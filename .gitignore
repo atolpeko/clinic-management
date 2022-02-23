@@ -1,1 +1,8 @@
-**/DS_Store
+**/.DS_Store
+**/.idea
+**/target
+**/${project.build.directory}
+**/*.iws
+**/*.iml
+**/*.ipr
+
