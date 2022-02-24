@@ -18,6 +18,7 @@
     <modules>
         <module>config-server</module>
         <module>discovery-server</module>
+        <module>api-gateway</module>
     </modules>
 
     <properties>
