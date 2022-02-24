@@ -14,9 +14,17 @@
  * limitations under the License.
  */
 
-package category;
+package discoveryserver;
 
-/**
- * A tag indicating that the given test is a unit test.
- */
-public interface UnitTest { }
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+@Tag("category.IntegrationTest")
+class DiscoveryServerApplicationTests {
+
+	@Test
+	void contextLoads() {
+	}
+}

@@ -17,6 +17,6 @@
 package category;
 
 /**
- * A tag indicating that the given test is a unit test.
+ * A tag indicating that the given text is an integration test.
  */
-public interface UnitTest { }
+public interface IntegrationTest { }
