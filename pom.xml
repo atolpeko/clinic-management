@@ -7,7 +7,6 @@
     <artifactId>clinic-service-parent</artifactId>
     <version>1.0</version>
     <packaging>pom</packaging>
-    <name>${project.artifactId}</name>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -19,6 +18,7 @@
         <module>config-server</module>
         <module>discovery-server</module>
         <module>api-gateway</module>
+        <module>client-service</module>
     </modules>
 
     <properties>
