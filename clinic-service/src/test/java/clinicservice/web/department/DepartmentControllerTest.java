@@ -1,0 +1,127 @@
+/*
+ * Copyright 2002-2021 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package clinicservice.web.department;
+
+import clinicservice.service.department.Department;
+import clinicservice.service.department.DepartmentService;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+
+@Tag("category.IntegrationTest")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "spring.cloud.config.enabled=false")
+@AutoConfigureMockMvc
+public class DepartmentControllerTest {
+    private static String newDepartmentJson;
+    private static String updateDepartmentJson;
+
+    @Autowired
+    private MockMvc mvc;
+
+    @Autowired
+    private DepartmentService departmentService;
+
+    @BeforeAll
+    public static void createClientJsons() {
+        newDepartmentJson = "{\"address\":{" +
+                "\"country\":\"USA\"," +
+                "\"state\":\"NY\"," +
+                "\"city\":\"NYC\"," +
+                "\"street\":\"23\"," +
+                "\"houseNumber\":11" +
+                "}}";
+
+        updateDepartmentJson = "{\"address\":{" +
+                "\"country\":\"USA\"," +
+                "\"state\":\"LA\"," +
+                "\"city\":\"California\"," +
+                "\"street\":\"36\"," +
+                "\"houseNumber\":1" +
+                "}}";
+    }
+
+    @Test
+    public void shouldReturnDepartmentsOnDepartmentsGetRequest() throws Exception {
+        mvc.perform(get("/departments"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    public void shouldReturnDepartmentOnDepartmentGetRequest() throws Exception {
+        mvc.perform(get("/departments/1"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    public void shouldReturnDepartmentsOnDepartmentGetByFacilityIdRequest() throws Exception {
+        mvc.perform(get("/departments").param("facilityId", "1"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    public void shouldReturnSavedDepartmentOnDepartmentsPostRequest() throws Exception {
+        int initialCount = departmentService.findAll().size();
+        mvc.perform(post("/departments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(newDepartmentJson)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+        int newCount = departmentService.findAll().size();
+        assertThat(newCount, is(initialCount + 1));
+    }
+
+    @Test
+    public void shouldReturnUpdatedDepartmentOnDepartmentPatchRequest() throws Exception {
+        Department initial = departmentService.findById(1).orElseThrow();
+        mvc.perform(patch("/departments/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateDepartmentJson)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+        Department updated = departmentService.findById(1).orElseThrow();
+        assertThat(updated, is(not(equalTo(initial))));
+    }
+}

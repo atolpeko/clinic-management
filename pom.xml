@@ -19,6 +19,7 @@
         <module>discovery-server</module>
         <module>api-gateway</module>
         <module>client-service</module>
+        <module>clinic-service</module>
     </modules>
 
     <properties>
