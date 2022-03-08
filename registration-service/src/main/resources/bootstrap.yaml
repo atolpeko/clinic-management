@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: registration-service
+  profiles:
+    active: default
+  cloud:
+    config:
+      uri: http://localhost:8888

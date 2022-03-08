@@ -20,6 +20,7 @@
         <module>api-gateway</module>
         <module>client-service</module>
         <module>clinic-service</module>
+        <module>registration-service</module>
     </modules>
 
     <properties>
