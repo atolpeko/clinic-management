@@ -21,6 +21,7 @@
         <module>client-service</module>
         <module>clinic-service</module>
         <module>registration-service</module>
+        <module>results-service</module>
     </modules>
 
     <properties>
