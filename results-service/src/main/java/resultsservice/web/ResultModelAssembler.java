@@ -20,6 +20,7 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
+import org.springframework.hateoas.server.mvc.BasicLinkBuilder;
 import org.springframework.stereotype.Component;
 
 import resultsservice.service.result.Result;
@@ -35,9 +36,18 @@ public class ResultModelAssembler implements RepresentationModelAssembler<Result
 
     @Override
     public EntityModel<Result> toModel(Result entity) {
-        Link dutyLink = Link.of("/services/" + entity.getDutyId()).withRel("service");
-        Link doctorLink = Link.of("/doctors/" + entity.getDoctorId()).withRel("doctor");
-        Link clientLink = Link.of("/clients/" + entity.getClientId()).withRel("client" );
+        Link dutyLink = BasicLinkBuilder
+                .linkToCurrentMapping()
+                .slash("/services/" + entity.getDutyId())
+                .withRel("service");
+        Link doctorLink = BasicLinkBuilder
+                .linkToCurrentMapping()
+                .slash("/doctors/" + entity.getDoctorId())
+                .withRel("doctor");
+        Link clientLink = BasicLinkBuilder
+                .linkToCurrentMapping()
+                .slash("/clients/" + entity.getClientId())
+                .withRel("client");
 
         EntityModel<Result> entityModel = EntityModel.of(entity);
         entityModel.add(dutyLink, doctorLink, clientLink);

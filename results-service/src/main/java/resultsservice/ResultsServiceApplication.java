@@ -22,15 +22,17 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
+import org.springframework.web.filter.ForwardedHeaderFilter;
 
 import java.time.Duration;
 
 @SpringBootApplication
-@EnableEurekaClient
+@EnableDiscoveryClient
 @EnableFeignClients
 public class ResultsServiceApplication {
 
@@ -51,5 +53,13 @@ public class ResultsServiceApplication {
 
         CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(config);
         return registry.circuitBreaker("circuitBreaker");
+    }
+
+    @Bean
+    public FilterRegistrationBean<ForwardedHeaderFilter> forwardedHeaderFilter() {
+        FilterRegistrationBean<ForwardedHeaderFilter> filter = new FilterRegistrationBean<>();
+        filter.setFilter(new ForwardedHeaderFilter());
+        filter.setOrder(0);
+        return filter;
     }
 }

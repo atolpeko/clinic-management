@@ -22,15 +22,18 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.context.annotation.Bean;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.filter.ForwardedHeaderFilter;
 
 import java.time.Duration;
 
 @SpringBootApplication
-@EnableEurekaClient
+@EnableDiscoveryClient
 public class ClientServiceApplication {
 
     public static void main(String[] args) {
@@ -45,6 +48,7 @@ public class ClientServiceApplication {
                 .slidingWindowSize(10)
                 .slowCallRateThreshold(70.0f)
                 .slowCallDurationThreshold(Duration.ofSeconds(2))
+                .recordExceptions(InvalidDataAccessResourceUsageException.class)
                 .build();
 
         CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(config);
@@ -54,5 +58,13 @@ public class ClientServiceApplication {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public FilterRegistrationBean<ForwardedHeaderFilter> forwardedHeaderFilter() {
+        FilterRegistrationBean<ForwardedHeaderFilter> filter = new FilterRegistrationBean<>();
+        filter.setFilter(new ForwardedHeaderFilter());
+        filter.setOrder(0);
+        return filter;
     }
 }

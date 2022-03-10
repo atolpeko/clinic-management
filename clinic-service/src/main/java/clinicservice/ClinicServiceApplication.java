@@ -22,14 +22,16 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.filter.ForwardedHeaderFilter;
 
 import java.time.Duration;
 
 @SpringBootApplication
+@EnableDiscoveryClient
 public class ClinicServiceApplication {
 
     public static void main(String[] args) {
@@ -52,7 +54,10 @@ public class ClinicServiceApplication {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public FilterRegistrationBean<ForwardedHeaderFilter> forwardedHeaderFilter() {
+        FilterRegistrationBean<ForwardedHeaderFilter> filter = new FilterRegistrationBean<>();
+        filter.setFilter(new ForwardedHeaderFilter());
+        filter.setOrder(0);
+        return filter;
     }
 }
