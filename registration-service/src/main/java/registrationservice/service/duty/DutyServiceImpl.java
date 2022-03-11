@@ -16,8 +16,6 @@
 
 package registrationservice.service.duty;
 
-import feign.FeignException.FeignClientException;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 
 import org.apache.logging.log4j.LogManager;
@@ -25,6 +23,8 @@ import org.apache.logging.log4j.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,17 +32,20 @@ import registrationservice.data.DutyRepository;
 import registrationservice.data.RegistrationRepository;
 import registrationservice.service.exception.IllegalModificationException;
 import registrationservice.service.exception.RemoteResourceException;
-import registrationservice.service.external.ClinicServiceFeignClient;
+import registrationservice.service.external.clinic.ClinicServiceFeignClient;
+import registrationservice.service.external.clinic.Doctor;
 import registrationservice.service.registration.Registration;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -59,12 +62,12 @@ public class DutyServiceImpl implements DutyService {
     public DutyServiceImpl(DutyRepository dutyRepository,
                            RegistrationRepository registrationRepository,
                            Validator validator,
-                           ClinicServiceFeignClient feignClient,
+                           ClinicServiceFeignClient clinicService,
                            CircuitBreaker circuitBreaker) {
         this.dutyRepository = dutyRepository;
         this.registrationRepository = registrationRepository;
         this.validator = validator;
-        this.feignClient = feignClient;
+        this.feignClient = clinicService;
         this.circuitBreaker = circuitBreaker;
     }
 
@@ -84,10 +87,17 @@ public class DutyServiceImpl implements DutyService {
 
     private void loadDoctors(Duty duty) {
         try {
-//            List<Doctor> doctors = feignClient.findAllDoctorsWithSpecialty(duty.getNeededSpecialty());
-//            duty.setDoctors(doctors);
-        } catch (FeignClientException e) {
-            throw new RemoteResourceException("Clinic microservice unavailable", e);
+            Supplier<CollectionModel<EntityModel<Doctor>>> find = () ->
+                    feignClient.findAllDoctorsBySpecialty(duty.getNeededSpecialty());
+            Collection<Doctor> doctors = circuitBreaker.decorateSupplier(find)
+                    .get()
+                    .getContent()
+                    .stream()
+                    .map(EntityModel::getContent)
+                    .collect(Collectors.toSet());
+            duty.setDoctors(doctors);
+        } catch (Exception e) {
+            logger.error("Clinic microservice unavailable: " + e.getMessage());
         }
     }
 

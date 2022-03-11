@@ -41,11 +41,22 @@ public interface DoctorService {
      *
      * @param id ID of the department with doctors to get
      *
-     * @return all doctors with the specified department ID in the remote doctor repository.
+     * @return all doctors with the specified department ID in the remote doctor repository
      *
      * @throws RemoteResourceException if there is any problem with the remote doctor repository
      */
     List<Doctor> findAllByDepartmentId(Long id);
+
+    /**
+     * Looks for all doctors with the specified specialty in the remote doctor repository.
+     *
+     * @param specialty specialty of the doctors to get
+     *
+     * @return all doctors with the specified specialty in the remote doctor repository
+     *
+     * @throws RemoteResourceException if there is any problem with the remote doctor repository
+     */
+    List<Doctor> findAllBySpecialty(String specialty);
 
     /**
      * Looks for a doctor with the specified ID in the remote doctor repository.
@@ -53,6 +64,7 @@ public interface DoctorService {
      * @param id ID of the doctor to get
      *
      * @return the doctor with the specified ID in the remote doctor repository
+     * or Optional#empty() if none found
      *
      * @throws RemoteResourceException if there is any problem with the remote doctor repository
      */

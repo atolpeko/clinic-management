@@ -78,7 +78,7 @@ public class Department implements Serializable {
      */
     public Department(Department other) {
         id = other.id;
-        address = new Address(other.address);
+        address = (other.address == null) ? null : new Address(other.address);
         doctors = new HashSet<>(other.doctors);
         facilities = new HashSet<>(other.facilities);
     }

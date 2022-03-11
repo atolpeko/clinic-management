@@ -75,8 +75,18 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     public List<Doctor> findAllByDepartmentId(Long id) {
         try {
-            Supplier<List<Doctor>> findById = () -> doctorRepository.findAllByDepartmentId(id);
-            return circuitBreaker.decorateSupplier(findById).get();
+            Supplier<List<Doctor>> findByDepartmentId = () -> doctorRepository.findAllByDepartmentId(id);
+            return circuitBreaker.decorateSupplier(findByDepartmentId).get();
+        } catch (Exception e) {
+            throw new RemoteResourceException("Doctor database unavailable", e);
+        }
+    }
+
+    @Override
+    public List<Doctor> findAllBySpecialty(String specialty) {
+        try {
+            Supplier<List<Doctor>> findBySpecialty = () -> doctorRepository.findAllBySpecialty(specialty);
+            return circuitBreaker.decorateSupplier(findBySpecialty).get();
         } catch (Exception e) {
             throw new RemoteResourceException("Doctor database unavailable", e);
         }
@@ -100,11 +110,13 @@ public class DoctorServiceImpl implements DoctorService {
             doctorToSave.setId(null);
             loadDepartment(doctorToSave);
 
-            Supplier<Doctor> save = () -> doctorRepository.save(doctorToSave);
-            Runnable flush = doctorRepository::flush;
+            Supplier<Doctor> save = () -> {
+                Doctor saved = doctorRepository.save(doctorToSave);
+                doctorRepository.flush();
+                return saved;
+            };
 
             Doctor saved = circuitBreaker.decorateSupplier(save).get();
-            circuitBreaker.decorateRunnable(flush).run();
             logger.info("Doctor " + saved.getName() + " saved. ID - " + saved.getId());
             return saved;
         } catch (IllegalModificationException e) {
@@ -117,6 +129,9 @@ public class DoctorServiceImpl implements DoctorService {
     private void loadDepartment(Doctor doctor) {
         if (doctor.getDepartment() == null) {
             return;
+        }
+        if (doctor.getDepartment().getId() == null) {
+            throw new IllegalModificationException("Department ID is mandatory");
         }
 
         long departmentId = doctor.getDepartment().getId();
@@ -151,11 +166,13 @@ public class DoctorServiceImpl implements DoctorService {
             prepareUpdateData(doctorToUpdate, doctor);
             validate(doctorToUpdate);
 
-            Supplier<Doctor> save = () -> doctorRepository.save(doctorToUpdate);
-            Runnable flush = doctorRepository::flush;
+            Supplier<Doctor> update = () -> {
+                Doctor updated = doctorRepository.save(doctorToUpdate);
+                doctorRepository.flush();
+                return updated;
+            };
 
-            Doctor updated = circuitBreaker.decorateSupplier(save).get();
-            circuitBreaker.decorateRunnable(flush).run();
+            Doctor updated = circuitBreaker.decorateSupplier(update).get();
             logger.info("Doctor " + updated.getId() + " updated");
             return updated;
         } catch (IllegalModificationException e) {
@@ -184,10 +201,12 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     public void deleteById(long id) {
         try {
-            Runnable delete = () -> doctorRepository.deleteById(id);
-            Runnable flush = doctorRepository::flush;
+            Runnable delete = () -> {
+                doctorRepository.deleteById(id);
+                doctorRepository.flush();
+            };
+
             circuitBreaker.decorateRunnable(delete).run();
-            circuitBreaker.decorateRunnable(flush).run();
             logger.info("Doctor " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
             throw new IllegalModificationException("No doctor with id " + id);

@@ -58,11 +58,11 @@ public class RegistrationControllerTest {
     private RegistrationService registrationService;
 
     @BeforeAll
-    public static void createClientJsons() {
+    public static void createClientJson() {
         newRegistrationJson = "{\"date\": \"2022-03-08T00:00:00\"," +
                 "\"duty\": { \"id\": 1  }," +
-                "\"client\": { \"id\": 1  }," +
-                "\"doctor\": { \"id\": 1  }}";
+                "\"clientId\": 1," +
+                "\"doctorId\": 1}";
     }
 
     @Test
@@ -111,8 +111,7 @@ public class RegistrationControllerTest {
         int newCount = registrationService.findAll().size();
         assertThat(newCount, is(initialCount + 1));
     }
-
-
+    
     @Test
     public void shouldReturnUpdatedRegistrationOnRegistrationStatusPatchRequest() throws Exception {
         boolean initial = registrationService.findById(1).orElseThrow().isActive();

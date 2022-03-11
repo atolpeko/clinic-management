@@ -19,8 +19,8 @@ package registrationservice.service.registration;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import registrationservice.service.duty.Duty;
-import registrationservice.service.external.Client;
-import registrationservice.service.external.Doctor;
+import registrationservice.service.external.client.Client;
+import registrationservice.service.external.clinic.Doctor;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -29,7 +29,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -40,7 +42,7 @@ import java.util.Objects;
  */
 @Entity
 @Table(name = "registration")
-@JsonIgnoreProperties(value = { "duty", "doctor", "client" }, allowSetters = true)
+@JsonIgnoreProperties(value = { "clientId", "doctorId" }, allowSetters = true)
 public class Registration implements Serializable {
 
     @Id
@@ -54,16 +56,24 @@ public class Registration implements Serializable {
     @NotNull(message = "Registration date is mandatory")
     private LocalDateTime date;
 
-    @OneToOne
-    @NotNull(message = "Doctor is mandatory")
-    private Doctor doctor;
+    @Column(nullable = false)
+    @NotNull(message = "Client ID is mandatory")
+    @Positive(message = "Client ID must be positive")
+    private Long clientId;
 
-    @OneToOne
-    @NotNull(message = "Client is mandatory")
-    private Client client;
+    @Column(nullable = false)
+    @NotNull(message = "Doctor ID is mandatory")
+    @Positive(message = "Doctor ID must be positive")
+    private Long doctorId;
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
+
+    @Transient
+    private Doctor doctor;
+
+    @Transient
+    private Client client;
 
     /**
      * Constructs a new active Registration.
@@ -80,10 +90,12 @@ public class Registration implements Serializable {
     public Registration(Registration other) {
         id = other.id;
         duty = other.duty;
-        date = other.date;
-        doctor = other.doctor;
-        client = other.client;
+        date = LocalDateTime.from(other.date);
+        doctorId = other.doctorId;
+        clientId = other.clientId;
         isActive = other.isActive;
+        doctor = (other.doctor == null) ? null : new Doctor(other.doctor);
+        client = (other.client == null) ? null :new Client(other.client);
     }
 
     /**
@@ -128,6 +140,22 @@ public class Registration implements Serializable {
         this.date = date;
     }
 
+    public Long getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(Long clientId) {
+        this.clientId = clientId;
+    }
+
+    public Long getDoctorId() {
+        return doctorId;
+    }
+
+    public void setDoctorId(Long doctorId) {
+        this.doctorId = doctorId;
+    }
+
     public Doctor getDoctor() {
         return doctor;
     }
@@ -161,17 +189,19 @@ public class Registration implements Serializable {
         if (other == null || getClass() != other.getClass()) {
             return false;
         }
-
         Registration that = (Registration) other;
-        return Objects.equals(duty, that.duty)
+        return isActive() == that.isActive()
+                && Objects.equals(duty, that.duty)
                 && Objects.equals(date, that.date)
+                && Objects.equals(clientId, that.clientId)
+                && Objects.equals(doctorId, that.doctorId)
                 && Objects.equals(doctor, that.doctor)
                 && Objects.equals(client, that.client);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(duty, date, doctor, client, isActive);
+        return Objects.hash(duty, date, clientId, doctorId, isActive, doctor, client);
     }
 
     @Override
@@ -180,9 +210,11 @@ public class Registration implements Serializable {
                 "id=" + id +
                 ", duty=" + duty +
                 ", date=" + date +
+                ", clientId=" + clientId +
+                ", doctorId=" + doctorId +
+                ", isActive=" + isActive +
                 ", doctor=" + doctor +
                 ", client=" + client +
-                ", isActive=" + isActive +
                 '}';
     }
 }

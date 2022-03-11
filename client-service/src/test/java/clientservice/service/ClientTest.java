@@ -43,10 +43,7 @@ public class ClientTest {
         client.setName("Alexander");
         client.setSex(Client.Sex.MALE);
         client.setPhoneNumber("+375-34-556-70-90");
-        client.setCountry("Belarus");
-        client.setCity("Minsk");
-        client.setStreet("Goretskogo");
-        client.setHouseNumber(20);
+        client.setAddress(new Address("USA", "NY", "NYC", "23", 1));
 
         int errors = validator.validate(client).size();
         assertThat(errors, is(0));
@@ -55,9 +52,8 @@ public class ClientTest {
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
         Client client = new Client();
-        client.setHouseNumber(-1);
 
         int errors = validator.validate(client).size();
-        assertThat(errors, is(9));
+        assertThat(errors, is(6));
     }
 }

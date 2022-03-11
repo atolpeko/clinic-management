@@ -18,6 +18,7 @@ package registrationservice.web.duty;
 
 import registrationservice.service.duty.Duty;
 
+import org.springframework.hateoas.server.mvc.BasicLinkBuilder;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
@@ -35,13 +36,11 @@ public class DutyModelAssembler implements RepresentationModelAssembler<Duty, En
 
     @Override
     public EntityModel<Duty> toModel(Duty entity) {
-        EntityModel<Duty> entityModel = EntityModel.of(entity);
-        entity.getDoctors().forEach(doctor -> {
-            long id = doctor.getId();
-            Link link = Link.of("/doctors/" + id).withRel("doctor-" + id);
-            entityModel.add(link);
-        });
-
+        Link doctorsLink = BasicLinkBuilder
+                .linkToCurrentMapping()
+                .slash("/doctors/?specialty=" + entity.getNeededSpecialty())
+                .withRel("doctors");
+        EntityModel<Duty> entityModel = EntityModel.of(entity, doctorsLink);
         entityModel.add(linkTo(methodOn(DutyController.class).getById(entity.getId())).withSelfRel(),
                 linkTo(methodOn(DutyController.class).getAll()).withRel("all"));
         return entityModel;

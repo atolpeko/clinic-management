@@ -103,11 +103,13 @@ public class FacilityServiceImpl implements FacilityService {
             facilityToSave.setId(null);
             loadDepartments(facilityToSave);
 
-            Supplier<MedicalFacility> save = () -> facilityRepository.save(facilityToSave);
-            Runnable flush = facilityRepository::flush;
+            Supplier<MedicalFacility> save = () -> {
+                MedicalFacility saved = facilityRepository.save(facilityToSave);
+                facilityRepository.flush();
+                return saved;
+            };
 
             MedicalFacility saved = circuitBreaker.decorateSupplier(save).get();
-            circuitBreaker.decorateRunnable(flush).run();
             logger.info("Medical facility " + saved.getName() + " saved. ID - " + saved.getId());
             return saved;
         } catch (IllegalModificationException e) {
@@ -120,6 +122,11 @@ public class FacilityServiceImpl implements FacilityService {
     }
 
     private void loadDepartments(MedicalFacility facility) {
+        facility.getDepartments().stream()
+                .filter(department -> department.getId() != null)
+                .findAny()
+                .orElseThrow(() -> new IllegalModificationException("Department ID is mandatory"));
+
         LongFunction<Department> mapper = id -> {
             Supplier<Optional<Department>> findById = () -> departmentRepository.findById(id);
             return circuitBreaker.decorateSupplier(findById)
@@ -160,11 +167,13 @@ public class FacilityServiceImpl implements FacilityService {
             prepareUpdateData(facilityToUpdate, facility);
             validate(facilityToUpdate);
 
-            Supplier<MedicalFacility> save = () -> facilityRepository.save(facilityToUpdate);
-            Runnable flush = facilityRepository::flush;
+            Supplier<MedicalFacility> update = () -> {
+                MedicalFacility updated = facilityRepository.save(facilityToUpdate);
+                facilityRepository.flush();
+                return updated;
+            };
 
-            MedicalFacility updated = circuitBreaker.decorateSupplier(save).get();
-            circuitBreaker.decorateRunnable(flush).run();
+            MedicalFacility updated = circuitBreaker.decorateSupplier(update).get();
             logger.info("Medical facility " + updated.getId() + " updated");
             return updated;
         } catch (IllegalModificationException e) {
@@ -189,10 +198,12 @@ public class FacilityServiceImpl implements FacilityService {
     @Override
     public void deleteAllByDepartmentId(long departmentId) {
         try {
-            Runnable delete = () -> facilityRepository.deleteAllByDepartmentId(departmentId);
-            Runnable flush = facilityRepository::flush;
+            Runnable delete = () -> {
+                facilityRepository.deleteAllByDepartmentId(departmentId);
+                facilityRepository.flush();
+            };
+
             circuitBreaker.decorateRunnable(delete).run();
-            circuitBreaker.decorateRunnable(flush).run();
             logger.info("All medical facilities deleted from department " + departmentId);
         } catch (EmptyResultDataAccessException e) {
             throw new IllegalModificationException("No department with id " + departmentId);
@@ -204,10 +215,12 @@ public class FacilityServiceImpl implements FacilityService {
     @Override
     public void deleteFromDepartmentById(long departmentId, long facilityId) {
         try {
-            Runnable delete = () -> facilityRepository.deleteFromDepartment(departmentId, facilityId);
-            Runnable flush = facilityRepository::flush;
+            Runnable delete = () -> {
+                facilityRepository.deleteFromDepartment(departmentId, facilityId);
+                facilityRepository.flush();
+            };
+
             circuitBreaker.decorateRunnable(delete).run();
-            circuitBreaker.decorateRunnable(flush).run();
             logger.info("Medical facility " + facilityId + " deleted from department " + departmentId);
         } catch (EmptyResultDataAccessException e) {
             String errorMsg = "No department with id " + departmentId +
@@ -221,13 +234,18 @@ public class FacilityServiceImpl implements FacilityService {
     @Override
     public void deleteById(long id) {
         try {
-            Runnable delete = () -> facilityRepository.deleteById(id);
-            Runnable flush = facilityRepository::flush;
+            Runnable delete = () -> {
+                facilityRepository.deleteById(id);
+                facilityRepository.flush();
+            };
+
             circuitBreaker.decorateRunnable(delete).run();
-            circuitBreaker.decorateRunnable(flush).run();
             logger.info("Medical facility " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
             throw new IllegalModificationException("No facility with id " + id);
+        } catch (DataIntegrityViolationException e) {
+            String errorMsg = "Delete all departments related to this facility first";
+            throw new IllegalModificationException(errorMsg);
         } catch (Exception e) {
             throw new RemoteResourceException("Facility database unavailable", e);
         }

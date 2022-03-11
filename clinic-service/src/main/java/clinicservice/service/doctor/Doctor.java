@@ -51,7 +51,7 @@ public class Doctor implements Serializable {
     private String name;
 
     @Column(nullable = false)
-    @NotNull(message = "Specialty is mandatory")
+    @NotBlank(message = "Specialty is mandatory")
     private String specialty;
 
     @Column(name = "practice_beginning_date", nullable = false)

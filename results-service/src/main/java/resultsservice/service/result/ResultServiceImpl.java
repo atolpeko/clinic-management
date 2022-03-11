@@ -105,8 +105,7 @@ public class ResultServiceImpl implements ResultService {
             return null;
         }
     }
-
-
+    
     private Doctor loadDoctor(long doctorId) {
         try {
             Supplier<Optional<Doctor>> findDoctor = () -> clinicService.findDoctorById(doctorId);

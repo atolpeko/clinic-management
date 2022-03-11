@@ -21,9 +21,15 @@ import clientservice.service.exception.RemoteResourceException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -39,10 +45,27 @@ import java.util.NoSuchElementException;
 public class ExceptionInterceptor {
     private static final Logger logger = LogManager.getLogger(ExceptionInterceptor.class);
 
-    @ExceptionHandler({NoSuchElementException.class, MethodArgumentTypeMismatchException.class})
+    @ExceptionHandler({ NoSuchElementException.class, MethodArgumentTypeMismatchException.class })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public void handleNotFoundException(Exception e) {
         logger.error(e.getMessage());
+    }
+
+    @ExceptionHandler({ HttpMessageNotReadableException.class,
+            HttpMediaTypeNotSupportedException.class,
+            UnsatisfiedServletRequestParameterException.class,
+            MissingServletRequestParameterException.class })
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleBadRequestException(Exception e) {
+        logger.error(e.getMessage());
+        return e.getMessage();
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    public String handleNotSupportedException(HttpRequestMethodNotSupportedException e) {
+        logger.error(e.getMessage());
+        return e.getMessage();
     }
 
     @ExceptionHandler(ClientsModificationException.class)

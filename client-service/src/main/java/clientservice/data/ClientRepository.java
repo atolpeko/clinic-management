@@ -17,20 +17,24 @@
 package clientservice.data;
 
 import clientservice.service.Client;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
 import java.util.Optional;
 
 /**
  * A ClientRepository abstracts a collection of Client objects.
  */
+@Repository
 public interface ClientRepository extends JpaRepository<Client, Long> {
 
     /**
-     * Retrieves an entity by its email.
+     * Retrieves a client by its email.
      *
-     * @param email the email of the entity to find
+     * @param email the email of the client to find
      *
-     * @return the entity with the given id or Optional#empty() if none found
+     * @return the client with the given name or Optional#empty() if none found
      */
     Optional<Client> findByEmail(String email);
 }

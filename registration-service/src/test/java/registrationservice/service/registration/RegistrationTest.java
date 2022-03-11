@@ -21,8 +21,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import registrationservice.service.duty.Duty;
-import registrationservice.service.external.Client;
-import registrationservice.service.external.Doctor;
 
 import javax.validation.Validation;
 import javax.validation.Validator;
@@ -44,8 +42,8 @@ public class RegistrationTest {
     public void shouldPassValidationWhenHasValidData() {
         Registration registration = new Registration();
         registration.setDate(LocalDateTime.now());
-        registration.setClient(new Client());
-        registration.setDoctor(new Doctor());
+        registration.setClientId(1L);
+        registration.setDoctorId(1L);
         registration.setDuty(new Duty());
 
         int errors = validator.validate(registration).size();

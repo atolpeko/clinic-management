@@ -20,6 +20,7 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
+import org.springframework.hateoas.server.mvc.BasicLinkBuilder;
 import org.springframework.stereotype.Component;
 
 import registrationservice.service.registration.Registration;
@@ -37,18 +38,19 @@ public class RegistrationModelAssembler
 
     @Override
     public EntityModel<Registration> toModel(Registration entity) {
-        EntityModel<Registration> entityModel = EntityModel.of(entity);
-        long clientId = entity.getClient().getId();
-        Link clientLink = Link.of("clients/" + clientId).withRel("client");
+        Link doctorLink = BasicLinkBuilder
+                .linkToCurrentMapping()
+                .slash("/doctors/" + entity.getDoctorId())
+                .withRel("doctor");
+        Link clientLink = BasicLinkBuilder
+                .linkToCurrentMapping()
+                .slash("/clients/" + entity.getClientId())
+                .withRel("client");
 
-        long doctorId = entity.getDoctor().getId();
-        Link doctorLink = Link.of("doctors/" + doctorId).withRel("doctor");
-
-        long dutyId = entity.getDuty().getId();
-        Link dutyLink = linkTo(methodOn(DutyController.class).getById(dutyId)).withRel("service");
-
-        entityModel.add(clientLink, doctorLink, dutyLink);
-        entityModel.add(linkTo(methodOn(RegistrationController.class).getAll()).withRel("all"));
+        EntityModel<Registration> entityModel = EntityModel.of(entity, doctorLink, clientLink);
+        entityModel.add(linkTo(methodOn(DutyController.class).getById(entity.getId())).withRel("service"),
+                linkTo(methodOn(RegistrationController.class).getById(entity.getId())).withSelfRel(),
+                linkTo(methodOn(RegistrationController.class).getAll()).withRel("all"));
         return entityModel;
     }
 

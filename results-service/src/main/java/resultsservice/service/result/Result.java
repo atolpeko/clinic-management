@@ -185,8 +185,7 @@ public class Result implements Serializable {
         }
 
         Result result = (Result) other;
-        return Objects.equals(id, result.id)
-                && Objects.equals(data, result.data)
+        return Objects.equals(data, result.data)
                 && Objects.equals(dutyId, result.dutyId)
                 && Objects.equals(clientId, result.clientId)
                 && Objects.equals(doctorId, result.doctorId)
@@ -197,8 +196,7 @@ public class Result implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, data, dutyId, clientId, doctorId,
-                doctor, client, duty);
+        return Objects.hash(data, dutyId, clientId, doctorId, doctor, client, duty);
     }
 
     @Override

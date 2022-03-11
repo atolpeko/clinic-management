@@ -16,9 +16,7 @@
 
 package registrationservice.service.duty;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-import registrationservice.service.external.Doctor;
+import registrationservice.service.external.clinic.Doctor;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -27,13 +25,13 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.Objects;
 
 /**
@@ -41,7 +39,6 @@ import java.util.Objects;
  */
 @Entity
 @Table(name = "duty")
-@JsonIgnoreProperties("doctors")
 public class Duty implements Serializable {
 
     @Id
@@ -49,15 +46,15 @@ public class Duty implements Serializable {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    @NotEmpty(message = "Name is mandatory")
+    @NotBlank(message = "Name is mandatory")
     private String name;
 
     @Column(nullable = false)
-    @NotEmpty(message = "Description is mandatory")
+    @NotBlank(message = "Description is mandatory")
     private String description;
 
     @Column(name = "needs_specialty", nullable = false)
-    @NotEmpty(message = "Specialty is mandatory")
+    @NotBlank(message = "Specialty is mandatory")
     private String neededSpecialty;
 
     @Column(nullable = false)
@@ -65,7 +62,7 @@ public class Duty implements Serializable {
     private BigDecimal price;
 
     @Transient
-    private List<Doctor> doctors;
+    private Collection<Doctor> doctors;
 
     public Duty() {
         doctors = new ArrayList<>();
@@ -90,6 +87,7 @@ public class Duty implements Serializable {
      *
      * @param name name to set
      * @param description description to set
+     * @param needsSpecialty specialty to set
      * @param price price to set
      */
     public Duty(String name, String description, String needsSpecialty, BigDecimal price) {
@@ -139,11 +137,11 @@ public class Duty implements Serializable {
         this.price = price;
     }
 
-    public List<Doctor> getDoctors() {
+    public Collection<Doctor> getDoctors() {
         return doctors;
     }
 
-    public void setDoctors(List<Doctor> doctors) {
+    public void setDoctors(Collection<Doctor> doctors) {
         this.doctors = doctors;
     }
 
@@ -167,7 +165,7 @@ public class Duty implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, description, neededSpecialty, price, doctors);
+        return Objects.hash(name, description, neededSpecialty, price, doctors);
     }
 
     @Override

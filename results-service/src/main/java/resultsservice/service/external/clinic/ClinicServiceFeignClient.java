@@ -19,6 +19,7 @@ package resultsservice.service.external.clinic;
 import feign.FeignException.FeignClientException;
 
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -40,7 +41,7 @@ public interface ClinicServiceFeignClient {
      * @throws FeignClientException if there is any problem with feign client
      */
     @RequestMapping(method = RequestMethod.GET,
-            value = "",
+            value = "/doctors/{id}",
             consumes = "application/json")
-    Optional<Doctor> findDoctorById(long id);
+    Optional<Doctor> findDoctorById(@PathVariable Long id);
 }

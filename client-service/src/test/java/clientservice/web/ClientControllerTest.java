@@ -16,6 +16,9 @@
 
 package clientservice.web;
 
+import clientservice.service.Client;
+import clientservice.service.ClientService;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -25,6 +28,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Optional;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -41,29 +51,36 @@ public class ClientControllerTest {
     @Autowired
     private MockMvc mvc;
 
+    @Autowired
+    private ClientService clientService;
+
     @BeforeAll
     public static void createClientJsons() {
-        newClientJson = "{\"id\":null," +
-                "\"email\":\"altolpeko@gmail.com\"," +
+        newClientJson = "{\"email\":\"altolpeko@gmail.com\"," +
                 "\"password\":\"12345678\"," +
                 "\"name\":\"Alexander\"," +
                 "\"sex\":\"MALE\"," +
                 "\"phoneNumber\":\"+375-34-556-70-90\"," +
-                "\"country\":\"Belarus\"," +
-                "\"city\":\"Minsk\"," +
-                "\"street\":\"Nemiga\"," +
-                "\"houseNumber\":11}";
+                "\"address\":{" +
+                    "\"country\":\"USA\"," +
+                    "\"state\":\"NY\"," +
+                    "\"city\":\"NYC\"," +
+                    "\"street\":\"23\"," +
+                    "\"houseNumber\":11" +
+                "}}";
 
-        updateClientJson = "{\"id\":null," +
-                "\"email\":\"alextolpeko@gmail.com\"," +
+        updateClientJson = "{\"email\":\"alextolpeko@gmail.com\"," +
                 "\"password\":\"87654321\"," +
                 "\"name\":\"Alex\"," +
                 "\"sex\":\"MALE\"," +
                 "\"phoneNumber\":\"+375-21-134-54-67\"," +
-                "\"country\":\"Belarus\"," +
-                "\"city\":\"Minsk\"," +
-                "\"street\":\"Goretskogo\"," +
-                "\"houseNumber\":33}";
+                "\"address\":{" +
+                    "\"country\":\"USA\"," +
+                    "\"state\":\"LA\"," +
+                    "\"city\":\"California\"," +
+                    "\"street\":\"36\"," +
+                    "\"houseNumber\":1" +
+                "}}";
     }
 
     @Test
@@ -91,7 +108,8 @@ public class ClientControllerTest {
     }
 
     @Test
-    public void shouldReturnSavedClientOnRegisterPostRequest() throws Exception {
+    public void shouldReturnSavedClientOnClientsPostRequest() throws Exception {
+        int initialCount = clientService.findAll().size();
         mvc.perform(post("/clients")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(newClientJson)
@@ -99,10 +117,14 @@ public class ClientControllerTest {
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+        int newCount = clientService.findAll().size();
+        assertThat(newCount, is(initialCount + 1));
     }
 
     @Test
     public void shouldReturnUpdatedClientOnClientPatchRequest() throws Exception {
+        Client initial = clientService.findById(1).orElseThrow();
         mvc.perform(patch("/clients/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateClientJson)
@@ -110,14 +132,21 @@ public class ClientControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+        Client updated = clientService.findById(1).orElseThrow();
+        assertThat(updated, is(not(equalTo(initial))));
     }
 
     @Test
     public void shouldReturnUpdatedClientOnClientStatusPatchRequest() throws Exception {
-        mvc.perform(patch("/clients/1/status").param("isActive", "true"))
+        boolean initial = clientService.findById(1).orElseThrow().isEnabled();
+        mvc.perform(patch("/clients/1/status").param("isActive", "false"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+        boolean updated = clientService.findById(1).orElseThrow().isEnabled();
+        assertThat(updated, is(not(equalTo(initial))));
     }
 
     @Test
@@ -125,5 +154,8 @@ public class ClientControllerTest {
         mvc.perform(delete("/clients/2"))
                 .andDo(print())
                 .andExpect(status().isNoContent());
+
+        Optional<Client> deleted = clientService.findById(2);
+        assertThat(deleted, is(Optional.empty()));
     }
 }

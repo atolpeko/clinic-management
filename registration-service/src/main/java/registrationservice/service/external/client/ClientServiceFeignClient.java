@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package resultsservice.service.external.client;
+package registrationservice.service.external.client;
 
 import feign.FeignException.FeignClientException;
 

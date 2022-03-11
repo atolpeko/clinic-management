@@ -28,7 +28,7 @@ import org.mockito.Mockito;
 import registrationservice.data.DutyRepository;
 import registrationservice.data.RegistrationRepository;
 import registrationservice.service.exception.IllegalModificationException;
-import registrationservice.service.external.ClinicServiceFeignClient;
+import registrationservice.service.external.clinic.ClinicServiceFeignClient;
 
 import javax.validation.Validator;
 
@@ -67,9 +67,7 @@ public class DutyServiceImplTest {
         dutyRepository = mock(DutyRepository.class);
         registrationRepository = mock(RegistrationRepository.class);
         validator = mock(Validator.class);
-
         feignClient = mock(ClinicServiceFeignClient.class);
-        when(feignClient.findAllDoctorsWithSpecialty(any())).thenReturn(Collections.emptyList());
 
         circuitBreaker = mock(CircuitBreaker.class);
         when(circuitBreaker.decorateSupplier(any())).then(returnsFirstArg());

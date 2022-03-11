@@ -42,6 +42,7 @@ public interface DepartmentService {
      * @param id ID of the department to get
      *
      * @return the department with the specified ID in the remote department repository
+     * or Optional#empty() if none found
      *
      * @throws RemoteResourceException if there is any problem with the remote department repository
      */

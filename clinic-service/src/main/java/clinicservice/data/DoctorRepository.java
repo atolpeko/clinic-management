@@ -37,4 +37,13 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
      * @return all doctors with the given department ID
      */
     List<Doctor> findAllByDepartmentId(long departmentId);
+
+    /**
+     * Retrieves all doctors with the specified specialty.
+     *
+     * @param specialty specialty of the doctors to get
+     *
+     * @return all doctors with the given department ID
+     */
+    List<Doctor> findAllBySpecialty(String specialty);
 }

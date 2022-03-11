@@ -72,7 +72,7 @@ public class DoctorServiceImplTest {
     }
 
     @BeforeAll
-    public static void createFacility() {
+    public static void createDoctor() {
         Department department = new Department();
         department.setId(1L);
 
@@ -85,7 +85,7 @@ public class DoctorServiceImplTest {
     }
 
     @BeforeAll
-    public static void createUpdatedFacility() {
+    public static void createUpdatedDoctor() {
         Department department = new Department();
         department.setId(1L);
 

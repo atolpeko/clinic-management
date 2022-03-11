@@ -22,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -51,6 +52,7 @@ public class ExceptionInterceptor {
     }
 
     @ExceptionHandler({ HttpMessageNotReadableException.class,
+            HttpMediaTypeNotSupportedException.class,
             UnsatisfiedServletRequestParameterException.class,
             MissingServletRequestParameterException.class })
     @ResponseStatus(HttpStatus.BAD_REQUEST)

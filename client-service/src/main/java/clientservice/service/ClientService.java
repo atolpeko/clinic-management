@@ -42,6 +42,7 @@ public interface ClientService {
      * @param id ID of the client to get
      *
      * @return the client with the specified ID in the remote client repository
+     * or Optional#empty() if none found
      *
      * @throws RemoteResourceException if there is any problem with the remote client repository
      */
@@ -53,6 +54,7 @@ public interface ClientService {
      * @param email email of the client to get
      *
      * @return the client with the specified email in the remote client repository
+     * or Optional#empty() if none found
      *
      * @throws RemoteResourceException if there is any problem with the remote client repository
      */
@@ -60,12 +62,12 @@ public interface ClientService {
 
     /**
      * Saves the specified client in the remote client repository.
-     * Use the returned instance for further operations as the save operation
-     * might have changed the entity instance completely.
+     * Use the returned client for further operations as the save operation
+     * might have changed the client instance completely.
      *
      * @param client client to register
      *
-     * @return the saved entity
+     * @return the saved client
      *
      * @throws ClientsModificationException either if a client has invalid data or already exists
      * @throws RemoteResourceException if there is any problem with the remote client repository
@@ -74,29 +76,28 @@ public interface ClientService {
 
     /**
      * Updates the client with the specified ID in the remote client repository.
-     * Use the returned instance for further operations as the update operation
-     * might have changed the entity instance completely.
+     * Use the returned client for further operations as the update operation
+     * might have changed the client instance completely.
      *
-     * @param client entity to update
+     * @param client client to update
      *
-     * @return the updated entity
+     * @return the updated client
      *
-     * @throws ClientsModificationException if a client has invalid data or does not exist
+     * @throws ClientsModificationException either if a client has invalid data or does not exist
      * @throws RemoteResourceException if there is any problem with the remote client repository
      */
     Client update(Client client);
 
     /**
      * Sets an account status for the client with the specified ID in the remote client repository.
-     * Does nothing if such a client does not exist.
      * <br>
-     * Use the returned instance for further operations as the update operation
-     * might have changed the entity instance completely.
+     * Use the returned client for further operations as the update operation
+     * might have changed the client instance completely.
      *
      * @param id the ID of the client whose account status need to be changed
      * @param isEnabled blocks the account if true, unblocks otherwise
      *
-     * @return the updated entity
+     * @return the updated client
      *
      * @throws ClientsModificationException if such a client does not exist
      * @throws RemoteResourceException if there is any problem with the remote client repository
@@ -105,10 +106,10 @@ public interface ClientService {
 
     /**
      * Deletes the client with the specified ID in the remote client repository.
-     * Does nothing if such a client does not exist.
      *
      * @param id the ID of the client to be deleted
      *
+     * @throws ClientsModificationException if such a client does not exist
      * @throws RemoteResourceException if there is any problem with the remote client repository
      */
     void deleteById(long id);

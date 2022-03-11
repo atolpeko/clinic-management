@@ -27,6 +27,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
+import org.springframework.hateoas.config.EnableHypermediaSupport;
 import org.springframework.web.filter.ForwardedHeaderFilter;
 
 import java.time.Duration;
@@ -34,6 +35,7 @@ import java.time.Duration;
 @SpringBootApplication
 @EnableDiscoveryClient
 @EnableFeignClients
+@EnableHypermediaSupport(type = EnableHypermediaSupport.HypermediaType.HAL)
 public class RegistrationServiceApplication {
 
     public static void main(String[] args) {

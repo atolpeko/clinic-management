@@ -14,15 +14,7 @@
  * limitations under the License.
  */
 
-package registrationservice.service.external;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.validation.constraints.NotBlank;
+package registrationservice.service.external.clinic;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -30,17 +22,10 @@ import java.util.Objects;
 /**
  * Doctor domain class.
  */
-@Entity
-@Table(name = "doctor")
 public class Doctor implements Serializable {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false)
-    @NotBlank(message = "Name is mandatory")
     private String name;
+    private String specialty;
 
     public Doctor() {
     }
@@ -53,15 +38,20 @@ public class Doctor implements Serializable {
     public Doctor(Doctor other) {
         id = other.id;
         name = other.name;
+        specialty = other.specialty;
     }
 
     /**
-     * Constructs a new Doctor with the specified name.
+     * Constructs a new Doctor with the specified id, name and specialty.
      *
+     * @param id id to set
      * @param name name to set
+     * @param specialty specialty ro set
      */
-    public Doctor(String name) {
+    public Doctor(Long id, String name, String specialty) {
+        this.id = id;
         this.name = name;
+        this.specialty = specialty;
     }
 
     public Long getId() {
@@ -80,6 +70,14 @@ public class Doctor implements Serializable {
         this.name = name;
     }
 
+    public String getSpecialty() {
+        return specialty;
+    }
+
+    public void setSpecialty(String specialty) {
+        this.specialty = specialty;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (this == other) {
@@ -91,12 +89,14 @@ public class Doctor implements Serializable {
         }
 
         Doctor doctor = (Doctor) other;
-        return Objects.equals(name, doctor.name);
+        return Objects.equals(id, doctor.id)
+                && Objects.equals(name, doctor.name)
+                && Objects.equals(specialty, doctor.specialty);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name);
+        return Objects.hash(id, name, specialty);
     }
 
     @Override
@@ -104,6 +104,7 @@ public class Doctor implements Serializable {
         return getClass().getName() + "{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", specialty='" + specialty + '\'' +
                 '}';
     }
 }

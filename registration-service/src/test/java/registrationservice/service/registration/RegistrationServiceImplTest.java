@@ -28,8 +28,8 @@ import org.mockito.Mockito;
 import registrationservice.data.RegistrationRepository;
 import registrationservice.service.duty.Duty;
 import registrationservice.service.exception.IllegalModificationException;
-import registrationservice.service.external.Client;
-import registrationservice.service.external.Doctor;
+import registrationservice.service.external.client.ClientServiceFeignClient;
+import registrationservice.service.external.clinic.ClinicServiceFeignClient;
 
 import javax.validation.Validator;
 
@@ -55,6 +55,8 @@ public class RegistrationServiceImplTest {
     private static RegistrationRepository registrationRepository;
     private static Validator validator;
     private static CircuitBreaker circuitBreaker;
+    private static ClinicServiceFeignClient clinicService;
+    private static ClientServiceFeignClient clientService;
 
     private static Registration registration;
 
@@ -64,34 +66,34 @@ public class RegistrationServiceImplTest {
     public static void setUpMocks() {
         registrationRepository = mock(RegistrationRepository.class);
         validator = mock(Validator.class);
+        clinicService = mock(ClinicServiceFeignClient.class);
 
         circuitBreaker = mock(CircuitBreaker.class);
         when(circuitBreaker.decorateSupplier(any())).then(returnsFirstArg());
         when(circuitBreaker.decorateRunnable(any())).then(returnsFirstArg());
+
+        clientService = mock(ClientServiceFeignClient.class);
+        when(clientService.findClientById(any(Long.class))).thenReturn(Optional.empty());
     }
 
     @BeforeAll
     public static void createRegistration() {
-        Doctor doctor = new Doctor();
-        doctor.setId(1L);
-
-        Client client = new Client();
-        client.setId(1L);
-
         Duty duty = new Duty();
         duty.setId(1L);
 
         registration = new Registration();
+        registration.setId(1L);
         registration.setDate(LocalDateTime.now());
-        registration.setDoctor(doctor);
-        registration.setClient(client);
+        registration.setClientId(1L);
+        registration.setDoctorId(1L);
         registration.setDuty(duty);
     }
 
     @BeforeEach
     public void beforeEach() {
         Mockito.reset(registrationRepository, validator);
-        registrationService = new RegistrationServiceImpl(registrationRepository, validator, circuitBreaker);
+        registrationService = new RegistrationServiceImpl(registrationRepository,
+                validator, circuitBreaker, clinicService, clientService);
     }
 
     @Test

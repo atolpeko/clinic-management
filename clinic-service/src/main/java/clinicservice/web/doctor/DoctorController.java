@@ -66,6 +66,12 @@ public class DoctorController {
         return modelAssembler.toCollectionModel(doctors);
     }
 
+    @GetMapping(params = "specialty")
+    public CollectionModel<EntityModel<Doctor>> getAllBySpecialty(@RequestParam String specialty) {
+        List<Doctor> doctors = doctorService.findAllBySpecialty(specialty);
+        return modelAssembler.toCollectionModel(doctors);
+    }
+
     @GetMapping("/{id}")
     public EntityModel<Doctor> getById(@PathVariable Long id) {
         Doctor doctor = doctorService.findById(id)

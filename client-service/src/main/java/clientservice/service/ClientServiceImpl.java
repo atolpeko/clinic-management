@@ -20,7 +20,6 @@ import clientservice.data.ClientRepository;
 import clientservice.service.exception.ClientsModificationException;
 import clientservice.service.exception.RemoteResourceException;
 
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 
 import org.apache.logging.log4j.LogManager;
@@ -28,12 +27,18 @@ import org.apache.logging.log4j.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
+
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 @Service
@@ -43,14 +48,17 @@ public class ClientServiceImpl implements ClientService {
 
     private final ClientRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final Validator validator;
     private final CircuitBreaker circuitBreaker;
 
     @Autowired
     public ClientServiceImpl(ClientRepository repository,
                              PasswordEncoder passwordEncoder,
+                             Validator validator,
                              CircuitBreaker circuitBreaker) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
+        this.validator = validator;
         this.circuitBreaker = circuitBreaker;
     }
 
@@ -59,10 +67,8 @@ public class ClientServiceImpl implements ClientService {
         try {
             Supplier<List<Client>> findAll = repository::findAll;
             return circuitBreaker.decorateSupplier(findAll).get();
-        } catch (CallNotPermittedException e) {
-            throw new RemoteResourceException("Client database unavailable", e);
         } catch (Exception e) {
-            throw new RemoteResourceException(e);
+            throw new RemoteResourceException("Client database unavailable", e);
         }
     }
 
@@ -71,10 +77,8 @@ public class ClientServiceImpl implements ClientService {
         try {
             Supplier<Optional<Client>> findById = () -> repository.findById(id);
             return circuitBreaker.decorateSupplier(findById).get();
-        } catch (CallNotPermittedException e) {
-            throw new RemoteResourceException("Client database unavailable", e);
         } catch (Exception e) {
-            throw new RemoteResourceException(e);
+            throw new RemoteResourceException("Client database unavailable", e);
         }
     }
 
@@ -83,29 +87,48 @@ public class ClientServiceImpl implements ClientService {
         try {
             Supplier<Optional<Client>> findByEmail = () -> repository.findByEmail(email);
             return circuitBreaker.decorateSupplier(findByEmail).get();
-        } catch (CallNotPermittedException e) {
-            throw new RemoteResourceException("Client database unavailable", e);
         } catch (Exception e) {
-            throw new RemoteResourceException(e);
+            throw new RemoteResourceException("Client database unavailable", e);
         }
     }
 
     @Override
     public Client register(Client client) {
         try {
+            validate(client);
             Client clientToSave = new Client(client);
+            clientToSave.setId(null);
             clientToSave.setPassword(passwordEncoder.encode(client.getPassword()));
 
-            Supplier<Client> save = () -> repository.save(clientToSave);
+            Supplier<Client> save = () -> {
+                Client saved = repository.save(clientToSave);
+                repository.flush();
+                return saved;
+            };
+
             Client saved = circuitBreaker.decorateSupplier(save).get();
             logger.info("Client " + saved.getEmail() + " registered. ID - " + saved.getId());
             return saved;
-        } catch (IllegalArgumentException | DataIntegrityViolationException e) {
-            throw new ClientsModificationException(e);
-        } catch (CallNotPermittedException e) {
-            throw new RemoteResourceException("Client database unavailable", e);
+        } catch (ClientsModificationException e) {
+            throw e;
+        } catch (DataIntegrityViolationException e) {
+            throw new ClientsModificationException("Such a client already exists", e);
         } catch (Exception e) {
-            throw new RemoteResourceException(e);
+            throw new RemoteResourceException("Client database unavailable", e);
+        }
+    }
+
+    private void validate(Client client) {
+        Set<ConstraintViolation<Client>> violations = validator.validate(client);
+        if (!violations.isEmpty()) {
+            StringBuilder builder = new StringBuilder();
+            for (ConstraintViolation<Client> violation : violations) {
+                builder.append(violation.getMessage()).append(", ");
+            }
+
+            builder.delete(builder.length() - 2, builder.length() - 1);
+            String msg = builder.toString().toLowerCase(Locale.ROOT);
+            throw new ClientsModificationException(msg);
         }
     }
 
@@ -117,17 +140,23 @@ public class ClientServiceImpl implements ClientService {
                     .get()
                     .orElseThrow(() -> new ClientsModificationException("No client with id " + client.getId()));
             prepareUpdateData(clientToUpdate, client);
+            validate(clientToUpdate);
 
-            Supplier<Client> save = () -> repository.save(clientToUpdate);
-            Client updated = circuitBreaker.decorateSupplier(save).get();
+            Supplier<Client> update = () -> {
+                Client updated = repository.save(clientToUpdate);
+                repository.flush();
+                return updated;
+            };
+
+            Client updated = circuitBreaker.decorateSupplier(update).get();
             logger.info("Client " + updated.getId() + " updated");
             return updated;
-        } catch (IllegalArgumentException | DataIntegrityViolationException e) {
-            throw new ClientsModificationException(e);
-        } catch (CallNotPermittedException e) {
-            throw new RemoteResourceException("Client database unavailable", e);
+        } catch (ClientsModificationException e) {
+            throw e;
+        } catch (DataIntegrityViolationException e) {
+            throw new ClientsModificationException("Such a client already exists", e);
         } catch (Exception e) {
-            throw new RemoteResourceException(e);
+            throw new RemoteResourceException("Client database unavailable", e);
         }
     }
 
@@ -147,17 +176,22 @@ public class ClientServiceImpl implements ClientService {
         if (updateData.getPhoneNumber() != null) {
             client.setPhoneNumber(updateData.getPhoneNumber());
         }
-        if (updateData.getCountry() != null) {
-            client.setCountry(updateData.getCountry());
-        }
-        if (updateData.getCity() != null) {
-            client.setCity(updateData.getCity());
-        }
-        if (updateData.getStreet() != null) {
-            client.setStreet(updateData.getStreet());
-        }
-        if (updateData.getHouseNumber() != 0) {
-            client.setHouseNumber(updateData.getHouseNumber());
+        if (updateData.getAddress() != null) {
+            if (updateData.getAddress().getCountry() != null) {
+                client.getAddress().setCountry(updateData.getAddress().getCountry());
+            }
+            if (updateData.getAddress().getState() != null) {
+                client.getAddress().setState(updateData.getAddress().getState());
+            }
+            if (updateData.getAddress().getCity() != null) {
+                client.getAddress().setCity(updateData.getAddress().getCity());
+            }
+            if (updateData.getAddress().getStreet() != null) {
+                client.getAddress().setStreet(updateData.getAddress().getStreet());
+            }
+            if (updateData.getAddress().getHouseNumber() != null) {
+                client.getAddress().setHouseNumber(updateData.getAddress().getHouseNumber());
+            }
         }
     }
 
@@ -170,27 +204,34 @@ public class ClientServiceImpl implements ClientService {
                     .orElseThrow(() -> new ClientsModificationException("No client with id " + id));
             clientToUpdate.setEnabled(isEnabled);
 
-            Supplier<Client> save = () -> repository.save(clientToUpdate);
-            Client updated = circuitBreaker.decorateSupplier(save).get();
-            logger.info("Client " + updated.getId() + " updated");
+            Supplier<Client> update = () -> {
+                Client updated = repository.save(clientToUpdate);
+                repository.flush();
+                return updated;
+            };
+
+            Client updated = circuitBreaker.decorateSupplier(update).get();
+            logger.info("Account status of client " + id + " changed");
             return updated;
-        } catch (CallNotPermittedException e) {
-            throw new RemoteResourceException("Client database unavailable", e);
         } catch (Exception e) {
-            throw new RemoteResourceException(e);
+            throw new RemoteResourceException("Client database unavailable", e);
         }
     }
 
     @Override
     public void deleteById(long id) {
         try {
-            Runnable delete = () -> repository.deleteById(id);
+            Runnable delete = () -> {
+                repository.deleteById(id);
+                repository.flush();
+            };
+
             circuitBreaker.decorateRunnable(delete).run();
             logger.info("Client " + id + " deleted");
-        } catch (CallNotPermittedException e) {
-            throw new RemoteResourceException("Client database unavailable", e);
+        } catch (EmptyResultDataAccessException e) {
+            throw new ClientsModificationException("No client with id " + id);
         } catch (Exception e) {
-            throw new RemoteResourceException(e);
+            throw new RemoteResourceException("Client database unavailable", e);
         }
     }
 }

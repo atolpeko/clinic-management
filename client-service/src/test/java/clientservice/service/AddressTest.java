@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package registrationservice.service.external;
+package clientservice.service;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -27,7 +27,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @Tag("category.UnitTest")
-public class ClientTest {
+public class AddressTest {
     private static Validator validator;
 
     @BeforeAll
@@ -37,17 +37,18 @@ public class ClientTest {
 
     @Test
     public void shouldPassValidationWhenHasValidData() {
-        Client client = new Client("atolpeko@gmail.com", "Name");
+        Address address = new Address("USA", "NY", "NYC", "23", 1);
 
-        int errors = validator.validate(client).size();
+        int errors = validator.validate(address).size();
         assertThat(errors, is(0));
     }
 
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
-        Client client = new Client();
+        Address address = new Address();
+        address.setHouseNumber(-1);
 
-        int errors = validator.validate(client).size();
-        assertThat(errors, is(2));
+        int errors = validator.validate(address).size();
+        assertThat(errors, is(5));
     }
 }

@@ -44,11 +44,6 @@ public class ClientModelAssembler implements RepresentationModelAssembler<Client
         CollectionModel<EntityModel<Client>> collectionModel =
                 RepresentationModelAssembler.super.toCollectionModel(entities);
         collectionModel.add(linkTo(methodOn(ClientController.class).getAll()).withSelfRel());
-        collectionModel.forEach(entityModel -> {
-            long clientId = entityModel.getContent().getId();
-            entityModel.add(linkTo(methodOn(ClientController.class).getById(clientId)).withSelfRel());
-        });
-
         return collectionModel;
     }
 }

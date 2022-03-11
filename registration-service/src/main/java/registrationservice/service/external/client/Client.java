@@ -14,16 +14,7 @@
  * limitations under the License.
  */
 
-package registrationservice.service.external;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
+package registrationservice.service.external.client;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -31,21 +22,9 @@ import java.util.Objects;
 /**
  * Client domain class.
  */
-@Entity
-@Table(name = "client")
 public class Client implements Serializable {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(unique = true, nullable = false)
-    @NotBlank(message = "Email is mandatory")
-    @Email
     private String email;
-
-    @Column(nullable = false)
-    @NotBlank(message = "Name is mandatory")
     private String name;
 
     public Client() {
@@ -63,12 +42,14 @@ public class Client implements Serializable {
     }
 
     /**
-     * Constructs a new Client with the specified email and name.
+     * Constructs a new Client with the specified id, email and name.
      *
+     * @param id id to set
      * @param email email to set
      * @param name name to set
      */
-    public Client(String email, String name) {
+    public Client(Long id, String email, String name) {
+        this.id = id;
         this.email = email;
         this.name = name;
     }
@@ -108,12 +89,14 @@ public class Client implements Serializable {
         }
 
         Client client = (Client) other;
-        return  Objects.equals(email, client.email) && Objects.equals(name, client.name);
+        return Objects.equals(id, client.id)
+                && Objects.equals(email, client.email)
+                && Objects.equals(name, client.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(email, name);
+        return Objects.hash(id, email, name);
     }
 
     @Override

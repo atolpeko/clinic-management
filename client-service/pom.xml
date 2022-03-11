@@ -10,11 +10,11 @@
     </parent>
 
     <artifactId>client-service</artifactId>
-    <version>1.0</version>
+    <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>client-service</name>
-    <description>client-service</description>
+    <description>Microservice providing endpoints for working with clients</description>
 
     <dependencies>
         <dependency>

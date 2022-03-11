@@ -27,9 +27,11 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import org.mockito.Mockito;
-import org.springframework.dao.DataIntegrityViolationException;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import javax.validation.Validator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,19 +45,21 @@ import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.*;
 
 @Tag("category.UnitTest")
-public class ClientServiceTest {
+public class ClientServiceImplTest {
     private static ClientRepository repository;
     private static PasswordEncoder encoder;
+    private static Validator validator;
     private static CircuitBreaker circuitBreaker;
 
     private static Client client;
     private static Client updatedClient;
 
-    private ClientService clientService;
+    private ClientServiceImpl clientService;
 
     @BeforeAll
     public static void setUpMocks() {
         repository = mock(ClientRepository.class);
+        validator = mock(Validator.class);
 
         encoder = mock(PasswordEncoder.class);
         when(encoder.encode(anyString())).then(returnsFirstArg());
@@ -79,10 +83,7 @@ public class ClientServiceTest {
         client.setName("Alexander");
         client.setSex(Client.Sex.MALE);
         client.setPhoneNumber("+375-34-556-70-90");
-        client.setCountry("Belarus");
-        client.setCity("Minsk");
-        client.setStreet("Goretskogo");
-        client.setHouseNumber(20);
+        client.setAddress(new Address("USA", "NY", "NYC", "23", 1));
     }
 
     @BeforeAll
@@ -94,16 +95,13 @@ public class ClientServiceTest {
         updatedClient.setName("Alex");
         updatedClient.setSex(Client.Sex.MALE);
         updatedClient.setPhoneNumber("+375-44-546-60-54");
-        updatedClient.setCountry("Russia");
-        updatedClient.setCity("Moscow");
-        updatedClient.setStreet("Sretenka");
-        updatedClient.setHouseNumber(19);
+        updatedClient.setAddress(new Address("USA", "California", "LA", "36", 10));
     }
 
     @BeforeEach
     public void beforeEach() {
-        Mockito.reset(repository);
-        clientService = new ClientServiceImpl(repository, encoder, circuitBreaker);
+        Mockito.reset(repository, validator);
+        clientService = new ClientServiceImpl(repository, encoder, validator, circuitBreaker);
     }
 
     @Test
@@ -133,7 +131,8 @@ public class ClientServiceTest {
 
     @Test
     public void shouldRegisterClientWhenClientIsValid() {
-        when(repository.save(client)).thenReturn(client);
+        when(repository.save(any(Client.class))).thenReturn(client);
+        when(validator.validate(any(Client.class))).thenReturn(Collections.emptySet());
 
         Client registered = clientService.register(client);
         assertThat(registered, equalTo(client));
@@ -141,16 +140,15 @@ public class ClientServiceTest {
 
     @Test
     public void shouldThrowExceptionWhenClientIsInvalid() {
-        Client invalidClient = new Client();
-        when(repository.save(invalidClient)).thenThrow(DataIntegrityViolationException.class);
-
-        assertThrows(ClientsModificationException.class, () -> clientService.register(invalidClient));
+        when(validator.validate(any(Client.class))).thenThrow(ClientsModificationException.class);
+        assertThrows(ClientsModificationException.class, () -> clientService.register(new Client()));
     }
 
     @Test
     public void shouldUpdateClientWhenClientIsValid() {
         when(repository.findById(1L)).thenReturn(Optional.of(client));
         when(repository.save(updatedClient)).thenReturn(updatedClient);
+        when(validator.validate(any(Client.class))).thenReturn(Collections.emptySet());
 
         Client client = clientService.update(updatedClient);
         assertThat(client, equalTo(updatedClient));

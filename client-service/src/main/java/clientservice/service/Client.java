@@ -19,6 +19,7 @@ package clientservice.service;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -27,12 +28,13 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -41,7 +43,7 @@ import java.util.Objects;
 @Entity
 @Table(name = "client")
 @JsonIgnoreProperties(value = "password", allowSetters = true)
-public class Client {
+public class Client implements Serializable {
 
     /**
      * An enumeration denoting client's sex.
@@ -75,21 +77,10 @@ public class Client {
     @NotBlank(message = "Phone number is mandatory")
     private String phoneNumber;
 
-    @Column(nullable = false)
-    @NotBlank(message = "Country is mandatory")
-    private String country;
-
-    @Column(nullable = false)
-    @NotBlank(message = "City is mandatory")
-    private String city;
-
-    @Column(nullable = false)
-    @NotBlank(message = "Street is mandatory")
-    private String street;
-
-    @Column(name = "house_number", nullable = false)
-    @Positive(message = "House number must be positive")
-    private int houseNumber;
+    @Embedded
+    @NotNull(message = "Address in mandatory")
+    @Valid
+    private Address address;
 
     @Column(name = "is_enabled", nullable = false)
     private boolean isEnabled;
@@ -101,6 +92,11 @@ public class Client {
         isEnabled = true;
     }
 
+    /**
+     * Constructs a new Client copying data from the passed one.
+     *
+     * @param other client to copy data from
+     */
     public Client(Client other) {
         id = other.id;
         email = other.email;
@@ -108,11 +104,31 @@ public class Client {
         name = other.name;
         sex = other.sex;
         phoneNumber = other.phoneNumber;
-        country = other.country;
-        city = other.city;
-        street = other.street;
-        houseNumber = other.houseNumber;
+        address = new Address(other.address);
         isEnabled = other.isEnabled;
+    }
+
+    /**
+     * Constructs a new Client with the specified email, password, name, sex, phone number,
+     * address and account status.
+     *
+     * @param email email to set
+     * @param password password to set
+     * @param name name to set
+     * @param sex sex to set
+     * @param phoneNumber phone number to set
+     * @param address address to set
+     * @param isEnabled account status to set
+     */
+    public Client(String email, String password, String name, Sex sex,
+                  String phoneNumber, Address address, boolean isEnabled) {
+        this.email = email;
+        this.password = password;
+        this.name = name;
+        this.sex = sex;
+        this.phoneNumber = phoneNumber;
+        this.address = address;
+        this.isEnabled = isEnabled;
     }
 
     public Long getId() {
@@ -163,44 +179,20 @@ public class Client {
         this.phoneNumber = phoneNumber;
     }
 
-    public String getCountry() {
-        return country;
+    public Address getAddress() {
+        return address;
     }
 
-    public void setCountry(String country) {
-        this.country = country;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
-    }
-
-    public String getStreet() {
-        return street;
-    }
-
-    public void setStreet(String street) {
-        this.street = street;
-    }
-
-    public int getHouseNumber() {
-        return houseNumber;
-    }
-
-    public void setHouseNumber(int houseNumber) {
-        this.houseNumber = houseNumber;
+    public void setAddress(Address address) {
+        this.address = address;
     }
 
     public boolean isEnabled() {
         return isEnabled;
     }
 
-    public void setEnabled(boolean enabled) {
-        isEnabled = enabled;
+    public void setEnabled(boolean isEnabled) {
+        this.isEnabled = isEnabled;
     }
 
     @Override
@@ -214,23 +206,18 @@ public class Client {
         }
 
         Client client = (Client) other;
-        return Objects.equals(id, client.id)
-                && Objects.equals(email, client.email)
+        return Objects.equals(email, client.email)
                 && Objects.equals(password, client.password)
                 && Objects.equals(name, client.name)
                 && sex == client.sex
                 && Objects.equals(phoneNumber, client.phoneNumber)
-                && Objects.equals(country, client.country)
-                && Objects.equals(city, client.city)
-                && Objects.equals(street, client.street)
-                && houseNumber == client.houseNumber
+                && Objects.equals(address, client.address)
                 && isEnabled == client.isEnabled;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, email, password, name, sex, phoneNumber,
-                country, city, street, houseNumber, isEnabled);
+        return Objects.hash(email, password, name, sex, phoneNumber, address, isEnabled);
     }
 
     @Override
@@ -241,12 +228,8 @@ public class Client {
                 ", password='" + password + '\'' +
                 ", name='" + name + '\'' +
                 ", sex=" + sex +
-                ", phoneNumber='" + phoneNumber + '\'' +
-                ", country='" + country + '\'' +
-                ", city='" + city + '\'' +
-                ", street='" + street + '\'' +
-                ", houseNumber=" + houseNumber +
-                ", isEnabled=" + isEnabled +
+                ", address=" + address +
+                ", phoneNumber='" + phoneNumber  +
                 '}';
     }
 }

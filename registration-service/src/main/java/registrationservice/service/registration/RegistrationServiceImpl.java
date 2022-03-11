@@ -29,12 +29,17 @@ import org.springframework.transaction.annotation.Transactional;
 import registrationservice.data.RegistrationRepository;
 import registrationservice.service.exception.IllegalModificationException;
 import registrationservice.service.exception.RemoteResourceException;
+import registrationservice.service.external.client.Client;
+import registrationservice.service.external.client.ClientServiceFeignClient;
+import registrationservice.service.external.clinic.ClinicServiceFeignClient;
+import registrationservice.service.external.clinic.Doctor;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -48,22 +53,64 @@ public class RegistrationServiceImpl implements RegistrationService {
     private final Validator validator;
     private final CircuitBreaker circuitBreaker;
 
+    private final ClinicServiceFeignClient clinicService;
+    private final ClientServiceFeignClient clientService;
+
     @Autowired
     public RegistrationServiceImpl(RegistrationRepository repository,
                                    Validator validator,
-                                   CircuitBreaker circuitBreaker) {
+                                   CircuitBreaker circuitBreaker,
+                                   ClinicServiceFeignClient clinicService,
+                                   ClientServiceFeignClient clientService) {
         this.repository = repository;
         this.validator = validator;
         this.circuitBreaker = circuitBreaker;
+        this.clinicService = clinicService;
+        this.clientService = clientService;
     }
 
     @Override
     public List<Registration> findAll() {
         try {
             Supplier<List<Registration>> findAll = repository::findAll;
-            return circuitBreaker.decorateSupplier(findAll).get();
+            List<Registration> registrations = circuitBreaker.decorateSupplier(findAll).get();
+            registrations.forEach(this::loadContent);
+            return registrations;
         } catch (Exception e) {
             throw new RemoteResourceException("Registration database unavailable", e);
+        }
+    }
+
+    private void loadContent(Registration registration) {
+        registration.setDoctor(loadDoctor(registration.getDoctorId()));
+        registration.setClient(loadClient(registration.getClientId()));
+    }
+
+    private Doctor loadDoctor(long doctorId) {
+        try {
+            Supplier<Optional<Doctor>> findDoctor = () -> clinicService.findDoctorById(doctorId);
+            return circuitBreaker.decorateSupplier(findDoctor).get().orElseThrow();
+        } catch (NoSuchElementException e) {
+            logger.error("Doctor not found: " + doctorId);
+            return null;
+        } catch (Exception e) {
+            String errorMsg = "Clinic microservice unavailable: " + e.getMessage();
+            logger.error(errorMsg);
+            return null;
+        }
+    }
+
+    private Client loadClient(long clientId) {
+        try {
+            Supplier<Optional<Client>> findClient = () -> clientService.findClientById(clientId);
+            return circuitBreaker.decorateSupplier(findClient).get().orElseThrow();
+        } catch (NoSuchElementException e) {
+            logger.error("Client not found: " + clientId);
+            return null;
+        } catch (Exception e) {
+            String errorMsg = "Client microservice unavailable: " + e.getMessage();
+            logger.error(errorMsg);
+            return null;
         }
     }
 
@@ -71,7 +118,9 @@ public class RegistrationServiceImpl implements RegistrationService {
     public List<Registration> findAllByClientId(long clientId) {
         try {
             Supplier<List<Registration>> findAll = () -> repository.findAllByClientId(clientId);
-            return circuitBreaker.decorateSupplier(findAll).get();
+            List<Registration> registrations = circuitBreaker.decorateSupplier(findAll).get();
+            registrations.forEach(this::loadContent);
+            return registrations;
         } catch (Exception e) {
             throw new RemoteResourceException("Registration database unavailable", e);
         }
@@ -81,7 +130,9 @@ public class RegistrationServiceImpl implements RegistrationService {
     public List<Registration> findAllByDoctorId(long doctorId) {
         try {
             Supplier<List<Registration>> findAll = () -> repository.findAllByDoctorId(doctorId);
-            return circuitBreaker.decorateSupplier(findAll).get();
+            List<Registration> registrations = circuitBreaker.decorateSupplier(findAll).get();
+            registrations.forEach(this::loadContent);
+            return registrations;
         } catch (Exception e) {
             throw new RemoteResourceException("Registration database unavailable", e);
         }
@@ -91,7 +142,9 @@ public class RegistrationServiceImpl implements RegistrationService {
     public Optional<Registration> findById(long id) {
         try {
             Supplier<Optional<Registration>> findById = () -> repository.findById(id);
-            return circuitBreaker.decorateSupplier(findById).get();
+            Optional<Registration> registration = circuitBreaker.decorateSupplier(findById).get();
+            registration.ifPresent(this::loadContent);
+            return registration;
         } catch (Exception e) {
             throw new RemoteResourceException("Registration database unavailable", e);
         }
@@ -111,6 +164,7 @@ public class RegistrationServiceImpl implements RegistrationService {
             };
 
             Registration saved = circuitBreaker.decorateSupplier(save).get();
+            loadContent(saved);
             logger.info("Registration " + saved.getDate() + " saved. ID - " + saved.getId());
             return saved;
         } catch (IllegalModificationException e) {
@@ -133,12 +187,6 @@ public class RegistrationServiceImpl implements RegistrationService {
             throw new IllegalModificationException(msg);
         }
 
-        if (registration.getDoctor().getId() == null) {
-           throw new IllegalModificationException("Doctor ID is mandatory");
-        }
-        if (registration.getClient().getId() == null) {
-            throw new IllegalModificationException("Client ID is mandatory");
-        }
         if (registration.getDuty() == null) {
             throw new IllegalModificationException("Duty is mandatory");
         }
@@ -163,6 +211,7 @@ public class RegistrationServiceImpl implements RegistrationService {
             };
 
             Registration updated = circuitBreaker.decorateSupplier(update).get();
+            loadContent(updated);
             logger.info("Registration status " + id + " changed");
             return updated;
         } catch (Exception e) {

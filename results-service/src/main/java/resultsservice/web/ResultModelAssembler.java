@@ -49,8 +49,7 @@ public class ResultModelAssembler implements RepresentationModelAssembler<Result
                 .slash("/clients/" + entity.getClientId())
                 .withRel("client");
 
-        EntityModel<Result> entityModel = EntityModel.of(entity);
-        entityModel.add(dutyLink, doctorLink, clientLink);
+        EntityModel<Result> entityModel = EntityModel.of(entity, dutyLink, doctorLink, clientLink);
         entityModel.add(linkTo(methodOn(ResultController.class).getById(entity.getId())).withSelfRel(),
                 linkTo(methodOn(ResultController.class).getAll()).withRel("all"));
         return entityModel;

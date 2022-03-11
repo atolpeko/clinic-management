@@ -53,6 +53,7 @@ public interface FacilityService {
      * @param id ID of the facility to get
      *
      * @return the medical facility with the specified ID in the remote facility repository
+     * or Optional#empty() if none found
      *
      * @throws RemoteResourceException if there is any problem with the remote facility repository
      */

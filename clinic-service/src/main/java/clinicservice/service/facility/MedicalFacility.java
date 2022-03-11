@@ -79,7 +79,7 @@ public class MedicalFacility implements Serializable {
      */
     public MedicalFacility(String name, Set<Department> departments) {
         this.name = name;
-        this.departments = departments;
+        this.departments = new HashSet<>(departments);
     }
 
     /**
@@ -139,13 +139,13 @@ public class MedicalFacility implements Serializable {
         }
 
         MedicalFacility that = (MedicalFacility) other;
-        return Objects.equals(id, that.id) && Objects.equals(name, that.name);
+        return Objects.equals(name, that.name);
     }
 
     @Override
     public int hashCode() {
         // Not using departments field to avoid infinite recursion
-        return Objects.hash(id, name);
+        return Objects.hash(name);
     }
 
     @Override

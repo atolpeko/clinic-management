@@ -26,6 +26,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -94,10 +95,13 @@ public class DepartmentServiceImpl implements DepartmentService {
             Department departmentToSave = new Department(department);
             departmentToSave.setId(null);
 
-            Supplier<Department> save = () -> repository.save(departmentToSave);
-            Runnable flush = repository::flush;
+            Supplier<Department> save = () -> {
+                Department saved = repository.save(departmentToSave);
+                repository.flush();
+                return saved;
+            };
+
             Department saved = circuitBreaker.decorateSupplier(save).get();
-            circuitBreaker.decorateRunnable(flush).run();
             logger.info("Department saved. ID - " + saved.getId());
             return saved;
         } catch (IllegalModificationException e) {
@@ -132,11 +136,13 @@ public class DepartmentServiceImpl implements DepartmentService {
             prepareUpdateData(departmentToUpdate, department);
             validate(departmentToUpdate);
 
-            Supplier<Department> update = () -> repository.save(departmentToUpdate);
-            Runnable flush = repository::flush;
+            Supplier<Department> update = () -> {
+                Department updated = repository.save(departmentToUpdate);
+                repository.flush();;
+                return updated;
+            };
 
             Department updated = circuitBreaker.decorateSupplier(update).get();
-            circuitBreaker.decorateRunnable(flush).run();
             logger.info("Department " + updated.getId() + " updated");
             return updated;
         } catch (IllegalModificationException e) {
@@ -169,13 +175,18 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public void deleteById(long id) {
         try {
-            Runnable delete = () -> repository.deleteById(id);
-            Runnable flush = repository::flush;
+            Runnable delete = () -> {
+                repository.deleteById(id);
+                repository.flush();
+            };
+
             circuitBreaker.decorateRunnable(delete).run();
-            circuitBreaker.decorateRunnable(flush).run();
             logger.info("Department " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
             throw new IllegalModificationException("No department with id " + id);
+        } catch (DataIntegrityViolationException e) {
+            String errorMsg = "Delete all doctors and facilities related to this department first";
+            throw new IllegalModificationException(errorMsg);
         } catch (Exception e) {
             throw new RemoteResourceException("Department database unavailable", e);
         }
