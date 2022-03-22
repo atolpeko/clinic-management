@@ -46,6 +46,22 @@ services:
       - 8761:8761
     depends_on:
       - config-server
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"     
+
+  auth-server:
+    image: atolpeko/auth-server:1.0-SNAPSHOT
+    container_name: auth-server
+    restart: on-failure
+    mem_limit: 1024M
+    networks: 
+      - cloud-network
+    ports:
+      # - 8761:8761
+    depends_on:
+      - config-server
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"        
 
   api-gateway:
     image: atolpeko/api-gateway:1.0-SNAPSHOT
@@ -59,6 +75,8 @@ services:
     depends_on:
       - config-server
       - discovery-server
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"     
 
   client-service:
     image: atolpeko/client-service:1.0-SNAPSHOT
@@ -72,6 +90,8 @@ services:
       - config-server
       - discovery-server  
       - mysql
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"       
 
   clinic-service:
     image: atolpeko/clinic-service:1.0-SNAPSHOT
@@ -85,6 +105,8 @@ services:
       - config-server
       - discovery-server  
       - mysql  
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"       
 
   registration-service:
     image: atolpeko/registration-service:1.0-SNAPSHOT
@@ -98,6 +120,8 @@ services:
       - config-server
       - discovery-server  
       - mysql  
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"       
 
   results-service:
     image: atolpeko/results-service:1.0-SNAPSHOT
@@ -110,5 +134,7 @@ services:
     depends_on:
       - config-server
       - discovery-server  
-      - mysql         
+      - mysql   
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"             
   

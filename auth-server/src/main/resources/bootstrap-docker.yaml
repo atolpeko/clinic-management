@@ -1,8 +1,6 @@
 spring:
   application:
-    name: results-service
-  profiles:
-    active: default
+    name: client-service
   cloud:
     config:
       uri: http://config-server:8888

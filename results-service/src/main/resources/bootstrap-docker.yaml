@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: results-service
+  cloud:
+    config:
+      uri: http://config-server:8888
+      fail-fast: true
