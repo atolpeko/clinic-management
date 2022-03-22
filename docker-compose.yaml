@@ -1,0 +1,114 @@
+version: '3.0'
+
+volumes:
+  db-volume:    
+
+networks:
+  cloud-network:
+    driver: bridge
+
+services:
+  mysql:
+    image: mysql:5.7
+    platform: linux/x86_64
+    container_name: mysql
+    restart: on-failure
+    mem_limit: 512M
+    networks: 
+      - cloud-network
+    environment:
+      - MYSQL_ROOT_PASSWORD=clinic33789
+    ports:
+      - 3306:3306
+    expose:
+      - 3306
+    volumes:
+      - db-volume:/var/lib/mysql
+
+  config-server:
+    image: atolpeko/config-server:1.0-SNAPSHOT
+    container_name: config-server
+    restart: on-failure
+    mem_limit: 1024M
+    networks: 
+      - cloud-network
+    ports:
+      - 8888:8888 
+
+  discovery-server:
+    image: atolpeko/discovery-server:1.0-SNAPSHOT
+    container_name: discovery-server
+    restart: on-failure
+    mem_limit: 1024M
+    networks: 
+      - cloud-network
+    ports:
+      - 8761:8761
+    depends_on:
+      - config-server
+
+  api-gateway:
+    image: atolpeko/api-gateway:1.0-SNAPSHOT
+    container_name: api-gateway
+    restart: on-failure
+    mem_limit: 1024M
+    networks: 
+      - cloud-network
+    ports:
+      - 8080:8080
+    depends_on:
+      - config-server
+      - discovery-server
+
+  client-service:
+    image: atolpeko/client-service:1.0-SNAPSHOT
+    restart: on-failure
+    mem_limit: 1024M
+    networks: 
+      - cloud-network
+    ports:
+      - 5980-5990:5980    
+    depends_on:
+      - config-server
+      - discovery-server  
+      - mysql
+
+  clinic-service:
+    image: atolpeko/clinic-service:1.0-SNAPSHOT
+    restart: on-failure
+    mem_limit: 1024M
+    networks: 
+      - cloud-network
+    ports:
+      - 6120-6130:6120    
+    depends_on:
+      - config-server
+      - discovery-server  
+      - mysql  
+
+  registration-service:
+    image: atolpeko/registration-service:1.0-SNAPSHOT
+    restart: on-failure
+    mem_limit: 1024M
+    networks: 
+      - cloud-network
+    ports:
+      - 6340-6350:6340
+    depends_on:
+      - config-server
+      - discovery-server  
+      - mysql  
+
+  results-service:
+    image: atolpeko/results-service:1.0-SNAPSHOT
+    restart: on-failure
+    mem_limit: 1024M
+    networks: 
+      - cloud-network
+    ports:
+      - 6450-6460:6450    
+    depends_on:
+      - config-server
+      - discovery-server  
+      - mysql         
+  

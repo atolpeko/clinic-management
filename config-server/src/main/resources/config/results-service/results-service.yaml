@@ -1,5 +1,5 @@
 server:
-  port: 0
+  port: 6450
 eureka:
   instance:
     prefIpAdress: true;
@@ -7,7 +7,7 @@ eureka:
     registerWithEureka: true
     fetchRegistry: true
     serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://discovery-server:8761/eureka/
 spring:
   jpa:
     database: MYSQL
@@ -15,7 +15,7 @@ spring:
       ddl-auto: update
   datasource:
     platform: mysql
-    url: jdbc:mysql://localhost:3306/results?createDatabaseIfNotExist=true
+    url: jdbc:mysql://mysql/results?createDatabaseIfNotExist=true
     username: root
-    password:
+    password: clinic33789
     driverClassName: com.mysql.cj.jdbc.Driver
