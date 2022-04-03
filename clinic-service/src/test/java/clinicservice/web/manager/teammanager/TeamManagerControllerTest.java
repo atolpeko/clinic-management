@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package clinicservice.web.doctor;
+package clinicservice.web.manager.teammanager;
 
-import clinicservice.service.employee.doctor.Doctor;
-import clinicservice.service.employee.doctor.DoctorService;
+import clinicservice.service.employee.manager.teammanager.TeamManager;
+import clinicservice.service.employee.manager.teammanager.TeamManagerService;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -36,128 +36,121 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("category.IntegrationTest")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = "spring.cloud.config.enabled=false")
 @AutoConfigureMockMvc
-public class DoctorControllerTest {
-    private static String newDoctorJson;
-    private static String updateDoctorJson;
+public class TeamManagerControllerTest {
+    private static String newManagerJson;
+    private static String updateManagerJson;
 
     @Autowired
     private MockMvc mvc;
 
     @Autowired
-    private DoctorService doctorService;
+    private TeamManagerService managerService;
 
     @BeforeAll
-    public static void createDoctorJsons() {
-        newDoctorJson = "{\"name\": \"Alexander\"," +
-                "\"specialty\": \"Surgery\"," +
+    public static void createManagerJsons() {
+        newManagerJson = "{\"name\": \"Alexander\"," +
                 "\"hireDate\": \"2022-03-01\"," +
                 "\"phone\": \"123456\"," +
                 "\"sex\": \"MALE\"," +
                 "\"dateOfBirth\": \"1995-01-22\"," +
                 "\"salary\": 1000," +
-                "\"practiceBeginningDate\": \"2022-03-06\"," +
                 "\"department\" : { \"id\": 1 }," +
-                "\"email\": \"admin@gmail.com\"," +
+                "\"email\": \"team-manager@gmail.com\"," +
                 "\"password\": \"12345678\"," +
                 "\"address\":{" +
-                    "\"country\":\"USA\"," +
-                    "\"state\":\"NY\"," +
-                    "\"city\":\"NYC\"," +
-                    "\"street\":\"23\"," +
-                    "\"houseNumber\":11" +
+                "\"country\":\"USA\"," +
+                "\"state\":\"NY\"," +
+                "\"city\":\"NYC\"," +
+                "\"street\":\"23\"," +
+                "\"houseNumber\":11" +
                 "}}";
 
-        updateDoctorJson = "{\"name\": \"Alex\"," +
-                "\"specialty\": \"Emergency\"," +
-                "\"phone\": \"654321\"," +
-                "\"practiceBeginningDate\": \"2003-04-01\"}";
+        updateManagerJson = "{\"name\": \"Mark\"," +
+                "\"department\" : { \"id\": 2 }," +
+                "\"email\": \"team-manager2@gmail.com\"}";
     }
 
     @Test
-    public void shouldReturnDoctorsOnDoctorsGetRequest() throws Exception {
-        mvc.perform(get("/doctors"))
+    public void shouldReturnManagersOnManagersGetRequest() throws Exception {
+        mvc.perform(get("/team-managers"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    public void shouldReturnDoctorOnDoctorGetRequest() throws Exception {
-        mvc.perform(get("/doctors/1"))
+    public void shouldReturnManagersOnManagersGetByEmailRequest() throws Exception {
+        mvc.perform(get("/team-managers").param("email", "email4@gmail.com"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    public void shouldReturnDoctorOnDoctorGetByEmailRequest() throws Exception {
-        mvc.perform(get("/doctors").param("email", "email@gmail.com"))
+    public void shouldReturnManagersOnManagersGetByDepartmentIdRequest() throws Exception {
+        mvc.perform(get("/team-managers").param("departmentId", "1"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    public void shouldReturnDoctorsOnDoctorsGetByDepartmentIdRequest() throws Exception {
-        mvc.perform(get("/doctors").param("departmentId", "1"))
+    public void shouldReturnManagerOnManagerGetRequest() throws Exception {
+        mvc.perform(get("/team-managers/4"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    public void shouldReturnDoctorsOnDoctorsGetSpecialtyRequest() throws Exception {
-        mvc.perform(get("/doctors").param("specialty", "Surgery"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-    }
-
-    @Test
-    public void shouldReturnSavedDoctorOnDoctorsPostRequest() throws Exception {
-        int initialCount = doctorService.findAll().size();
-        mvc.perform(post("/doctors")
+    public void shouldReturnSavedManagerOnManagersPostRequest() throws Exception {
+        int initialCount = managerService.findAll().size();
+        mvc.perform(post("/team-managers")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(newDoctorJson)
+                        .content(newManagerJson)
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-        int newCount = doctorService.findAll().size();
+        int newCount = managerService.findAll().size();
         assertThat(newCount, is(initialCount + 1));
     }
 
     @Test
-    public void shouldReturnUpdatedDoctorOnDoctorPatchRequest() throws Exception {
-        Doctor initial = doctorService.findById(3).orElseThrow();
-        mvc.perform(patch("/doctors/3")
+    public void shouldReturnUpdatedManagerOnManagerPatchRequest() throws Exception {
+        TeamManager initial = managerService.findById(4).orElseThrow();
+        mvc.perform(patch("/team-managers/4")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(updateDoctorJson)
+                        .content(updateManagerJson)
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-        Doctor updated = doctorService.findById(3).orElseThrow();
+        TeamManager updated = managerService.findById(4).orElseThrow();
         assertThat(updated, is(not(equalTo(initial))));
     }
 
     @Test
-    public void shouldDeleteDoctorOnDoctorDeleteRequest() throws Exception {
-        mvc.perform(delete("/doctors/2"))
+    public void shouldDeleteManagerOnManagerDeleteRequest() throws Exception {
+        mvc.perform(delete("/team-managers/5"))
                 .andDo(print())
                 .andExpect(status().isNoContent());
 
-        Optional<Doctor> deleted = doctorService.findById(2);
+        Optional<TeamManager> deleted = managerService.findById(2);
         assertThat(deleted, is(Optional.empty()));
     }
 }

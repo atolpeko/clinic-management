@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package clinicservice.service.department;
+package clinicservice.service.employee.manager.teammanager;
 
 import clinicservice.service.Address;
+import clinicservice.service.department.Department;
+
+import clinicservice.service.employee.PersonalData;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -24,12 +27,14 @@ import org.junit.jupiter.api.Test;
 import javax.validation.Validation;
 import javax.validation.Validator;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @Tag("category.UnitTest")
-public class DepartmentTest {
-
+public class TeamManagerTest {
     private static Validator validator;
 
     @BeforeAll
@@ -39,18 +44,30 @@ public class DepartmentTest {
 
     @Test
     public void shouldPassValidationWhenHasValidData() {
-        Department department = new Department();
-        department.setAddress(new Address("USA", "NY", "NYC", "23", 1));
+        PersonalData data = new PersonalData();
+        data.setName("Name");
+        data.setAddress(new Address("USA", "NY", "NYC", "23", 1));
+        data.setPhone("1234567");
+        data.setSex(PersonalData.Sex.MALE);
+        data.setDateOfBirth(LocalDate.now());
+        data.setHireDate(LocalDate.now());
+        data.setSalary(BigDecimal.valueOf(1000));
 
-        int errors = validator.validate(department).size();
+        TeamManager manager = new TeamManager();
+        manager.setPersonalData(data);
+        manager.setEmail("admin@gmail.com");
+        manager.setPassword("12345678");
+        manager.setDepartment(new Department());
+
+        int errors = validator.validate(manager).size();
         assertThat(errors, is(0));
     }
 
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
-        Department department = new Department();
+        TeamManager admin = new TeamManager();
 
-        int errors = validator.validate(department).size();
-        assertThat(errors, is(1));
+        int errors = validator.validate(admin).size();
+        assertThat(errors, is(3));
     }
 }

@@ -14,23 +14,18 @@
  * limitations under the License.
  */
 
-package clinicservice.service.doctor;
+package clinicservice.service.employee.doctor;
 
 import clinicservice.service.department.Department;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import clinicservice.service.employee.AbstractEmployee;
+import clinicservice.service.employee.PersonalData;
 
 import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
-import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -38,31 +33,21 @@ import java.util.Objects;
  * Doctor domain class.
  */
 @Entity
-@Table(name = "doctor")
-@JsonIgnoreProperties(value = "department", allowSetters = true)
-public class Doctor implements Serializable {
+@DiscriminatorValue("DOCTOR")
+public class Doctor extends AbstractEmployee {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
-    @NotBlank(message = "Name is mandatory")
-    private String name;
-
-    @Column(nullable = false)
     @NotBlank(message = "Specialty is mandatory")
     private String specialty;
 
-    @Column(name = "practice_beginning_date", nullable = false)
+    @Column(name = "practice_beginning_date")
     @NotNull(message = "Date of practice beginning is mandatory")
     private LocalDate practiceBeginningDate;
 
-    @ManyToOne
-    @NotNull(message = "Department is mandatory")
-    private Department department;
-
+    /**
+     * Constructs a new enabled Doctor.
+     */
     public Doctor() {
+        super();
     }
 
     /**
@@ -71,44 +56,33 @@ public class Doctor implements Serializable {
      * @param other doctor to copy data from
      */
     public Doctor(Doctor other) {
-        id = other.id;
-        name = other.name;
+        super(other);
         specialty = other.specialty;
         practiceBeginningDate = LocalDate.from(other.practiceBeginningDate);
-        department = other.department;
     }
 
     /**
-     * Constructs a new Doctor with the specified name, specialty,
-     * date of practice beginning and department.
+     * Constructs a new Doctor with the specified email, password, personal data, department,
+     * specialty and date of practice beginning.
      *
-     * @param name name to set
+     * @param email email to set
+     * @param password password to set
+     * @param data personal data to set
      * @param specialty specialty to set
-     * @param practiceBeginningDate date of practice beginning to set
      * @param department department to set
+     * @param practiceBeginningDate date of practice beginning to set
      */
-    public Doctor(String name, String specialty,
-                  LocalDate practiceBeginningDate, Department department) {
-        this.name = name;
+    public Doctor(String email, String password, PersonalData data, String specialty,
+                  Department department, LocalDate practiceBeginningDate) {
+        super(email, password, data, department);
         this.specialty = specialty;
         this.practiceBeginningDate = practiceBeginningDate;
-        this.department = department;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    @Override
+    @NotNull(message = "Department is mandatory")
+    public Department getDepartment() {
+        return super.getDepartment();
     }
 
     public String getSpecialty() {
@@ -127,14 +101,6 @@ public class Doctor implements Serializable {
         this.practiceBeginningDate = practiceBeginningDate;
     }
 
-    public Department getDepartment() {
-        return department;
-    }
-
-    public void setDepartment(Department department) {
-        this.department = department;
-    }
-
     @Override
     public boolean equals(Object other) {
         if (this == other) {
@@ -145,26 +111,25 @@ public class Doctor implements Serializable {
             return false;
         }
 
+        if (!super.equals(other)) {
+            return false;
+        }
+
         Doctor doctor = (Doctor) other;
-        return Objects.equals(name, doctor.name)
-                && Objects.equals(specialty, doctor.specialty)
+        return Objects.equals(specialty, doctor.specialty)
                 && Objects.equals(practiceBeginningDate, doctor.practiceBeginningDate);
     }
 
     @Override
     public int hashCode() {
-        // Not using department field to avoid infinite recursion
-        return Objects.hash(name, specialty, practiceBeginningDate);
+        return Objects.hash(super.hashCode(), specialty, practiceBeginningDate);
     }
 
     @Override
     public String toString() {
         return getClass().getName() + "{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", specialty='" + specialty + '\'' +
+                "specialty='" + specialty + '\'' +
                 ", practiceBeginningDate=" + practiceBeginningDate +
-                ", department=" + department +
                 '}';
     }
 }

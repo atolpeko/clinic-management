@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package clinicservice.service.doctor;
+package clinicservice.service.employee.doctor;
 
 import clinicservice.data.DepartmentRepository;
 import clinicservice.data.DoctorRepository;
+import clinicservice.service.Address;
 import clinicservice.service.department.Department;
+import clinicservice.service.employee.PersonalData;
 import clinicservice.service.exception.IllegalModificationException;
 import clinicservice.service.exception.RemoteResourceException;
 
@@ -28,7 +30,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,16 +52,19 @@ public class DoctorServiceImpl implements DoctorService {
 
     private final DoctorRepository doctorRepository;
     private final DepartmentRepository departmentRepository;
+    private final PasswordEncoder passwordEncoder;
     private final Validator validator;
     private final CircuitBreaker circuitBreaker;
 
     @Autowired
     public DoctorServiceImpl(DoctorRepository doctorRepository,
                              DepartmentRepository departmentRepository,
+                             PasswordEncoder passwordEncoder,
                              Validator validator,
                              CircuitBreaker circuitBreaker) {
         this.doctorRepository = doctorRepository;
         this.departmentRepository = departmentRepository;
+        this.passwordEncoder = passwordEncoder;
         this.validator = validator;
         this.circuitBreaker = circuitBreaker;
     }
@@ -68,7 +75,7 @@ public class DoctorServiceImpl implements DoctorService {
             Supplier<List<Doctor>> findAll = doctorRepository::findAll;
             return circuitBreaker.decorateSupplier(findAll).get();
         } catch (Exception e) {
-            throw new RemoteResourceException("Doctor database unavailable", e);
+            throw new RemoteResourceException("Employee database unavailable", e);
         }
     }
 
@@ -78,7 +85,7 @@ public class DoctorServiceImpl implements DoctorService {
             Supplier<List<Doctor>> findByDepartmentId = () -> doctorRepository.findAllByDepartmentId(id);
             return circuitBreaker.decorateSupplier(findByDepartmentId).get();
         } catch (Exception e) {
-            throw new RemoteResourceException("Doctor database unavailable", e);
+            throw new RemoteResourceException("Employee database unavailable", e);
         }
     }
 
@@ -88,7 +95,7 @@ public class DoctorServiceImpl implements DoctorService {
             Supplier<List<Doctor>> findBySpecialty = () -> doctorRepository.findAllBySpecialty(specialty);
             return circuitBreaker.decorateSupplier(findBySpecialty).get();
         } catch (Exception e) {
-            throw new RemoteResourceException("Doctor database unavailable", e);
+            throw new RemoteResourceException("Employee database unavailable", e);
         }
     }
 
@@ -98,7 +105,17 @@ public class DoctorServiceImpl implements DoctorService {
             Supplier<Optional<Doctor>> findById = () -> doctorRepository.findById(id);
             return circuitBreaker.decorateSupplier(findById).get();
         } catch (Exception e) {
-            throw new RemoteResourceException("Doctor database unavailable", e);
+            throw new RemoteResourceException("Employee database unavailable", e);
+        }
+    }
+
+    @Override
+    public Optional<Doctor> findByEmail(String email) {
+        try {
+            Supplier<Optional<Doctor>> findById = () -> doctorRepository.findByEmail(email);
+            return circuitBreaker.decorateSupplier(findById).get();
+        } catch (Exception e) {
+            throw new RemoteResourceException("Employee database unavailable", e);
         }
     }
 
@@ -108,7 +125,7 @@ public class DoctorServiceImpl implements DoctorService {
             validate(doctor);
             Doctor doctorToSave = new Doctor(doctor);
             doctorToSave.setId(null);
-            loadDepartment(doctorToSave);
+            doctorToSave.setPassword(passwordEncoder.encode(doctor.getPassword()));
 
             Supplier<Doctor> save = () -> {
                 Doctor saved = doctorRepository.save(doctorToSave);
@@ -117,29 +134,16 @@ public class DoctorServiceImpl implements DoctorService {
             };
 
             Doctor saved = circuitBreaker.decorateSupplier(save).get();
-            logger.info("Doctor " + saved.getName() + " saved. ID - " + saved.getId());
+            logger.info("Doctor " + saved.getEmail() + " saved. ID - " + saved.getId());
             return saved;
         } catch (IllegalModificationException e) {
             throw e;
+        } catch (DataIntegrityViolationException e) {
+            String msg = "Such an employee already exists: " + doctor.getEmail();
+            throw new IllegalModificationException(msg, e);
         } catch (Exception e) {
-            throw new RemoteResourceException("Doctor database unavailable", e);
+            throw new RemoteResourceException("Employee database unavailable", e);
         }
-    }
-
-    private void loadDepartment(Doctor doctor) {
-        if (doctor.getDepartment() == null) {
-            return;
-        }
-        if (doctor.getDepartment().getId() == null) {
-            throw new IllegalModificationException("Department ID is mandatory");
-        }
-
-        long departmentId = doctor.getDepartment().getId();
-        Supplier<Optional<Department>> findById = () -> departmentRepository.findById(departmentId);
-        Department department = circuitBreaker.decorateSupplier(findById)
-                .get()
-                .orElseThrow(() -> new IllegalModificationException("No department with id " + departmentId));
-        department.addDoctor(doctor);
     }
 
     private void validate(Doctor doctor) {
@@ -154,6 +158,21 @@ public class DoctorServiceImpl implements DoctorService {
             String msg = builder.toString().toLowerCase(Locale.ROOT);
             throw new IllegalModificationException(msg);
         }
+
+        if (doctor.getDepartment().getId() == null) {
+            throw new IllegalModificationException("Department id is mandatory");
+        }
+
+        if (!departmentExists(doctor.getDepartment().getId())) {
+            String msg = "No department with id: " + doctor.getDepartment().getId();
+            throw new IllegalModificationException(msg);
+        }
+    }
+
+    private boolean departmentExists(long id) {
+        Supplier<Optional<Department>> findById = () -> departmentRepository.findById(id);
+        Optional<Department> department = circuitBreaker.decorateSupplier(findById).get();
+        return department.isPresent();
     }
 
     @Override
@@ -177,14 +196,23 @@ public class DoctorServiceImpl implements DoctorService {
             return updated;
         } catch (IllegalModificationException e) {
             throw e;
+        } catch (DataIntegrityViolationException e) {
+            String msg = "Such an employee already exists: " + doctor.getEmail();
+            throw new IllegalModificationException(msg, e);
         } catch (Exception e) {
-            throw new RemoteResourceException("Doctor database unavailable", e);
+            throw new RemoteResourceException("Employee database unavailable", e);
         }
     }
 
     private void prepareUpdateData(Doctor doctor, Doctor updateData) {
-        if (updateData.getName() != null) {
-            doctor.setName(updateData.getName());
+        if (updateData.getEmail() != null) {
+            doctor.setEmail(updateData.getEmail());
+        }
+        if (updateData.getPassword() != null) {
+            doctor.setPassword(passwordEncoder.encode(updateData.getPassword()));
+        }
+        if (updateData.getDepartment() != null) {
+            doctor.setDepartment(updateData.getDepartment());
         }
         if (updateData.getSpecialty() != null) {
             doctor.setSpecialty(updateData.getSpecialty());
@@ -192,9 +220,50 @@ public class DoctorServiceImpl implements DoctorService {
         if (updateData.getPracticeBeginningDate() != null) {
             doctor.setPracticeBeginningDate(updateData.getPracticeBeginningDate());
         }
-        if (updateData.getDepartment() != null) {
-            doctor.setDepartment(updateData.getDepartment());
-            loadDepartment(doctor);
+        if (updateData.getPersonalData() != null) {
+            preparePersonalData(updateData.getPersonalData(), doctor.getPersonalData());
+        }
+    }
+
+    private void preparePersonalData(PersonalData source, PersonalData target) {
+        if (source.getName() != null) {
+            target.setName(source.getName());
+        }
+        if (source.getPhone() != null) {
+            target.setPhone(source.getPhone());
+        }
+        if (source.getSalary() != null) {
+            target.setSalary(source.getSalary());
+        }
+        if (source.getHireDate() != null) {
+            target.setHireDate(source.getHireDate());
+        }
+        if (source.getDateOfBirth() != null) {
+            target.setDateOfBirth(source.getDateOfBirth());
+        }
+        if (source.getSex() != null) {
+            target.setSex(source.getSex());
+        }
+        if (source.getAddress() != null) {
+            prepareAddress(source.getAddress(), target.getAddress());
+        }
+    }
+
+    private void prepareAddress(Address source, Address target) {
+        if (source.getCountry() != null) {
+            target.setCountry(source.getCountry());
+        }
+        if (source.getState() != null) {
+            target.setState(source.getState());
+        }
+        if (source.getCity() != null) {
+            target.setCity(source.getCity());
+        }
+        if (source.getStreet() != null) {
+            target.setStreet(source.getStreet());
+        }
+        if (source.getHouseNumber() != null) {
+            target.setHouseNumber(source.getHouseNumber());
         }
     }
 
@@ -211,7 +280,7 @@ public class DoctorServiceImpl implements DoctorService {
         } catch (EmptyResultDataAccessException e) {
             throw new IllegalModificationException("No doctor with id " + id);
         } catch (Exception e) {
-            throw new RemoteResourceException("Doctor database unavailable", e);
+            throw new RemoteResourceException("Employee database unavailable", e);
         }
     }
 }

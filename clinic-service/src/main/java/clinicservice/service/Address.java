@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package clinicservice.service.department;
+package clinicservice.service;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;

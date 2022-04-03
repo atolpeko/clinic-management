@@ -16,18 +16,28 @@
 
 package clinicservice.data;
 
-import clinicservice.service.doctor.Doctor;
+import clinicservice.service.employee.doctor.Doctor;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * A DoctorRepository abstracts a collection of Doctor objects.
  */
 @Repository
 public interface DoctorRepository extends JpaRepository<Doctor, Long> {
+
+    /**
+     * Retrieves a doctor by its email.
+     *
+     * @param email email of the doctor to get
+     *
+     * @return the doctor with the given id or Optional#empty() if none found.
+     */
+    Optional<Doctor> findByEmail(String email);
 
     /**
      * Retrieves all doctors with the specified department ID.

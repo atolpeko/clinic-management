@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package clinicservice.service.doctor;
+package clinicservice.service.employee.doctor;
 
 import clinicservice.data.DepartmentRepository;
 import clinicservice.data.DoctorRepository;
+import clinicservice.service.Address;
 import clinicservice.service.department.Department;
+import clinicservice.service.employee.PersonalData;
 import clinicservice.service.exception.IllegalModificationException;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -29,8 +31,10 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import org.mockito.Mockito;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.validation.Validator;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -44,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -52,6 +57,7 @@ import static org.mockito.Mockito.when;
 public class DoctorServiceImplTest {
     private static DoctorRepository doctorRepository;
     private static DepartmentRepository departmentRepository;
+    private static PasswordEncoder encoder;
     private static Validator validator;
     private static CircuitBreaker circuitBreaker;
 
@@ -66,6 +72,14 @@ public class DoctorServiceImplTest {
         departmentRepository = mock(DepartmentRepository.class);
         validator = mock(Validator.class);
 
+        encoder = mock(PasswordEncoder.class);
+        when(encoder.encode(anyString())).then(returnsFirstArg());
+        when(encoder.matches(anyString(), anyString())).then(invocation -> {
+            String rawPassword = invocation.getArgument(0);
+            String encodedPassword = invocation.getArgument(1);
+            return rawPassword.equals(encodedPassword);
+        });
+
         circuitBreaker = mock(CircuitBreaker.class);
         when(circuitBreaker.decorateSupplier(any())).then(returnsFirstArg());
         when(circuitBreaker.decorateRunnable(any())).then(returnsFirstArg());
@@ -73,25 +87,41 @@ public class DoctorServiceImplTest {
 
     @BeforeAll
     public static void createDoctor() {
+        PersonalData data = new PersonalData();
+        data.setName("Name");
+        data.setAddress(new Address("USA", "NY", "NYC", "23", 1));
+        data.setPhone("1234567");
+        data.setSex(PersonalData.Sex.MALE);
+        data.setDateOfBirth(LocalDate.now());
+        data.setHireDate(LocalDate.now());
+        data.setSalary(BigDecimal.valueOf(1000));
+
+        Address address = new Address("USA", "NY", "NYC", "22", 1);
         Department department = new Department();
+        department.setAddress(address);
         department.setId(1L);
 
         doctor = new Doctor();
         doctor.setId(1L);
-        doctor.setName("Doctor1");
+        doctor.setEmail("doctor@gmail.com");
+        doctor.setPassword("12345678");
         doctor.setSpecialty("Specialty1");
+        doctor.setPersonalData(data);
         doctor.setDepartment(department);
         doctor.setPracticeBeginningDate(LocalDate.now());
     }
 
     @BeforeAll
     public static void createUpdatedDoctor() {
+        Address address = new Address("USA", "NY", "NYC", "22", 1);
         Department department = new Department();
+        department.setAddress(address);
         department.setId(1L);
 
         updatedDoctor = new Doctor();
         updatedDoctor.setId(1L);
-        updatedDoctor.setName("Doctor2");
+        updatedDoctor.setEmail("doctor2@gmail.com");
+        updatedDoctor.setPassword("12345678");
         updatedDoctor.setSpecialty("Specialty2");
         updatedDoctor.setDepartment(department);
         updatedDoctor.setPracticeBeginningDate(LocalDate.now());
@@ -101,7 +131,7 @@ public class DoctorServiceImplTest {
     public void beforeEach() {
         Mockito.reset(doctorRepository, departmentRepository, validator);
         doctorService = new DoctorServiceImpl(doctorRepository, departmentRepository,
-                validator, circuitBreaker);
+                encoder, validator, circuitBreaker);
     }
 
     @Test
@@ -109,6 +139,14 @@ public class DoctorServiceImplTest {
         when(doctorRepository.findById(1L)).thenReturn(Optional.of(doctor));
 
         Doctor saved = doctorService.findById(1).orElseThrow();
+        assertThat(saved, is(equalTo(doctor)));
+    }
+
+    @Test
+    public void shouldReturnDoctorByEmailWhenContainsIt() {
+        when(doctorRepository.findByEmail(doctor.getEmail())).thenReturn(Optional.of(doctor));
+
+        Doctor saved = doctorService.findByEmail(doctor.getEmail()).orElseThrow();
         assertThat(saved, is(equalTo(doctor)));
     }
 
@@ -153,7 +191,7 @@ public class DoctorServiceImplTest {
         Department department = doctor.getDepartment();
         when(departmentRepository.findById(department.getId())).thenReturn(Optional.of(department));
         when(doctorRepository.findById(1L)).thenReturn(Optional.of(doctor));
-        when(doctorRepository.save(updatedDoctor)).thenReturn(updatedDoctor);
+        when(doctorRepository.save(any(Doctor.class))).thenReturn(updatedDoctor);
         when(validator.validate(any(Doctor.class))).thenReturn(Collections.emptySet());
 
         Doctor updated = doctorService.update(updatedDoctor);

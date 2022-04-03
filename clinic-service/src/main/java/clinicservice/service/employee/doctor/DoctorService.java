@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package clinicservice.service.doctor;
+package clinicservice.service.employee.doctor;
 
 import clinicservice.service.exception.IllegalModificationException;
 import clinicservice.service.exception.RemoteResourceException;
@@ -69,6 +69,18 @@ public interface DoctorService {
      * @throws RemoteResourceException if there is any problem with the remote doctor repository
      */
     Optional<Doctor> findById(long id);
+
+    /**
+     * Looks for a doctor with the specified email in the remote doctor repository.
+     *
+     * @param email email of the doctor to get
+     *
+     * @return the doctor with the specified email in the remote doctor repository
+     * or Optional#empty() if none found
+     *
+     * @throws RemoteResourceException if there is any problem with the remote doctor repository
+     */
+    Optional<Doctor> findByEmail(String email);
 
     /**
      * Saves the specified doctor in the remote doctor repository.

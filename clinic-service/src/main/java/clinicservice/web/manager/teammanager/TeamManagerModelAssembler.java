@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package clinicservice.web.doctor;
+package clinicservice.web.manager.teammanager;
 
-import clinicservice.service.employee.doctor.Doctor;
-
+import clinicservice.service.employee.manager.teammanager.TeamManager;
 import clinicservice.web.department.DepartmentController;
 
 import org.springframework.hateoas.CollectionModel;
@@ -29,26 +28,27 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 /**
- * Converts a Doctor domain class into a RepresentationModel.
+ * Converts a TeamManager domain class into a RepresentationModel.
  */
 @Component
-public class DoctorModelAssembler implements RepresentationModelAssembler<Doctor, EntityModel<Doctor>> {
+public class TeamManagerModelAssembler
+        implements RepresentationModelAssembler<TeamManager, EntityModel<TeamManager>> {
 
     @Override
-    public EntityModel<Doctor> toModel(Doctor entity) {
+    public EntityModel<TeamManager> toModel(TeamManager entity) {
         long id = entity.getId();
         long departmentId = entity.getDepartment().getId();
         return EntityModel.of(entity,
-                linkTo(methodOn(DoctorController.class).getById(id)).withSelfRel(),
-                linkTo(methodOn(DoctorController.class).getAll()).withRel("all"),
+                linkTo(methodOn(TeamManagerController.class).getById(id)).withSelfRel(),
+                linkTo(methodOn(TeamManagerController.class).getAll()).withRel("all"),
                 linkTo(methodOn(DepartmentController.class).getById(departmentId)).withRel("department"));
     }
 
     @Override
-    public CollectionModel<EntityModel<Doctor>> toCollectionModel(Iterable<? extends Doctor> entities) {
-        CollectionModel<EntityModel<Doctor>> collectionModel =
+    public CollectionModel<EntityModel<TeamManager>> toCollectionModel(Iterable<? extends TeamManager> entities) {
+        CollectionModel<EntityModel<TeamManager>> collectionModel =
                 RepresentationModelAssembler.super.toCollectionModel(entities);
-        collectionModel.add(linkTo(methodOn(DoctorController.class).getAll()).withSelfRel());
+        collectionModel.add(linkTo(methodOn(TeamManagerController.class).getAll()).withSelfRel());
         return collectionModel;
     }
 }

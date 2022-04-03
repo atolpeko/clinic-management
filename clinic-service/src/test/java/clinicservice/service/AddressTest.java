@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package clinicservice.service.doctor;
+package clinicservice.service;
 
-import clinicservice.service.department.Department;
-
+import clinicservice.service.Address;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -25,13 +24,11 @@ import org.junit.jupiter.api.Test;
 import javax.validation.Validation;
 import javax.validation.Validator;
 
-import java.time.LocalDate;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @Tag("category.UnitTest")
-public class DoctorTest {
+public class AddressTest {
     private static Validator validator;
 
     @BeforeAll
@@ -41,21 +38,18 @@ public class DoctorTest {
 
     @Test
     public void shouldPassValidationWhenHasValidData() {
-        Doctor doctor = new Doctor();
-        doctor.setName("Doctor");
-        doctor.setSpecialty("Specialty");
-        doctor.setDepartment(new Department());
-        doctor.setPracticeBeginningDate(LocalDate.now());
+        Address address = new Address("USA", "NY", "NYC", "23", 1);
 
-        int errors = validator.validate(doctor).size();
+        int errors = validator.validate(address).size();
         assertThat(errors, is(0));
     }
 
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
-        Doctor doctor = new Doctor();
+        Address address = new Address();
+        address.setHouseNumber(-1);
 
-        int errors = validator.validate(doctor).size();
-        assertThat(errors, is(4));
+        int errors = validator.validate(address).size();
+        assertThat(errors, is(5));
     }
 }

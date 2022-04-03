@@ -40,9 +40,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.LongFunction;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -101,7 +99,6 @@ public class FacilityServiceImpl implements FacilityService {
             validate(facility);
             MedicalFacility facilityToSave = new MedicalFacility(facility);
             facilityToSave.setId(null);
-            loadDepartments(facilityToSave);
 
             Supplier<MedicalFacility> save = () -> {
                 MedicalFacility saved = facilityRepository.save(facilityToSave);
@@ -121,27 +118,6 @@ public class FacilityServiceImpl implements FacilityService {
         }
     }
 
-    private void loadDepartments(MedicalFacility facility) {
-        facility.getDepartments().stream()
-                .filter(department -> department.getId() != null)
-                .findAny()
-                .orElseThrow(() -> new IllegalModificationException("Department ID is mandatory"));
-
-        LongFunction<Department> mapper = id -> {
-            Supplier<Optional<Department>> findById = () -> departmentRepository.findById(id);
-            return circuitBreaker.decorateSupplier(findById)
-                    .get()
-                    .orElseThrow(() -> new IllegalModificationException("No department with id " + id));
-        };
-
-        Set<Department> departments = facility.getDepartments().stream()
-                .mapToLong(Department::getId)
-                .mapToObj(mapper)
-                .collect(Collectors.toSet());
-        facility.getDepartments().clear();
-        departments.forEach(facility::addDepartment);
-    }
-
     private void validate(MedicalFacility facility) {
         Set<ConstraintViolation<MedicalFacility>> violations = validator.validate(facility);
         if (!violations.isEmpty()) {
@@ -154,6 +130,19 @@ public class FacilityServiceImpl implements FacilityService {
             String msg = builder.toString().toLowerCase(Locale.ROOT);
             throw new IllegalModificationException(msg);
         }
+
+        for (Department department : facility.getDepartments()) {
+            if (!departmentExists(department.getId())) {
+                String msg = "No department with id: " + department.getId();
+                throw new IllegalModificationException(msg);
+            }
+        }
+    }
+
+    private boolean departmentExists(long id) {
+        Supplier<Optional<Department>> findById = () -> departmentRepository.findById(id);
+        Optional<Department> department = circuitBreaker.decorateSupplier(findById).get();
+        return department.isPresent();
     }
 
     @Override
@@ -191,7 +180,6 @@ public class FacilityServiceImpl implements FacilityService {
         }
         if (!updateData.getDepartments().isEmpty()) {
             facility.setDepartments(updateData.getDepartments());
-            loadDepartments(facility);
         }
     }
 

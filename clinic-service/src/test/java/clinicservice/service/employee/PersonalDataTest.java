@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package clinicservice.service.department;
+package clinicservice.service.employee;
+
+import clinicservice.service.Address;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -23,11 +25,14 @@ import org.junit.jupiter.api.Test;
 import javax.validation.Validation;
 import javax.validation.Validator;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @Tag("category.UnitTest")
-public class AddressTest {
+public class PersonalDataTest {
     private static Validator validator;
 
     @BeforeAll
@@ -37,18 +42,25 @@ public class AddressTest {
 
     @Test
     public void shouldPassValidationWhenHasValidData() {
-        Address address = new Address("USA", "NY", "NYC", "23", 1);
+        PersonalData data = new PersonalData();
+        data.setName("Name");
+        data.setAddress(new Address("USA", "NY", "NYC", "23", 1));
+        data.setPhone("1234567");
+        data.setSex(PersonalData.Sex.MALE);
+        data.setDateOfBirth(LocalDate.now());
+        data.setHireDate(LocalDate.now());
+        data.setSalary(BigDecimal.valueOf(1000));
 
-        int errors = validator.validate(address).size();
+        int errors = validator.validate(data).size();
         assertThat(errors, is(0));
     }
 
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
-        Address address = new Address();
-        address.setHouseNumber(-1);
+        PersonalData data = new PersonalData();
+        data.setSalary(BigDecimal.valueOf(-1));
 
-        int errors = validator.validate(address).size();
-        assertThat(errors, is(5));
+        int errors = validator.validate(data).size();
+        assertThat(errors, is(7));
     }
 }

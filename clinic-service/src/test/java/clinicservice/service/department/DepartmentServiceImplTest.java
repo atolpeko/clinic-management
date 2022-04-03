@@ -17,6 +17,7 @@
 package clinicservice.service.department;
 
 import clinicservice.data.DepartmentRepository;
+import clinicservice.service.Address;
 import clinicservice.service.exception.IllegalModificationException;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;

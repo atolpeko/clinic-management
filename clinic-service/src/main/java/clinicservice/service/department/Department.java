@@ -16,8 +16,9 @@
 
 package clinicservice.service.department;
 
+import clinicservice.service.Address;
+import clinicservice.service.employee.AbstractEmployee;
 import clinicservice.service.facility.MedicalFacility;
-import clinicservice.service.doctor.Doctor;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -45,7 +46,7 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "department")
-@JsonIgnoreProperties({ "facilities", "doctors" })
+@JsonIgnoreProperties({ "facilities", "employees" })
 public class Department implements Serializable {
 
     @Id
@@ -57,8 +58,8 @@ public class Department implements Serializable {
     @Valid
     private Address address;
 
-    @OneToMany(mappedBy = "department", fetch = FetchType.EAGER)
-    private Set<Doctor> doctors;
+    @OneToMany(mappedBy = "department", fetch = FetchType.EAGER, orphanRemoval = true)
+    private Set<AbstractEmployee> employees;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "department_facility",
@@ -67,7 +68,7 @@ public class Department implements Serializable {
     private Set<MedicalFacility> facilities;
 
     public Department() {
-        doctors = new HashSet<>();
+        employees = new HashSet<>();
         facilities = new HashSet<>();
     }
 
@@ -79,43 +80,44 @@ public class Department implements Serializable {
     public Department(Department other) {
         id = other.id;
         address = (other.address == null) ? null : new Address(other.address);
-        doctors = new HashSet<>(other.doctors);
+        employees = new HashSet<>(other.employees);
         facilities = new HashSet<>(other.facilities);
     }
 
     /**
-     * Constructs a new Department with the specified address, medical facilities and doctors.
+     * Constructs a new Department with the specified address, medical facilities and employees.
      *
      * @param address address to set
      * @param facilities facilities to set
-     * @param doctors doctors to set
+     * @param employees employees to set
      */
-    public Department(Address address, Set<MedicalFacility> facilities, Set<Doctor> doctors) {
+    public Department(Address address, Set<MedicalFacility> facilities,
+                      Set<AbstractEmployee> employees) {
         this.address = address;
-        this.doctors = doctors;
+        this.employees = employees;
         this.facilities = facilities;
     }
 
     /**
-     * Adds the specified doctor to the department.
+     * Adds the specified employee to the department.
      * Synchronized for bidirectional association.
      *
-     * @param doctor doctor to add
+     * @param employee employee to add
      */
-    public void addDoctor(Doctor doctor) {
-        doctors.add(doctor);
-        doctor.setDepartment(this);
+    public void addEmployee(AbstractEmployee employee) {
+        employees.add(employee);
+        employee.setDepartment(this);
     }
 
     /**
-     * Removes the specified doctor from the department.
+     * Removes the specified employee from the department.
      * Synchronized for bidirectional association.
      *
-     * @param doctor doctor to remove
+     * @param employee employee to remove
      */
-    public void removeDoctor(Doctor doctor) {
-        doctors.remove(doctor);
-        doctor.setDepartment(null);
+    public void removeEmployee(AbstractEmployee employee) {
+        employees.remove(employee);
+        employee.setDepartment(null);
     }
 
     /**
@@ -164,12 +166,12 @@ public class Department implements Serializable {
         this.facilities = facilities;
     }
 
-    public Set<Doctor> getDoctors() {
-        return doctors;
+    public Set<AbstractEmployee> getEmployees() {
+        return employees;
     }
 
-    public void setDoctors(Set<Doctor> employees) {
-        this.doctors = employees;
+    public void setEmployees(Set<AbstractEmployee> employees) {
+        this.employees = employees;
     }
 
     @Override
@@ -185,12 +187,12 @@ public class Department implements Serializable {
         Department that = (Department) other;
         return address.equals(that.address)
                 && facilities.equals(that.facilities)
-                && doctors.equals(that.doctors);
+                && employees.equals(that.employees);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(address, facilities, doctors);
+        return Objects.hash(address, facilities, employees);
     }
 
     @Override
@@ -199,7 +201,7 @@ public class Department implements Serializable {
                 "id=" + id +
                 ", address=" + address +
                 ", facilities=" + facilities +
-                ", doctors=" + doctors +
+                ", employees=" + employees +
                 '}';
     }
 }

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package clinicservice.web.doctor;
+package clinicservice.web.manager.teammanager;
 
-import clinicservice.service.employee.doctor.Doctor;
-import clinicservice.service.employee.doctor.DoctorService;
+import clinicservice.service.employee.manager.teammanager.TeamManager;
+import clinicservice.service.employee.manager.teammanager.TeamManagerService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
@@ -41,69 +41,63 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 @RestController
-@RequestMapping(path = "/doctors", produces = "application/json")
+@RequestMapping(path = "/team-managers", produces = "application/json")
 @CrossOrigin(origins = "*")
-public class DoctorController {
-    private final DoctorService doctorService;
-    private final DoctorModelAssembler modelAssembler;
+public class TeamManagerController {
+    private final TeamManagerService managerService;
+    private final TeamManagerModelAssembler modelAssembler;
 
     @Autowired
-    public DoctorController(DoctorService doctorService,
-                            DoctorModelAssembler modelAssembler) {
-        this.doctorService = doctorService;
+    public TeamManagerController(TeamManagerService managerService,
+                                 TeamManagerModelAssembler modelAssembler) {
+        this.managerService = managerService;
         this.modelAssembler = modelAssembler;
     }
 
     @GetMapping
-    public CollectionModel<EntityModel<Doctor>> getAll() {
-        List<Doctor> doctors = doctorService.findAll();
-        return modelAssembler.toCollectionModel(doctors);
+    public CollectionModel<EntityModel<TeamManager>> getAll() {
+        List<TeamManager> managers = managerService.findAll();
+        return modelAssembler.toCollectionModel(managers);
     }
 
     @GetMapping(params = "departmentId")
-    public CollectionModel<EntityModel<Doctor>> getAllByDepartmentId(@RequestParam Long departmentId) {
-        List<Doctor> doctors = doctorService.findAllByDepartmentId(departmentId);
-        return modelAssembler.toCollectionModel(doctors);
-    }
-
-    @GetMapping(params = "specialty")
-    public CollectionModel<EntityModel<Doctor>> getAllBySpecialty(@RequestParam String specialty) {
-        List<Doctor> doctors = doctorService.findAllBySpecialty(specialty);
-        return modelAssembler.toCollectionModel(doctors);
+    public CollectionModel<EntityModel<TeamManager>> getAllByDepartmentId(@RequestParam Long departmentId) {
+        List<TeamManager> managers = managerService.findAllByDepartmentId(departmentId);
+        return modelAssembler.toCollectionModel(managers);
     }
 
     @GetMapping("/{id}")
-    public EntityModel<Doctor> getById(@PathVariable Long id) {
-        Doctor doctor = doctorService.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("No doctor with id " + id));
-        return modelAssembler.toModel(doctor);
+    public EntityModel<TeamManager> getById(@PathVariable Long id) {
+        TeamManager manager = managerService.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("No manager with id " + id));
+        return modelAssembler.toModel(manager);
     }
 
     @GetMapping(value = "/{email}", params = "email")
-    public EntityModel<Doctor> getByEmail(@PathVariable String email) {
-        Doctor doctor = doctorService.findByEmail(email)
-                .orElseThrow(() -> new NoSuchElementException("No doctor with email " + email));
-        return modelAssembler.toModel(doctor);
+    public EntityModel<TeamManager> getByEmail(@PathVariable String email) {
+        TeamManager manager = managerService.findByEmail(email)
+                .orElseThrow(() -> new NoSuchElementException("No manager with email " + email));
+        return modelAssembler.toModel(manager);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public EntityModel<Doctor> save(@RequestBody @Valid Doctor doctor) {
-        Doctor saved = doctorService.save(doctor);
+    public EntityModel<TeamManager> save(@RequestBody @Valid TeamManager manager) {
+        TeamManager saved = managerService.save(manager);
         return modelAssembler.toModel(saved);
     }
 
     @PatchMapping("/{id}")
-    public EntityModel<Doctor> patchById(@PathVariable Long id,
-                                         @RequestBody Doctor doctor) {
-        doctor.setId(id);
-        Doctor updated = doctorService.update(doctor);
+    public EntityModel<TeamManager> patchById(@PathVariable Long id,
+                                              @RequestBody TeamManager manager) {
+        manager.setId(id);
+        TeamManager updated = managerService.update(manager);
         return modelAssembler.toModel(updated);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@PathVariable Long id) {
-        doctorService.deleteById(id);
+        managerService.deleteById(id);
     }
 }

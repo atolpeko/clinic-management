@@ -140,6 +140,7 @@ public class MedicalFacility implements Serializable {
 
         MedicalFacility that = (MedicalFacility) other;
         return Objects.equals(name, that.name);
+               // Not using departments field to avoid infinite recursion
     }
 
     @Override
