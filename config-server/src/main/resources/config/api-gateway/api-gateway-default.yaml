@@ -28,3 +28,7 @@ spring:
           uri: lb://results-service
           predicates:
             - Path=/results/**
+        - id: authServerRoutes
+          uri: lb://auth-server
+          predicates:
+            - Path=/oauth/**

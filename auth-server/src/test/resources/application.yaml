@@ -27,7 +27,6 @@ database:
     password:
     driverClassName: com.mysql.cj.jdbc.Driver
 oauth:
-  jwt-key: MjWP5L7CiDff90qA
   clients:
     -
       name: client-service

@@ -57,7 +57,7 @@ services:
     networks: 
       - cloud-network
     ports:
-      # - 8761:8761
+      - 9000:9000
     depends_on:
       - config-server
     environment:
