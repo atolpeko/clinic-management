@@ -20,9 +20,12 @@ import clientservice.service.Client;
 import clientservice.service.ClientService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,12 +58,15 @@ public class ClientController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('TOP_MANAGER')")
     public CollectionModel<EntityModel<Client>> getAll() {
         List<Client> clients = clientService.findAll();
         return modelAssembler.toCollectionModel(clients);
     }
 
     @GetMapping(params = "email")
+    @PreAuthorize("hasAuthority('USER') and #email == authentication.name " +
+            "or hasAnyAuthority('DOCTOR', 'TOP_MANAGER')")
     public EntityModel<Client> getByEmail(@RequestParam String email) {
         Client client = clientService.findByEmail(email)
                 .orElseThrow(() -> new NoSuchElementException("Client not found: " + email));
@@ -68,7 +74,9 @@ public class ClientController {
     }
 
     @GetMapping("/{id}")
-    public EntityModel<Client> getById(@PathVariable Long id) {
+    @PostAuthorize("hasAuthority('USER') and returnObject.content.email == authentication.name " +
+            "or hasAnyAuthority('DOCTOR', 'TOP_MANAGER')")
+    public EntityModel<Client> getById(@PathVariable @Param("id") Long id) {
         Client client = clientService.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Client not found: " + id));
         return modelAssembler.toModel(client);
@@ -82,6 +90,7 @@ public class ClientController {
     }
 
     @PatchMapping(path = "/{id}", consumes = "application/json")
+    @PreAuthorize("@clientAccessHandler.canPatch(#id)")
     public EntityModel<Client> patchById(@PathVariable Long id,
                                          @RequestBody Client client) {
         client.setId(id);
@@ -98,6 +107,7 @@ public class ClientController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("@clientAccessHandler.canDelete(#id)")
     public void deleteById(@PathVariable Long id) {
         clientService.deleteById(id);
     }

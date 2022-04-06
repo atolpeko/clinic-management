@@ -26,8 +26,6 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.filter.ForwardedHeaderFilter;
 
 import java.time.Duration;
@@ -53,11 +51,6 @@ public class ClientServiceApplication {
 
         CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(config);
         return registry.circuitBreaker("circuitBreaker");
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 
     @Bean

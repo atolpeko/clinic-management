@@ -45,7 +45,7 @@ public class AuthServerConfiguration extends AuthorizationServerConfigurerAdapte
     private final PasswordEncoder passwordEncoder;
     private final ClientProperties clientProperties;
 
-    @Value("{oauth.jwt-key}")
+    @Value("${oauth.jwt-key}")
     private String jwtKey;
 
     @Autowired

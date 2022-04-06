@@ -27,7 +27,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.util.Optional;
 
@@ -41,12 +43,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
 @Tag("category.IntegrationTest")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.cloud.config.enabled=false")
+@SpringBootTest(properties = "spring.cloud.config.enabled=false")
 @AutoConfigureMockMvc
 public class ClientControllerTest {
     private static String newClientJson;
     private static String updateClientJson;
+    private static String updateClient2Json;
 
     @Autowired
     private MockMvc mvc;
@@ -55,7 +57,7 @@ public class ClientControllerTest {
     private ClientService clientService;
 
     @BeforeAll
-    public static void createClientJsons() {
+    public static void createNewClientJson() {
         newClientJson = "{\"email\":\"altolpeko@gmail.com\"," +
                 "\"password\":\"12345678\"," +
                 "\"name\":\"Alexander\"," +
@@ -68,10 +70,12 @@ public class ClientControllerTest {
                     "\"street\":\"23\"," +
                     "\"houseNumber\":11" +
                 "}}";
+    }
 
-        updateClientJson = "{\"email\":\"alextolpeko@gmail.com\"," +
-                "\"password\":\"87654321\"," +
-                "\"name\":\"Alex\"," +
+    @BeforeAll
+    public static void createUpdateClientJsons() {
+        updateClientJson = "{\"password\":\"87654321\"," +
+                "\"name\":\"Mark2\"," +
                 "\"sex\":\"MALE\"," +
                 "\"phoneNumber\":\"+375-21-134-54-67\"," +
                 "\"address\":{" +
@@ -81,30 +85,99 @@ public class ClientControllerTest {
                     "\"street\":\"36\"," +
                     "\"houseNumber\":1" +
                 "}}";
+
+        updateClient2Json = "{\"password\":\"232424323\"," +
+                "\"name\":\"Robert2\"," +
+                "\"sex\":\"MALE\"," +
+                "\"phoneNumber\":\"+375-21-44-54-67\"," +
+                "\"address\":{" +
+                    "\"country\":\"USA\"," +
+                    "\"state\":\"LA\"," +
+                    "\"city\":\"California\"," +
+                    "\"street\":\"44\"," +
+                    "\"houseNumber\":2" +
+                "}}";
     }
 
     @Test
-    public void shouldReturnClientsOnClientsGetRequest() throws Exception {
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnClientsOnClientsGetRequestWhenUserIsTopManager() throws Exception {
+       getAllAndExpect(status().isOk());
+    }
+
+    private void getAllAndExpect(ResultMatcher status) throws Exception {
         mvc.perform(get("/clients"))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    public void shouldReturnClientOnClientGetRequest() throws Exception {
+    @WithMockUser(authorities = "USER")
+    public void shouldDenyAccessToClientsWhenUserIsNotTopManager() throws Exception {
+        getAllAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnClientOnClientGetByIdRequestWhenUserIsTopManager() throws Exception {
+        getByIdAndExpect(status().isOk());
+    }
+
+    private void getByIdAndExpect(ResultMatcher status) throws Exception {
         mvc.perform(get("/clients/1"))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    public void shouldReturnClientOnClientGetByEmailRequest() throws Exception {
+    @WithMockUser(authorities = "DOCTOR")
+    public void shouldReturnClientOnClientGetByIdRequestWhenUserIsDoctor() throws Exception {
+        getByIdAndExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "atolpeko@gmail.com", authorities = "USER")
+    public void shouldReturnClientOnClientGetByIdRequestWhenUserIsResourceOwner() throws Exception {
+       getByIdAndExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "robert@gmail.com", authorities = "USER")
+    public void shouldDenyAccessToClientByIdWhenUserIsNotResourceOwner() throws Exception {
+        getByIdAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnClientOnClientGetByEmailRequestWhenUserIsTopManager() throws Exception {
+        getByEmailAndExpect(status().isOk());
+    }
+
+    private void getByEmailAndExpect(ResultMatcher status) throws Exception {
         mvc.perform(get("/clients").param("email", "atolpeko@gmail.com"))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    @WithMockUser(authorities = "DOCTOR")
+    public void shouldReturnClientOnClientGetByEmailRequestWhenUserIsDoctor() throws Exception {
+        getByEmailAndExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "atolpeko@gmail.com", authorities = "USER")
+    public void shouldReturnClientOnClientGetByEmailRequestWhenUserIsResourceOwner() throws Exception {
+        getByEmailAndExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "mark@gmail.com", authorities = "USER")
+    public void shouldDenyAccessToClientByEmailWhenUserIsNotResourceOwner() throws Exception {
+        getByEmailAndExpect(status().isUnauthorized());
     }
 
     @Test
@@ -123,39 +196,91 @@ public class ClientControllerTest {
     }
 
     @Test
-    public void shouldReturnUpdatedClientOnClientPatchRequest() throws Exception {
-        Client initial = clientService.findById(1).orElseThrow();
-        mvc.perform(patch("/clients/1")
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnUpdatedClientOnClientPatchRequestWhenUserIsTopManager() throws Exception {
+        Client initial = clientService.findById(2).orElseThrow();
+        patchByIdAndExpect(2, updateClientJson, status().isOk());
+
+        Client updated = clientService.findById(2).orElseThrow();
+        assertThat(updated, is(not(equalTo(initial))));
+    }
+
+    private void patchByIdAndExpect(long id, String data, ResultMatcher status) throws Exception {
+        mvc.perform(patch("/clients/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(updateClientJson)
+                        .content(data)
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
 
-        Client updated = clientService.findById(1).orElseThrow();
+    @Test
+    @WithMockUser(username = "mark@gmail.com", authorities = "USER")
+    public void shouldReturnUpdatedClientOnClientPatchRequestWhenUserIsResourceOwner() throws Exception {
+        Client initial = clientService.findById(3).orElseThrow();
+        patchByIdAndExpect(3, updateClient2Json, status().isOk());
+
+        Client updated = clientService.findById(3).orElseThrow();
         assertThat(updated, is(not(equalTo(initial))));
     }
 
     @Test
-    public void shouldReturnUpdatedClientOnClientStatusPatchRequest() throws Exception {
-        boolean initial = clientService.findById(1).orElseThrow().isEnabled();
-        mvc.perform(patch("/clients/1/status").param("isActive", "false"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-
-        boolean updated = clientService.findById(1).orElseThrow().isEnabled();
-        assertThat(updated, is(not(equalTo(initial))));
+    @WithMockUser(username = "atolpeko@gmail.com", authorities = "USER")
+    public void shouldDenyClientPatchingWhenUserIsNotResourceOwner() throws Exception {
+        patchByIdAndExpect(2, "{}", status().isUnauthorized());
     }
 
     @Test
-    public void shouldDeleteClientOnClientDeleteRequest() throws Exception {
-        mvc.perform(delete("/clients/2"))
-                .andDo(print())
-                .andExpect(status().isNoContent());
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnUpdatedClientOnClientStatusPatchRequestWhenUserIsTopManager() throws Exception {
+        boolean initial = clientService.findById(3).orElseThrow().isEnabled();
+        patchStatusAndExpect(status().isOk());
 
-        Optional<Client> deleted = clientService.findById(2);
+        boolean updated = clientService.findById(3).orElseThrow().isEnabled();
+        assertThat(updated, is(not(equalTo(initial))));
+    }
+
+    private void patchStatusAndExpect(ResultMatcher status) throws Exception {
+        mvc.perform(patch("/clients/3/status").param("isActive", "false"))
+                .andDo(print())
+                .andExpect(status)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    @WithMockUser(authorities = "USER")
+    public void shouldDenyClientStatusPatchingWhenUserIsNotTopManager() throws Exception {
+        patchStatusAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldDeleteClientOnClientDeleteRequestWhenUserIsTopManager() throws Exception {
+        deleteByIdAndExpect(4, status().isNoContent());
+
+        Optional<Client> deleted = clientService.findById(4);
         assertThat(deleted, is(Optional.empty()));
+    }
+
+    private void deleteByIdAndExpect(long id, ResultMatcher status) throws Exception {
+        mvc.perform(delete("/clients/" + id))
+                .andDo(print())
+                .andExpect(status);
+    }
+
+    @Test
+    @WithMockUser(username = "thomas@gmail.com", authorities = "USER")
+    public void shouldDeleteClientOnClientDeleteRequestWhenUserIsResourceOwner() throws Exception {
+        deleteByIdAndExpect(5, status().isNoContent());
+
+        Optional<Client> deleted = clientService.findById(5);
+        assertThat(deleted, is(Optional.empty()));
+    }
+
+    @Test
+    @WithMockUser(username = "mark@gmail.com", authorities = "USER")
+    public void shouldDenyClientDeletionWhenUserIsNotResourceOwner() throws Exception {
+       deleteByIdAndExpect(5, status().isUnauthorized());
     }
 }

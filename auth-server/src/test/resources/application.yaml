@@ -27,18 +27,8 @@ database:
     password:
     driverClassName: com.mysql.cj.jdbc.Driver
 oauth:
+  jwt-key: MjWP5L7CiDff90qA
   clients:
-    -
-      name: client-service
-      password: client7845_service
-      grantTypes:
-        - password
-        - refresh_token
-      scopes:
-        - read
-        - write
-      accessTokenValiditySeconds: 1800
-      refreshTokenValiditySeconds: 43200
     -
       name: clinic-service
       password: clinic5813_8service
