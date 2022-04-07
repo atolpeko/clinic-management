@@ -28,7 +28,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.util.Optional;
 
@@ -42,8 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
 @Tag("category.IntegrationTest")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.cloud.config.enabled=false")
+@SpringBootTest(properties = "spring.cloud.config.enabled=false")
 @AutoConfigureMockMvc
 public class FacilityControllerTest {
     private static String newFacilityJson;
@@ -88,47 +89,80 @@ public class FacilityControllerTest {
     }
 
     @Test
-    public void shouldReturnSavedFacilityOnFacilitiesPostRequest() throws Exception {
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnSavedFacilityOnFacilitiesPostRequestWhenUserIsTopManager() throws Exception {
         int initialCount = facilityService.findAll().size();
-        mvc.perform(post("/facilities")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(newFacilityJson)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        postAndExpect(status().isCreated());
 
         int newCount = facilityService.findAll().size();
         assertThat(newCount, is(initialCount + 1));
     }
 
-    @Test
-    public void shouldReturnUpdatedFacilityOnFacilitiesPatchRequest() throws Exception {
-        MedicalFacility initial = facilityService.findById(1).orElseThrow();
-        mvc.perform(patch("/facilities/1")
+    private void postAndExpect(ResultMatcher status) throws Exception {
+        mvc.perform(post("/facilities")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(updateFacilityJson)
+                        .content(newFacilityJson)
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    @WithMockUser
+    public void shouldDenyFacilityPostingWhenUserIsNotTopManager() throws Exception {
+        postAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnUpdatedFacilityOnFacilitiesPatchRequestWhenUserIsTopManager() throws Exception {
+        MedicalFacility initial = facilityService.findById(1).orElseThrow();
+        patchAndExpect(status().isOk());
 
         MedicalFacility updated = facilityService.findById(1).orElseThrow();
         assertThat(updated, is(not(equalTo(initial))));
     }
 
-    @Test
-    public void shouldDeleteFacilityFromDepartmentOnFacilitiesDeleteRequest() throws Exception {
-        mvc.perform(delete("/facilities/")
-                        .param("departmentId", "2")
-                        .param("facilityId", "3"))
+    private void patchAndExpect(ResultMatcher status) throws Exception {
+        mvc.perform(patch("/facilities/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateFacilityJson)
+                        .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpect(status().isNoContent());
+                .andExpect(status)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    @WithMockUser
+    public void shouldDenyFacilityPatchingWhenUserIsNotTopManager() throws Exception {
+        patchAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldDeleteFacilityFromDepartmentOnFacilitiesDeleteRequestWhenUserIsTopManager() throws Exception {
+        deleteAndExpect(status().isNoContent());
 
         MedicalFacility facility = facilityService.findById(3).orElseThrow();
         Optional<Department> deleted = facility.getDepartments().stream()
                         .filter(department -> department.getId() == 2)
                         .findAny();
         assertThat(deleted, is(Optional.empty()));
+    }
+
+    private void deleteAndExpect(ResultMatcher status) throws Exception {
+        mvc.perform(delete("/facilities/")
+                        .param("departmentId", "2")
+                        .param("facilityId", "3"))
+                .andDo(print())
+                .andExpect(status);
+    }
+
+    @Test
+    @WithMockUser
+    public void shouldDenyFacilityDeletionWhenUserIsNotTopManager() throws Exception {
+        deleteAndExpect(status().isForbidden());
     }
 }

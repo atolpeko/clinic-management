@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -56,20 +58,28 @@ public class TopManagerController {
     @GetMapping
     public CollectionModel<EntityModel<TopManager>> getAll() {
         List<TopManager> managers = managerService.findAll();
+        managers.forEach(this::resetPrivateFields);
         return modelAssembler.toCollectionModel(managers);
+    }
+
+    private void resetPrivateFields(TopManager manager) {
+        manager.setPassword(null);
+        manager.setEnabled(null);
+    }
+
+    @GetMapping(params = "email")
+    public EntityModel<TopManager> getByEmail(@RequestParam String email) {
+        TopManager manager = managerService.findByEmail(email)
+                .orElseThrow(() -> new NoSuchElementException("No manager with email " + email));
+        resetPrivateFields(manager);
+        return modelAssembler.toModel(manager);
     }
 
     @GetMapping("/{id}")
     public EntityModel<TopManager> getById(@PathVariable Long id) {
         TopManager manager = managerService.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("No manager with id " + id));
-        return modelAssembler.toModel(manager);
-    }
-
-    @GetMapping(value = "/{email}", params = "email")
-    public EntityModel<TopManager> getByEmail(@PathVariable String email) {
-        TopManager manager = managerService.findByEmail(email)
-                .orElseThrow(() -> new NoSuchElementException("No manager with email " + email));
+        resetPrivateFields(manager);
         return modelAssembler.toModel(manager);
     }
 
@@ -81,6 +91,7 @@ public class TopManagerController {
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("@topManagerAccessHandler.canPatch(#id)")
     public EntityModel<TopManager> patchById(@PathVariable Long id,
                                               @RequestBody TopManager manager) {
         manager.setId(id);
@@ -90,6 +101,7 @@ public class TopManagerController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("@topManagerAccessHandler.canDelete(#id)")
     public void deleteById(@PathVariable Long id) {
         managerService.deleteById(id);
     }

@@ -23,6 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,28 +57,32 @@ public class TeamManagerController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('TOP_MANAGER')")
     public CollectionModel<EntityModel<TeamManager>> getAll() {
         List<TeamManager> managers = managerService.findAll();
         return modelAssembler.toCollectionModel(managers);
     }
 
+    @GetMapping(params = "email")
+    @PreAuthorize("#email == authentication.name or hasAuthority('TOP_MANAGER')")
+    public EntityModel<TeamManager> getByEmail(@RequestParam String email) {
+        TeamManager manager = managerService.findByEmail(email)
+                .orElseThrow(() -> new NoSuchElementException("No manager with email " + email));
+        return modelAssembler.toModel(manager);
+    }
+
     @GetMapping(params = "departmentId")
+    @PreAuthorize("hasAuthority('TOP_MANAGER')")
     public CollectionModel<EntityModel<TeamManager>> getAllByDepartmentId(@RequestParam Long departmentId) {
         List<TeamManager> managers = managerService.findAllByDepartmentId(departmentId);
         return modelAssembler.toCollectionModel(managers);
     }
 
     @GetMapping("/{id}")
+    @PostAuthorize("returnObject.content.email == authentication.name or hasAuthority('TOP_MANAGER')")
     public EntityModel<TeamManager> getById(@PathVariable Long id) {
         TeamManager manager = managerService.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("No manager with id " + id));
-        return modelAssembler.toModel(manager);
-    }
-
-    @GetMapping(value = "/{email}", params = "email")
-    public EntityModel<TeamManager> getByEmail(@PathVariable String email) {
-        TeamManager manager = managerService.findByEmail(email)
-                .orElseThrow(() -> new NoSuchElementException("No manager with email " + email));
         return modelAssembler.toModel(manager);
     }
 
@@ -88,6 +94,7 @@ public class TeamManagerController {
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("@teamManagerAccessHandler.canPatch(#id)")
     public EntityModel<TeamManager> patchById(@PathVariable Long id,
                                               @RequestBody TeamManager manager) {
         manager.setId(id);
@@ -97,6 +104,7 @@ public class TeamManagerController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("@teamManagerAccessHandler.canDelete(#id)")
     public void deleteById(@PathVariable Long id) {
         managerService.deleteById(id);
     }

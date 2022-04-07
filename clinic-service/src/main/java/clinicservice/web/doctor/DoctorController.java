@@ -23,6 +23,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,18 +60,53 @@ public class DoctorController {
     @GetMapping
     public CollectionModel<EntityModel<Doctor>> getAll() {
         List<Doctor> doctors = doctorService.findAll();
+        if (isUnauthorized()) {
+            doctors.forEach(this::resetPrivateFields);
+        }
+
         return modelAssembler.toCollectionModel(doctors);
+    }
+
+    private boolean isUnauthorized() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isBasicUser = authentication.getAuthorities().stream()
+                .anyMatch(authority -> {
+                    String auth = authority.getAuthority();
+                    return auth.equals("USER") || auth.equals("ROLE_ANONYMOUS");
+                });
+
+        return !authentication.isAuthenticated() || isBasicUser;
+    }
+
+    private void resetPrivateFields(Doctor doctor) {
+        doctor.setEmail(null);
+        doctor.setPassword(null);
+        doctor.setEnabled(null);
+        doctor.getPersonalData().setAddress(null);
+        doctor.getPersonalData().setSex(null);
+        doctor.getPersonalData().setHireDate(null);
+        doctor.getPersonalData().setPhone(null);
+        doctor.getPersonalData().setSalary(null);
+        doctor.getPersonalData().setDateOfBirth(null);
     }
 
     @GetMapping(params = "departmentId")
     public CollectionModel<EntityModel<Doctor>> getAllByDepartmentId(@RequestParam Long departmentId) {
         List<Doctor> doctors = doctorService.findAllByDepartmentId(departmentId);
+        if (isUnauthorized()) {
+            doctors.forEach(this::resetPrivateFields);
+        }
+
         return modelAssembler.toCollectionModel(doctors);
     }
 
     @GetMapping(params = "specialty")
     public CollectionModel<EntityModel<Doctor>> getAllBySpecialty(@RequestParam String specialty) {
         List<Doctor> doctors = doctorService.findAllBySpecialty(specialty);
+        if (isUnauthorized()) {
+            doctors.forEach(this::resetPrivateFields);
+        }
+
         return modelAssembler.toCollectionModel(doctors);
     }
 
@@ -76,6 +114,10 @@ public class DoctorController {
     public EntityModel<Doctor> getById(@PathVariable Long id) {
         Doctor doctor = doctorService.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("No doctor with id " + id));
+        if (isUnauthorized()) {
+            resetPrivateFields(doctor);
+        }
+
         return modelAssembler.toModel(doctor);
     }
 
@@ -83,6 +125,10 @@ public class DoctorController {
     public EntityModel<Doctor> getByEmail(@PathVariable String email) {
         Doctor doctor = doctorService.findByEmail(email)
                 .orElseThrow(() -> new NoSuchElementException("No doctor with email " + email));
+        if (isUnauthorized()) {
+            resetPrivateFields(doctor);
+        }
+
         return modelAssembler.toModel(doctor);
     }
 
@@ -94,6 +140,7 @@ public class DoctorController {
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("@doctorAccessHandler.canPatch(#id)")
     public EntityModel<Doctor> patchById(@PathVariable Long id,
                                          @RequestBody Doctor doctor) {
         doctor.setId(id);
@@ -103,6 +150,7 @@ public class DoctorController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("@doctorAccessHandler.canDelete(#id)")
     public void deleteById(@PathVariable Long id) {
         doctorService.deleteById(id);
     }

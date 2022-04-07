@@ -19,3 +19,6 @@ spring:
     username: root
     password: clinic33789
     driverClassName: com.mysql.cj.jdbc.Driver
+  security:
+    oauth2:
+      jwt-key: MjWP5L7CiDff90qA

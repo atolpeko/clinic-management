@@ -27,7 +27,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.util.Optional;
 
@@ -45,8 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("category.IntegrationTest")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.cloud.config.enabled=false")
+@SpringBootTest(properties = "spring.cloud.config.enabled=false")
 @AutoConfigureMockMvc
 public class TeamManagerControllerTest {
     private static String newManagerJson;
@@ -83,74 +84,163 @@ public class TeamManagerControllerTest {
     }
 
     @Test
-    public void shouldReturnManagersOnManagersGetRequest() throws Exception {
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnManagersOnManagersGetRequestWhenUserIsTopManager() throws Exception {
+        getAllAndExpect(status().isOk());
+    }
+
+    private void getAllAndExpect(ResultMatcher status) throws Exception {
         mvc.perform(get("/team-managers"))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    public void shouldReturnManagersOnManagersGetByEmailRequest() throws Exception {
-        mvc.perform(get("/team-managers").param("email", "email4@gmail.com"))
+    @WithMockUser
+    public void shouldDenyAccessToAllManagersWhenUserIsNotTopManager() throws Exception {
+        getAllAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnManagerOnManagerGetByEmailRequestWhenUserIsTopManager() throws Exception {
+        getByEmailAndExpect(status().isOk());
+    }
+
+    private void getByEmailAndExpect(ResultMatcher status) throws Exception {
+        mvc.perform(get("/team-managers").param("email", "oliver@gmail.com"))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    public void shouldReturnManagersOnManagersGetByDepartmentIdRequest() throws Exception {
+    @WithMockUser(username = "oliver@gmail.com", authorities = "TEAM_MANAGER")
+    public void shouldReturnManagerOnManagerGetByEmailRequestWhenUserIsResourceOwner() throws Exception {
+        getByEmailAndExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "lucas@gmail.com", authorities = "TEAM_MANAGER")
+    public void shouldDenyAccessToManagerByEmailWhenUserIsNotResourceOwnerManager() throws Exception {
+        getByEmailAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnManagersOnManagersGetByDepartmentIdRequestWhenUserIsTopManager() throws Exception {
+        getByDepartmentIdAndExpect(status().isOk());
+    }
+
+    private void getByDepartmentIdAndExpect(ResultMatcher status) throws Exception {
         mvc.perform(get("/team-managers").param("departmentId", "1"))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    public void shouldReturnManagerOnManagerGetRequest() throws Exception {
-        mvc.perform(get("/team-managers/4"))
+    @WithMockUser
+    public void shouldDenyAccessToManagersByDepartmentIdWhenUserIsNotTopManager() throws Exception {
+        getByDepartmentIdAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnManagerOnManagerGetByIdRequestWhenUserIsTopManager() throws Exception {
+        getByIdAndExpect(status().isOk());
+    }
+
+    private void getByIdAndExpect(ResultMatcher status) throws Exception {
+        mvc.perform(get("/team-managers/6"))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    public void shouldReturnSavedManagerOnManagersPostRequest() throws Exception {
+    @WithMockUser(username = "oliver@gmail.com", authorities = "TEAM_MANAGER")
+    public void shouldReturnManagerOnManagerGetByIdRequestWhenUserIsResourceOwner() throws Exception {
+        getByIdAndExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "lucas@gmail.com", authorities = "TEAM_MANAGER")
+    public void shouldDenyAccessToManagerByIdWhenUserIsNotResourceOwner() throws Exception {
+        getByDepartmentIdAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnSavedManagerOnManagersPostRequestWhenUserIsTopManager() throws Exception {
         int initialCount = managerService.findAll().size();
-        mvc.perform(post("/team-managers")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(newManagerJson)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        postAndExpect(status().isCreated());
 
         int newCount = managerService.findAll().size();
         assertThat(newCount, is(initialCount + 1));
     }
 
+    private void postAndExpect(ResultMatcher status) throws Exception {
+        mvc.perform(post("/team-managers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(newManagerJson)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
     @Test
-    public void shouldReturnUpdatedManagerOnManagerPatchRequest() throws Exception {
-        TeamManager initial = managerService.findById(4).orElseThrow();
-        mvc.perform(patch("/team-managers/4")
+    @WithMockUser
+    public void shouldDenyManagerPostingWhenUserIsNotTopManger() throws Exception {
+        postAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnUpdatedManagerOnManagerPatchRequestWhenUserIsTopManager() throws Exception {
+        TeamManager initial = managerService.findById(7).orElseThrow();
+        patchAndExpect(status().isOk());
+
+        TeamManager updated = managerService.findById(7).orElseThrow();
+        assertThat(updated, is(not(equalTo(initial))));
+    }
+
+    private void patchAndExpect(ResultMatcher status) throws Exception {
+        mvc.perform(patch("/team-managers/7")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateManagerJson)
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-
-        TeamManager updated = managerService.findById(4).orElseThrow();
-        assertThat(updated, is(not(equalTo(initial))));
     }
 
     @Test
-    public void shouldDeleteManagerOnManagerDeleteRequest() throws Exception {
-        mvc.perform(delete("/team-managers/5"))
-                .andDo(print())
-                .andExpect(status().isNoContent());
+    @WithMockUser
+    public void shouldDenyManagerPatchingWhenUserIsNotTopManager() throws Exception {
+        patchAndExpect(status().isForbidden());
+    }
 
-        Optional<TeamManager> deleted = managerService.findById(2);
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldDeleteManagerOnManagerDeleteRequestWhenUserIsTopManager() throws Exception {
+        deleteAndExpect(status().isNoContent());
+
+        Optional<TeamManager> deleted = managerService.findById(8);
         assertThat(deleted, is(Optional.empty()));
+    }
+
+    private void deleteAndExpect(ResultMatcher status) throws Exception {
+        mvc.perform(delete("/team-managers/8"))
+                .andDo(print())
+                .andExpect(status);
+    }
+
+    @Test
+    @WithMockUser
+    public void shouldDenyManagerDeletionWhenUserIsNotTopManager() throws Exception {
+        getByDepartmentIdAndExpect(status().isForbidden());
     }
 }

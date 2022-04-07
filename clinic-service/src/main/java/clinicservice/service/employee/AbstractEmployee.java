@@ -78,7 +78,7 @@ public abstract class AbstractEmployee implements Serializable {
     private Department department;
 
     @Column(name = "is_enabled", nullable = false)
-    private boolean isEnabled;
+    private Boolean isEnabled;
 
     /**
      * Constructs a new enabled AbstractEmployee.
@@ -158,11 +158,11 @@ public abstract class AbstractEmployee implements Serializable {
         this.department = department;
     }
 
-    public boolean isEnabled() {
+    public Boolean isEnabled() {
         return isEnabled;
     }
 
-    public void setEnabled(boolean enabled) {
+    public void setEnabled(Boolean enabled) {
         isEnabled = enabled;
     }
 
@@ -180,7 +180,7 @@ public abstract class AbstractEmployee implements Serializable {
         return Objects.equals(email, that.email)
                 && Objects.equals(password, that.password)
                 && Objects.equals(personalData, that.personalData)
-                && isEnabled == that.isEnabled;
+                && Objects.equals(isEnabled, that.isEnabled);
                 // Not using department field to avoid infinite recursion
     }
 

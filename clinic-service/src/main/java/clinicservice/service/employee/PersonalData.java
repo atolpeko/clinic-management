@@ -18,6 +18,8 @@ package clinicservice.service.employee;
 
 import clinicservice.service.Address;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -37,6 +39,7 @@ import java.util.Objects;
  * Represents employee's personal data.
  */
 @Embeddable
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class PersonalData implements Serializable {
 
     /**

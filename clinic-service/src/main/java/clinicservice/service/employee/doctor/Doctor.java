@@ -20,6 +20,8 @@ import clinicservice.service.department.Department;
 import clinicservice.service.employee.AbstractEmployee;
 import clinicservice.service.employee.PersonalData;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
@@ -34,6 +36,7 @@ import java.util.Objects;
  */
 @Entity
 @DiscriminatorValue("DOCTOR")
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class Doctor extends AbstractEmployee {
 
     @NotBlank(message = "Specialty is mandatory")

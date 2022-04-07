@@ -27,7 +27,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -39,8 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
 @Tag("category.IntegrationTest")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.cloud.config.enabled=false")
+@SpringBootTest(properties = "spring.cloud.config.enabled=false")
 @AutoConfigureMockMvc
 public class DepartmentControllerTest {
     private static String newDepartmentJson;
@@ -96,32 +97,54 @@ public class DepartmentControllerTest {
     }
 
     @Test
-    public void shouldReturnSavedDepartmentOnDepartmentsPostRequest() throws Exception {
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnSavedDepartmentOnDepartmentsPostRequestWhenUserIsTopManager() throws Exception {
         int initialCount = departmentService.findAll().size();
-        mvc.perform(post("/departments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(newDepartmentJson)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        postAndExpect(status().isCreated());
 
         int newCount = departmentService.findAll().size();
         assertThat(newCount, is(initialCount + 1));
     }
 
+    private void postAndExpect(ResultMatcher status) throws Exception {
+        mvc.perform(post("/departments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(newDepartmentJson)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
     @Test
-    public void shouldReturnUpdatedDepartmentOnDepartmentPatchRequest() throws Exception {
+    @WithMockUser
+    public void shouldDenyDepartmentPostingWhenUserIsNotTopManager() throws Exception {
+        postAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnUpdatedDepartmentOnDepartmentPatchRequestWhenUserIsTopManager() throws Exception {
         Department initial = departmentService.findById(1).orElseThrow();
+        patchAndExpect(status().isOk());
+
+        Department updated = departmentService.findById(1).orElseThrow();
+        assertThat(updated, is(not(equalTo(initial))));
+    }
+
+    private void patchAndExpect(ResultMatcher status) throws Exception {
         mvc.perform(patch("/departments/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateDepartmentJson)
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
 
-        Department updated = departmentService.findById(1).orElseThrow();
-        assertThat(updated, is(not(equalTo(initial))));
+    @Test
+    @WithMockUser
+    public void shouldDenyDepartmentPatchingWhenUserIsNotTopManager() throws Exception {
+        patchAndExpect(status().isForbidden());
     }
 }
