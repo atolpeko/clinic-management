@@ -20,6 +20,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,18 +57,43 @@ public class ResultController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('TOP_MANAGER')")
     public CollectionModel<EntityModel<Result>> getAll() {
         List<Result> results = resultService.findAll();
         return modelAssembler.toCollectionModel(results);
     }
 
     @GetMapping(params = "clientId")
+    @PostAuthorize("@resultAccessHandler.canGetAnyByClientId(returnObject.content)")
     public CollectionModel<EntityModel<Result>> getAllByClientId(Long clientId) {
         List<Result> results = resultService.findAllByClientId(clientId);
+        filter(results);
         return modelAssembler.toCollectionModel(results);
     }
 
+    // Cannot use @PostFilter on CollectionModel :(
+    private void filter(List<Result> results) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isUser = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("USER"));
+        boolean isDoctor = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("DOCTOR"));
+
+        if (isUser) {
+            results.removeIf(registration -> {
+                String email = registration.getClient().getEmail();
+                return !authentication.getName().equals(email);
+            });
+        } else if (isDoctor) {
+            results.removeIf(registration -> {
+                String email = registration.getDoctor().getEmail();
+                return !authentication.getName().equals(email);
+            });
+        }
+    }
+
     @GetMapping("/{id}")
+    @PostAuthorize("@resultAccessHandler.canGet(returnObject.content)")
     public EntityModel<Result> getById(@PathVariable Long id) {
         Result result = resultService.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Result not found: " + id));
@@ -73,12 +102,14 @@ public class ResultController {
 
     @PostMapping(consumes = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("@resultAccessHandler.canPost(#result)")
     public EntityModel<Result> save(@RequestBody @Valid Result result) {
         Result saved = resultService.save(result);
         return modelAssembler.toModel(saved);
     }
 
     @PatchMapping(path = "/{id}", consumes = "application/json")
+    @PreAuthorize("@resultAccessHandler.canPatch(#id)")
     public EntityModel<Result> patchById(@PathVariable Long id,
                                          @RequestBody Result result) {
         result.setId(id);
@@ -88,6 +119,7 @@ public class ResultController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("@resultAccessHandler.canDelete(#id)")
     public void deleteById(@PathVariable Long id) {
         resultService.deleteById(id);
     }

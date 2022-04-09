@@ -24,8 +24,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 
+import resultsservice.IntegrationTestConfig;
 import resultsservice.service.result.Result;
 import resultsservice.service.result.ResultService;
 
@@ -45,12 +49,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("category.IntegrationTest")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.cloud.config.enabled=false")
+@SpringBootTest(properties = "spring.cloud.config.enabled=false")
+@ContextConfiguration(classes = IntegrationTestConfig.class)
 @AutoConfigureMockMvc
 public class ResultControllerTest {
-    private static String newResultJson;
-    private static String updatedJson;
+    private static String newResult1Json;
+    private static String newResult2Json;
+    private static String update1Json;
+    private static String update2Json;
 
     @Autowired
     private MockMvc mvc;
@@ -59,79 +65,218 @@ public class ResultControllerTest {
     private ResultService resultService;
 
     @BeforeAll
-    public static void createResultJson() {
-        newResultJson = "{\"data\":\"Data1\"," +
+    public static void createNewResultJsons() {
+        newResult1Json = "{\"data\":\"New Data 1\"," +
                 "\"dutyId\":1," +
-                "\"clientId\":1," +
+                "\"clientId\":2," +
                 "\"doctorId\":1}";
 
-        updatedJson = "{\"data\":\"Data2\"," +
+        newResult2Json = "{\"data\":\"New Data 2\"," +
                 "\"dutyId\":2," +
-                "\"clientId\":2," +
+                "\"clientId\":1," +
                 "\"doctorId\":2}";
     }
 
+    @BeforeAll
+    public static void createUpdateResultJsons() {
+        update1Json = "{\"data\":\"Update 1\"," +
+                "\"dutyId\":2," +
+                "\"clientId\":1," +
+                "\"doctorId\":2}";
+
+        update2Json = "{\"data\":\"Update 2\"," +
+                "\"dutyId\":1," +
+                "\"clientId\":2," +
+                "\"doctorId\":3}";
+    }
+
     @Test
-    public void shouldReturnResultOnResultsGetRequest() throws Exception {
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnResultOnResultsGetAllRequestWhenUserIsTopManager() throws Exception {
+        getAllAndExpect(status().isOk());
+    }
+
+    private void getAllAndExpect(ResultMatcher status) throws Exception {
         mvc.perform(get("/results"))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    public void shouldReturnResultOnResultGetRequest() throws Exception {
+    @WithMockUser
+    public void shouldDenyAccessToAllResultsWhenUserIsNotTopManager() throws Exception {
+        getAllAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnResultOnResultGetByIdRequestWhenUserIsTopManager() throws Exception {
+        getByIdAndExpect(status().isOk());
+    }
+
+    private void getByIdAndExpect(ResultMatcher status) throws Exception {
         mvc.perform(get("/results/1"))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    public void shouldReturnResultOnResultGetByClientIdRequest() throws Exception {
+    @WithMockUser(username = "mark@gmail.com", authorities = "DOCTOR")
+    public void shouldReturnResultOnResultGetByIdRequestWhenUserIsDoctorAndResourceOwner()
+            throws Exception {
+        getByIdAndExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "emma@gmail.com", authorities = "USER")
+    public void shouldReturnResultOnResultGetByIdRequestWhenUserIsAuthenticatedAndResourceOwner()
+            throws Exception {
+        getByIdAndExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "robert@gmail.com", authorities = "DOCTOR")
+    public void shouldDenyAccessToResultsByIdWhenUserIsNotResourceOwner() throws Exception {
+        getByIdAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnResultsOnResultGetByClientIdRequestWhenUserIsTopManger()
+            throws Exception {
+        getByClientIdAndExpect(status().isOk());
+    }
+
+    private void getByClientIdAndExpect(ResultMatcher status) throws Exception {
         mvc.perform(get("/results").param("clientId", "1"))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    public void shouldReturnSavedResultOnResultsPostRequest() throws Exception {
+    @WithMockUser(username = "mark@gmail.com", authorities = "DOCTOR")
+    public void shouldReturnResultsOnResultGetByClientIdRequestWhenUserIsDoctorAndResourceOwner()
+            throws Exception {
+        getByClientIdAndExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "emma@gmail.com", authorities = "USER")
+    public void shouldReturnResultsOnResultGetByClientIdRequestWhenUserIsAuthenticatedAndResourceOwner()
+            throws Exception {
+        getByClientIdAndExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "jain@gmail.com", authorities = "DOCTOR")
+    public void shouldAccessToResultByClientIdWhenUserIsNotResourceOwner() throws Exception {
+        getByClientIdAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnSavedResultOnResultsPostRequestWhenUserIsTopManager() throws Exception {
         int initialCount = resultService.findAll().size();
+        postAndExpect(newResult1Json, status().isCreated());
+
+        int newCount = resultService.findAll().size();
+        assertThat(newCount, is(initialCount + 1));
+    }
+
+    private void postAndExpect(String data, ResultMatcher status) throws Exception {
         mvc.perform(post("/results")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(newResultJson)
+                        .content(data)
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpect(status().isCreated())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnSavedResultOnResultsPostRequestWhenUserIsDoctorAndResourceOwner()
+            throws Exception {
+        int initialCount = resultService.findAll().size();
+        postAndExpect(newResult2Json, status().isCreated());
 
         int newCount = resultService.findAll().size();
         assertThat(newCount, is(initialCount + 1));
     }
 
     @Test
-    public void shouldReturnUpdatedResultOnResultPatchRequest() throws Exception {
+    @WithMockUser(username = "robert@gmail.com", authorities = "DOCTOR")
+    public void shouldDenyResultPostingWhenUserIsNotResourceOwner() throws Exception {
+        postAndExpect(newResult1Json, status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnUpdatedResultOnResultPatchRequestWhenUserIsTopManager() throws Exception {
         Result initial = resultService.findById(2).orElseThrow();
-        mvc.perform(patch("/results/2")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(updatedJson)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        patchByIdAndExpect(2, update1Json, status().isOk());
 
         Result updated = resultService.findById(2).orElseThrow();
         assertThat(updated, is(not(equalTo(initial))));
     }
 
-    @Test
-    public void shouldDeleteResultOnResultDeleteRequest() throws Exception {
-        mvc.perform(delete("/results/3"))
+    private void patchByIdAndExpect(long id, String data, ResultMatcher status) throws Exception {
+        mvc.perform(patch("/results/" + id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(data)
+                        .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpect(status().isNoContent());
+                .andExpect(status)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
 
-        Optional<Result> deleted = resultService.findById(3);
+    @Test
+    @WithMockUser(username = "mark@gmail.com", authorities = "DOCTOR")
+    public void shouldReturnUpdatedResultOnResultPatchRequestWhenUserIsDoctorAndResourceOwner()
+            throws Exception {
+        Result initial = resultService.findById(3).orElseThrow();
+        patchByIdAndExpect(3, update2Json, status().isOk());
+
+        Result updated = resultService.findById(3).orElseThrow();
+        assertThat(updated, is(not(equalTo(initial))));
+    }
+
+    @Test
+    @WithMockUser(username = "robert@gmail.com", authorities = "DOCTOR")
+    public void shouldDenyResultPatchingWhenUserIsNotResourceOwner() throws Exception {
+        patchByIdAndExpect(3, update2Json, status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldDeleteResultOnResultDeleteRequestWhenUserIsTopManager() throws Exception {
+        deleteByIdAndExpect(4, status().isNoContent());
+
+        Optional<Result> deleted = resultService.findById(4);
         assertThat(deleted, is(Optional.empty()));
+    }
+
+    private void deleteByIdAndExpect(long id, ResultMatcher status) throws Exception {
+        mvc.perform(delete("/results/" + id))
+                .andDo(print())
+                .andExpect(status);
+    }
+
+    @Test
+    @WithMockUser(username = "robert@gmail.com", authorities = "DOCTOR")
+    public void shouldDeleteResultOnResultDeleteRequestWhenUserIsDoctorAndResourceOwner() throws Exception {
+        deleteByIdAndExpect(5, status().isNoContent());
+
+        Optional<Result> deleted = resultService.findById(5);
+        assertThat(deleted, is(Optional.empty()));
+    }
+
+    @Test
+    @WithMockUser(username = "mark@gmail.com", authorities = "DOCTOR")
+    public void shouldDenyResultDeletionWhenUserIsNotResourceOwner() throws Exception {
+        deleteByIdAndExpect(5, status().isUnauthorized());
     }
 }

@@ -19,3 +19,12 @@ spring:
     username: root
     password: clinic33789
     driverClassName: com.mysql.cj.jdbc.Driver
+  security:
+    oauth2:
+      jwt-key: MjWP5L7CiDff90qA
+      client:
+        client-id: results-service
+        client-secret: 309_res9ults_86
+        authorization-grant-type: client_credentials
+        scope: read
+        access-token-uri: http://localhost:9000/oauth/token

@@ -23,12 +23,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import resultsservice.config.OauthFeignConfiguration;
+
 import java.util.Optional;
 
 /**
  * Provides access to client microservice.
  */
-@FeignClient("client-service")
+@FeignClient(name = "client-service", configuration = OauthFeignConfiguration.class)
 public interface ClientServiceFeignClient {
 
     /**

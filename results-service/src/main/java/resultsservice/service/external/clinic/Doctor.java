@@ -24,6 +24,7 @@ import java.util.Objects;
  */
 public class Doctor implements Serializable {
     private Long id;
+    private String email;
     private String name;
     private String specialty;
 
@@ -37,19 +38,22 @@ public class Doctor implements Serializable {
      */
     public Doctor(Doctor other) {
         id = other.id;
+        email = other.email;
         name = other.name;
         specialty = other.specialty;
     }
 
     /**
-     * Constructs a new Doctor with the specified id, name and specialty.
+     * Constructs a new Doctor with the specified id, email, name and specialty.
      *
      * @param id id to set
+     * @param email email to set
      * @param name name to set
      * @param specialty specialty to set
      */
-    public Doctor(Long id, String name, String specialty) {
+    public Doctor(Long id, String email, String name, String specialty) {
         this.id = id;
+        this.email = email;
         this.name = name;
         this.specialty = specialty;
     }
@@ -60,6 +64,14 @@ public class Doctor implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+    
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getName() {
@@ -90,19 +102,21 @@ public class Doctor implements Serializable {
 
         Doctor doctor = (Doctor) other;
         return Objects.equals(id, doctor.id)
+                && Objects.equals(email, doctor.email)
                 && Objects.equals(name, doctor.name)
                 && Objects.equals(specialty, doctor.specialty);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, specialty);
+        return Objects.hash(id, email, name, specialty);
     }
 
     @Override
     public String toString() {
         return getClass().getName() + "{" +
                 "id=" + id +
+                ", email='" + email + '\'' +
                 ", name='" + name + '\'' +
                 ", specialty='" + specialty + '\'' +
                 '}';
