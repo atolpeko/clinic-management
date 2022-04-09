@@ -94,6 +94,7 @@ public class AuthServerConfiguration extends AuthorizationServerConfigurerAdapte
             clientDetails.setClientSecret(passwordEncoder.encode(client.getPassword()));
             clientDetails.setScope(client.getScopes());
             clientDetails.setAuthorizedGrantTypes(client.getGrantTypes());
+            clientDetails.setAuthorities(client.getAuthorities());
             clientDetails.setAccessTokenValiditySeconds(client.getAccessTokenValiditySeconds());
             clientDetails.setRefreshTokenValiditySeconds(client.getRefreshTokenValiditySeconds());
 

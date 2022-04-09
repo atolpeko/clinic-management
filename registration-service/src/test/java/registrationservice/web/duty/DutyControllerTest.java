@@ -24,8 +24,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
+import org.springframework.test.web.servlet.ResultMatcher;
 import registrationservice.service.duty.Duty;
 import registrationservice.service.duty.DutyService;
 
@@ -41,8 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
 @Tag("category.IntegrationTest")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.cloud.config.enabled=false")
+@SpringBootTest(properties = "spring.cloud.config.enabled=false")
 @AutoConfigureMockMvc
 public class DutyControllerTest {
     private static String newDutyJson;
@@ -92,42 +93,75 @@ public class DutyControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
     public void shouldReturnSavedDutyOnDutiesPostRequest() throws Exception {
         int initialCount = dutyService.findAll().size();
-        mvc.perform(post("/services")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(newDutyJson)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        postAndExpect(status().isCreated());
 
         int newCount = dutyService.findAll().size();
         assertThat(newCount, is(initialCount + 1));
     }
 
-    @Test
-    public void shouldReturnUpdatedDutyOnDutyPatchRequest() throws Exception {
-        Duty initial = dutyService.findById(2).orElseThrow();
-        mvc.perform(patch("/services/2")
+    private void postAndExpect(ResultMatcher status) throws Exception {
+        mvc.perform(post("/services")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(updateDutyJson)
+                        .content(newDutyJson)
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    @WithMockUser
+    public void shouldDenyDutyPostingWhenUserIsNotTopManager() throws Exception {
+        postAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnUpdatedDutyOnDutyPatchRequestWhenUserIsTopManager() throws Exception {
+        Duty initial = dutyService.findById(2).orElseThrow();
+        patchAndExpect(status().isOk());
 
         Duty updated = dutyService.findById(2).orElseThrow();
         assertThat(updated, is(not(equalTo(initial))));
     }
 
-    @Test
-    public void shouldDeleteDutyOnDutyDeleteRequest() throws Exception {
-        mvc.perform(delete("/services/3"))
+    private void patchAndExpect(ResultMatcher status) throws Exception {
+        mvc.perform(patch("/services/2")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateDutyJson)
+                        .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpect(status().isNoContent());
+                .andExpect(status)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    @WithMockUser
+    public void shouldDenyDutyPatchingWhenUserIsNotTopManager() throws Exception {
+        patchAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldDeleteDutyOnDutyDeleteRequestWhenUserIsTopManager() throws Exception {
+        deleteAndExpect(status().isNoContent());
 
         Optional<Duty> deleted = dutyService.findById(3);
         assertThat(deleted, is(Optional.empty()));
+    }
+
+    private void deleteAndExpect(ResultMatcher status) throws Exception {
+        mvc.perform(delete("/services/3"))
+                .andDo(print())
+                .andExpect(status);
+    }
+
+    @Test
+    @WithMockUser
+    public void shouldDenyDutyDeletionWhenUserIsNotTopManager() throws Exception {
+        deleteAndExpect(status().isForbidden());
     }
 }

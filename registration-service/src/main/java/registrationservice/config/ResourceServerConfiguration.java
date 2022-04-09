@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package clientservice.config;
+package registrationservice.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -23,8 +23,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
@@ -52,11 +50,6 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
         return converter;
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
     @Override
     public void configure(ResourceServerSecurityConfigurer resources) {
         resources.tokenStore(tokenStore());
@@ -66,19 +59,21 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
     public void configure(HttpSecurity http) throws Exception {
         http
             .requestMatchers()
-                .mvcMatchers("/clients/**")
+                .mvcMatchers("/**")
             .and()
             .authorizeRequests()
-                .mvcMatchers(HttpMethod.GET, "/clients/**")
-                    .hasAnyAuthority("INTERNAL", "USER", "DOCTOR", "TOP_MANAGER")
-                .mvcMatchers(HttpMethod.PATCH, "/clients/{id}/status")
-                    .hasAuthority("TOP_MANAGER")
-                .mvcMatchers(HttpMethod.PATCH, "/clients/**")
-                    .hasAnyAuthority("USER", "TOP_MANAGER")
-                .mvcMatchers(HttpMethod.DELETE, "/clients/**")
-                    .hasAnyAuthority("USER", "TOP_MANAGER")
-                .mvcMatchers(HttpMethod.POST, "/clients/")
+                .mvcMatchers(HttpMethod.GET, "/services/**")
                     .permitAll()
+                .mvcMatchers("/services/**")
+                    .hasAuthority("TOP_MANAGER")
+                .mvcMatchers(HttpMethod.GET, "/registrations/**")
+                    .hasAnyAuthority("USER", "DOCTOR", "TOP_MANAGER")
+                .mvcMatchers(HttpMethod.POST, "/registrations/**")
+                    .authenticated()
+                .mvcMatchers(HttpMethod.PATCH, "/registrations/**")
+                    .hasAnyAuthority("DOCTOR", "TOP_MANAGER")
+                .mvcMatchers(HttpMethod.DELETE, "/registrations/**")
+                    .hasAuthority("TOP_MANAGER")
                 .and()
             .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.NEVER);

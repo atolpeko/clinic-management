@@ -20,6 +20,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,24 +58,50 @@ public class RegistrationController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('TOP_MANAGER')")
     public CollectionModel<EntityModel<Registration>> getAll() {
         List<Registration> registrations = registrationService.findAll();
         return modelAssembler.toCollectionModel(registrations);
     }
 
-    @GetMapping(params = "clientId")
-    public CollectionModel<EntityModel<Registration>> getAllByClientId(Long clientId) {
-        List<Registration> registrations = registrationService.findAllByClientId(clientId);
-        return modelAssembler.toCollectionModel(registrations);
-    }
-
     @GetMapping(params = "doctorId")
+    @PostAuthorize("@registrationAccessHandler.canGetAllByDoctorId(returnObject.content)")
     public CollectionModel<EntityModel<Registration>> getAllByDoctorId(Long doctorId) {
         List<Registration> registrations = registrationService.findAllByDoctorId(doctorId);
         return modelAssembler.toCollectionModel(registrations);
     }
 
+    @GetMapping(params = "clientId")
+    @PostAuthorize("@registrationAccessHandler.canGetAnyByClientId(returnObject.content)")
+    public CollectionModel<EntityModel<Registration>> getAllByClientId(Long clientId) {
+        List<Registration> registrations = registrationService.findAllByClientId(clientId);
+        filter(registrations);
+        return modelAssembler.toCollectionModel(registrations);
+    }
+
+    // Cannot use @PostFilter on CollectionModel :(
+    private void filter(List<Registration> registrations) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isUser = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("USER"));
+        boolean isDoctor = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("DOCTOR"));
+
+        if (isUser) {
+            registrations.removeIf(registration -> {
+               String email = registration.getClient().getEmail();
+               return !authentication.getName().equals(email);
+            });
+        } else if (isDoctor) {
+            registrations.removeIf(registration -> {
+                String email = registration.getDoctor().getEmail();
+                return !authentication.getName().equals(email);
+            });
+        }
+    }
+
     @GetMapping("/{id}")
+    @PostAuthorize("@registrationAccessHandler.canGet(returnObject.content)")
     public EntityModel<Registration> getById(@PathVariable Long id) {
         Registration registration = registrationService.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Registration not found: " + id));
@@ -86,6 +116,7 @@ public class RegistrationController {
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("@registrationAccessHandler.canPatchStatus(#id)")
     public EntityModel<Registration> changeStatus(@PathVariable Long id,
                                                   @RequestParam boolean isActive) {
         Registration registration = registrationService.setActive(id, isActive);

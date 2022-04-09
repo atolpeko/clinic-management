@@ -29,23 +29,21 @@ database:
 oauth:
   jwt-key: MjWP5L7CiDff90qA
   clients:
-    -
-      name: registration-service
+    - name: registration-service
       password: reg_554_service14
       grantTypes:
-        - password
-        - refresh_token
+        - client_credentials
+      authorities:
+        - INTERNAL
       scopes:
         - read
-        - write
       accessTokenValiditySeconds: 1800
       refreshTokenValiditySeconds: 43200
-    -
-      name: results-service
-      password: 1789results_11service6
+
+    - name: web-frontend
+      password: 11front_45_jt590
       grantTypes:
         - password
-        - refresh_token
       scopes:
         - read
         - write

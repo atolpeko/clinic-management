@@ -75,7 +75,7 @@ public class ClientController {
 
     @GetMapping("/{id}")
     @PostAuthorize("hasAuthority('USER') and returnObject.content.email == authentication.name " +
-            "or hasAnyAuthority('DOCTOR', 'TOP_MANAGER')")
+            "or hasAnyAuthority('INTERNAL', 'DOCTOR', 'TOP_MANAGER')")
     public EntityModel<Client> getById(@PathVariable @Param("id") Long id) {
         Client client = clientService.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Client not found: " + id));

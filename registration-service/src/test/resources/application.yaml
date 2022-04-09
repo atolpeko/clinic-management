@@ -18,3 +18,12 @@ spring:
   sql:
     init:
       platform: h2
+  security:
+    oauth2:
+      jwt-key: MjWP5L7CiDff90qA
+      client:
+        client-id: registration-service
+        client-secret: reg_554_service14
+        authorization-grant-type: client_credentials
+        scope: read
+        access-token-uri: http://localhost:9000/oauth/token

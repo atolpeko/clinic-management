@@ -24,8 +24,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
+import org.springframework.test.web.servlet.ResultMatcher;
+
+import registrationservice.IntegrationTestConfig;
 import registrationservice.service.registration.Registration;
 import registrationservice.service.registration.RegistrationService;
 
@@ -45,8 +50,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("category.IntegrationTest")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.cloud.config.enabled=false")
+@SpringBootTest(properties = "spring.cloud.config.enabled=false")
+@ContextConfiguration(classes = IntegrationTestConfig.class)
 @AutoConfigureMockMvc
 public class RegistrationControllerTest {
     private static String newRegistrationJson;
@@ -58,7 +63,7 @@ public class RegistrationControllerTest {
     private RegistrationService registrationService;
 
     @BeforeAll
-    public static void createClientJson() {
+    public static void createRegistrationJson() {
         newRegistrationJson = "{\"date\": \"2022-03-08T00:00:00\"," +
                 "\"duty\": { \"id\": 1  }," +
                 "\"clientId\": 1," +
@@ -66,71 +71,192 @@ public class RegistrationControllerTest {
     }
 
     @Test
-    public void shouldReturnRegistrationsOnRegistrationsGetRequest() throws Exception {
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnAllRegistrationsOnRegistrationsGetRequestWhenUserIsTopManager() throws Exception {
+        getAllAndExpect(status().isOk());
+    }
+
+    private void getAllAndExpect(ResultMatcher status) throws Exception {
         mvc.perform(get("/registrations"))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    public void shouldReturnRegistrationOnRegistrationGetRequest() throws Exception {
+    @WithMockUser
+    public void shouldDenyAccessToRegistrationsWhenUserIsNotTopManager() throws Exception {
+        getAllAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnRegistrationOnRegistrationGetByIdRequestWhenUserIsTopManager() throws Exception {
+        getAndExpect(status().isOk());
+    }
+
+    private void getAndExpect(ResultMatcher status) throws Exception {
         mvc.perform(get("/registrations/1"))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    public void shouldReturnRegistrationOnRegistrationGetByClientIdRequest() throws Exception {
-        mvc.perform(get("/registrations").param("clientId", "1"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    @WithMockUser(username = "emma@gmail.com", authorities = "USER")
+    public void shouldReturnRegistrationOnRegistrationGetByIdRequestWhenUserIsAuthorizedAndResourceOwner()
+            throws Exception {
+        getAndExpect(status().isOk());
     }
 
     @Test
-    public void shouldReturnRegistrationOnRegistrationGetByDoctorIdRequest() throws Exception {
+    @WithMockUser(username = "mark@gmail.com", authorities = "DOCTOR")
+    public void shouldReturnRegistrationOnRegistrationGetByIdRequestWhenUserIsDoctorAndResourceOwner()
+            throws Exception {
+        getAndExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser
+    public void shouldDenyAccessToRegistrationByIdWhenUserIsNotResourceOwner() throws Exception {
+        getAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnRegistrationOnRegistrationGetByDoctorIdRequestWhenUserIsTopManager()
+            throws Exception {
+        getByDoctorIdAndExpect(status().isOk());
+    }
+
+    private void getByDoctorIdAndExpect(ResultMatcher status) throws Exception {
         mvc.perform(get("/registrations").param("doctorId", "1"))
                 .andDo(print())
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    public void shouldReturnSavedRegistrationOnRegistrationsPostRequest() throws Exception {
+    @WithMockUser(username = "mark@gmail.com", authorities = "DOCTOR")
+    public void shouldReturnRegistrationOnRegistrationGetByDoctorIdRequestWhenUserIsResourceOwner()
+            throws Exception {
+        getByDoctorIdAndExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "robert@gmail.com", authorities = "DOCTOR")
+    public void shouldDenyAccessToRegistrationsByDoctorIdWhenUserIsNotResourceOwner() throws Exception {
+        getByDoctorIdAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnRegistrationOnRegistrationGetByClientIdRequestWhenUserIsTopManager()
+            throws Exception {
+        getByClientIdAndExpect(status().isOk());
+    }
+
+    private void getByClientIdAndExpect(ResultMatcher status) throws Exception {
+        mvc.perform(get("/registrations").param("clientId", "1"))
+                .andDo(print())
+                .andExpect(status)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    @WithMockUser(username = "mark@gmail.com", authorities = "DOCTOR")
+    public void shouldReturnRegistrationOnRegistrationGetByClientIdRequestWhenUserIsDoctorAndResourceOwner()
+            throws Exception {
+        getByClientIdAndExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "emma@gmail.com", authorities = "USER")
+    public void shouldReturnRegistrationOnRegistrationGetByClientIdWhenUserAuthenticatedAndResourceOwner()
+            throws Exception {
+        getByClientIdAndExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "jain@gmail.com", authorities = "USER")
+    public void shouldDenyAccessToRegistrationsByClientIdWhenUserIsNotResourceOwner() throws Exception {
+        getByClientIdAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser
+    public void shouldReturnSavedRegistrationOnRegistrationsPostRequestWhenUserIsAuthenticated()
+            throws Exception {
         int initialCount = registrationService.findAll().size();
+        postAndExpect(status().isCreated());
+
+        int newCount = registrationService.findAll().size();
+        assertThat(newCount, is(initialCount + 1));
+    }
+
+    private void postAndExpect(ResultMatcher status) throws Exception {
         mvc.perform(post("/registrations")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(newRegistrationJson)
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpect(status().isCreated())
+                .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
 
-        int newCount = registrationService.findAll().size();
-        assertThat(newCount, is(initialCount + 1));
+    @Test
+    public void shouldDenyRegistrationPostingWhenUserIsNotAuthenticated() throws Exception {
+        postAndExpect(status().isUnauthorized());
     }
     
     @Test
-    public void shouldReturnUpdatedRegistrationOnRegistrationStatusPatchRequest() throws Exception {
-        boolean initial = registrationService.findById(1).orElseThrow().isActive();
-        mvc.perform(patch("/registrations/1/status").param("isActive", "false"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnUpdatedRegistrationOnRegistrationStatusPatchRequestWhenUserIsTopManager()
+            throws Exception {
+        boolean initial = registrationService.findById(2).orElseThrow().isActive();
+        patchStatusByIdAndExpect(2, status().isOk());
 
-        boolean updated = registrationService.findById(1).orElseThrow().isActive();
+        boolean updated = registrationService.findById(2).orElseThrow().isActive();
+        assertThat(updated, is(not(equalTo(initial))));
+    }
+
+    private void patchStatusByIdAndExpect(long id, ResultMatcher status) throws Exception {
+        mvc.perform(patch("/registrations/" + id + "/status")
+                        .param("isActive", "false"))
+                .andDo(print())
+                .andExpect(status)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    @WithMockUser(username = "robert@gmail.com", authorities = "DOCTOR")
+    public void shouldReturnUpdatedRegistrationOnRegistrationStatusPatchRequestWhenUserIsDoctorAndResourceOwner()
+            throws Exception {
+        boolean initial = registrationService.findById(3).orElseThrow().isActive();
+        patchStatusByIdAndExpect(3, status().isOk());
+
+        boolean updated = registrationService.findById(3).orElseThrow().isActive();
         assertThat(updated, is(not(equalTo(initial))));
     }
 
     @Test
-    public void shouldDeleteRegistrationOnRegistrationDeleteRequest() throws Exception {
-        mvc.perform(delete("/registrations/3"))
-                .andDo(print())
-                .andExpect(status().isNoContent());
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldDeleteRegistrationOnRegistrationDeleteRequestWhenUserIsTopManager() throws Exception {
+        deleteAndExpect(status().isNoContent());
 
-        Optional<Registration> deleted = registrationService.findById(3);
+        Optional<Registration> deleted = registrationService.findById(4);
         assertThat(deleted, is(Optional.empty()));
+    }
+
+    private void deleteAndExpect(ResultMatcher status) throws Exception {
+        mvc.perform(delete("/registrations/4"))
+                .andDo(print())
+                .andExpect(status);
+    }
+
+    @Test
+    @WithMockUser
+    public void shouldDenyRegistrationDeletionWhenUserIsNotTopManager() throws Exception {
+        deleteAndExpect(status().isForbidden());
     }
 }

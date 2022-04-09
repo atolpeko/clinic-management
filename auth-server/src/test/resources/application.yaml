@@ -29,36 +29,25 @@ database:
 oauth:
   jwt-key: MjWP5L7CiDff90qA
   clients:
-    -
-      name: clinic-service
-      password: clinic5813_8service
+    - name: client1
+      password: client1
       grantTypes:
-        - password
-        - refresh_token
+        - client_credentials
+      authorities:
+        - AUTH
       scopes:
         - read
         - write
-      accessTokenValiditySeconds: 1800
-      refreshTokenValiditySeconds: 43200
-    -
-      name: registration-service
-      password: reg_554_service14
+      accessTokenValiditySeconds: 10
+      refreshTokenValiditySeconds: 10
+    - name: client2
+      password: client2
       grantTypes:
-        - password
-        - refresh_token
+        - client_credentials
+      authorities:
+        - AUTH
       scopes:
         - read
         - write
-      accessTokenValiditySeconds: 1800
-      refreshTokenValiditySeconds: 43200
-    -
-      name: results-service
-      password: 1789results_11service6
-      grantTypes:
-        - password
-        - refresh_token
-      scopes:
-        - read
-        - write
-      accessTokenValiditySeconds: 1800
-      refreshTokenValiditySeconds: 43200
+      accessTokenValiditySeconds: 20
+      refreshTokenValiditySeconds: 20
