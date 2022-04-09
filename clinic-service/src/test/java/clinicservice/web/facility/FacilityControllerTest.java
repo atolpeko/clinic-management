@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -39,9 +40,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @Tag("category.IntegrationTest")
 @SpringBootTest(properties = "spring.cloud.config.enabled=false")
@@ -73,7 +78,7 @@ public class FacilityControllerTest {
     }
 
     @Test
-    public void shouldReturnFacilityOnFacilityGetRequest() throws Exception {
+    public void shouldReturnFacilityOnFacilityGeByIdtRequest() throws Exception {
         mvc.perform(get("/facilities/1"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -109,9 +114,15 @@ public class FacilityControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyFacilityPostingWhenUserIsNotTopManager() throws Exception {
         postAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyFacilityPostingWhenUserIsNotAuthenticated() throws Exception {
+        postAndExpect(status().isUnauthorized());
     }
 
     @Test
@@ -135,14 +146,21 @@ public class FacilityControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyFacilityPatchingWhenUserIsNotTopManager() throws Exception {
         patchAndExpect(status().isForbidden());
     }
 
     @Test
+    @WithAnonymousUser
+    public void shouldDenyFacilityPatchingWhenUserIsNotAuthenticated() throws Exception {
+        patchAndExpect(status().isUnauthorized());
+    }
+
+    @Test
     @WithMockUser(authorities = "TOP_MANAGER")
-    public void shouldDeleteFacilityFromDepartmentOnFacilitiesDeleteRequestWhenUserIsTopManager() throws Exception {
+    public void shouldDeleteFacilityFromDepartmentOnFacilitiesDeleteRequestWhenUserIsTopManager()
+            throws Exception {
         deleteAndExpect(status().isNoContent());
 
         MedicalFacility facility = facilityService.findById(3).orElseThrow();
@@ -161,8 +179,14 @@ public class FacilityControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyFacilityDeletionWhenUserIsNotTopManager() throws Exception {
         deleteAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyFacilityDeletionWhenUserIsNotAuthenticated() throws Exception {
+        deleteAndExpect(status().isUnauthorized());
     }
 }

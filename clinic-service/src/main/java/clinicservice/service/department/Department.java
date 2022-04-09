@@ -20,7 +20,7 @@ import clinicservice.service.Address;
 import clinicservice.service.employee.AbstractEmployee;
 import clinicservice.service.facility.MedicalFacility;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -46,7 +46,6 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "department")
-@JsonIgnoreProperties({ "facilities", "employees" })
 public class Department implements Serializable {
 
     @Id
@@ -58,13 +57,15 @@ public class Department implements Serializable {
     @Valid
     private Address address;
 
-    @OneToMany(mappedBy = "department", fetch = FetchType.EAGER, orphanRemoval = true)
+    @OneToMany(mappedBy = "department", fetch = FetchType.LAZY, orphanRemoval = true)
+    @JsonIgnore
     private Set<AbstractEmployee> employees;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "department_facility",
             joinColumns = @JoinColumn(name = "department_id", nullable = false),
             inverseJoinColumns = @JoinColumn(name = "facility_id", nullable = false))
+    @JsonIgnore
     private Set<MedicalFacility> facilities;
 
     public Department() {

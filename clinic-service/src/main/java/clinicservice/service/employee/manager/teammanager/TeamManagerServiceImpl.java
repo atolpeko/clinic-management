@@ -17,10 +17,12 @@
 package clinicservice.service.employee.manager.teammanager;
 
 import clinicservice.data.DepartmentRepository;
+import clinicservice.data.DoctorRepository;
 import clinicservice.data.TeamManagerRepository;
 import clinicservice.service.Address;
 import clinicservice.service.department.Department;
 import clinicservice.service.employee.PersonalData;
+import clinicservice.service.employee.doctor.Doctor;
 import clinicservice.service.exception.IllegalModificationException;
 import clinicservice.service.exception.RemoteResourceException;
 
@@ -28,6 +30,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -50,6 +53,7 @@ public class TeamManagerServiceImpl implements TeamManagerService {
     private static final Logger logger = LogManager.getLogger(TeamManagerServiceImpl.class);
 
     private final TeamManagerRepository managerRepository;
+    private final DoctorRepository doctorRepository;
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
     private final Validator validator;
@@ -57,11 +61,13 @@ public class TeamManagerServiceImpl implements TeamManagerService {
 
     @Autowired
     public TeamManagerServiceImpl(TeamManagerRepository managerRepository,
+                                  DoctorRepository doctorRepository,
                                   DepartmentRepository departmentRepository,
                                   PasswordEncoder passwordEncoder,
                                   Validator validator,
                                   CircuitBreaker circuitBreaker) {
         this.managerRepository = managerRepository;
+        this.doctorRepository = doctorRepository;
         this.departmentRepository = departmentRepository;
         this.passwordEncoder = passwordEncoder;
         this.validator = validator;
@@ -156,12 +162,25 @@ public class TeamManagerServiceImpl implements TeamManagerService {
             String msg = "No department with id: " + manager.getDepartment().getId();
             throw new IllegalModificationException(msg);
         }
+
+        validateTeam(manager.getTeam());
     }
 
     private boolean departmentExists(long id) {
         Supplier<Optional<Department>> findById = () -> departmentRepository.findById(id);
         Optional<Department> department = circuitBreaker.decorateSupplier(findById).get();
         return department.isPresent();
+    }
+
+    private void validateTeam(Set<Doctor> team) {
+        for (Doctor doctor : team) {
+            long id = doctor.getId();
+            Supplier<Optional<Doctor>> findById = () -> doctorRepository.findById(id);
+            Optional<Doctor> saved = circuitBreaker.decorateSupplier(findById).get();
+            if (saved.isEmpty()) {
+                throw new IllegalModificationException("Such a doctor does not exist: " + id);
+            }
+        }
     }
 
     @Override
@@ -264,7 +283,7 @@ public class TeamManagerServiceImpl implements TeamManagerService {
             circuitBreaker.decorateRunnable(delete).run();
             logger.info("Manager " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
-            throw new IllegalModificationException("No manager with id " + id);
+            throw new IllegalModificationException("No manager with id " + id, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Employee database unavailable", e);
         }

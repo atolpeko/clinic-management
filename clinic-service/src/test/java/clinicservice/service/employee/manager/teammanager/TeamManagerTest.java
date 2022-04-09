@@ -18,8 +18,8 @@ package clinicservice.service.employee.manager.teammanager;
 
 import clinicservice.service.Address;
 import clinicservice.service.department.Department;
-
 import clinicservice.service.employee.PersonalData;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -65,9 +65,18 @@ public class TeamManagerTest {
 
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
-        TeamManager admin = new TeamManager();
+        Address address = new Address();
+        address.setHouseNumber(-1);
 
-        int errors = validator.validate(admin).size();
-        assertThat(errors, is(3));
+        PersonalData data = new PersonalData();
+        data.setAddress(address);
+        data.setSalary(BigDecimal.valueOf(-1));
+
+        TeamManager manager = new TeamManager();
+        manager.setPersonalData(data);
+        manager.setEmail("not-a-email");
+
+        int errors = validator.validate(manager).size();
+        assertThat(errors, is(14));
     }
 }

@@ -197,8 +197,7 @@ public class PersonalData implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, phone, dateOfBirth,
-                address, sex, hireDate, salary);
+        return Objects.hash(name, phone, dateOfBirth, address, sex, hireDate, salary);
     }
 
     @Override

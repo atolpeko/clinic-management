@@ -17,6 +17,7 @@
 package clinicservice.service.employee.manager.teammanager;
 
 import clinicservice.data.DepartmentRepository;
+import clinicservice.data.DoctorRepository;
 import clinicservice.data.TeamManagerRepository;
 import clinicservice.service.Address;
 import clinicservice.service.department.Department;
@@ -29,7 +30,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+
 import org.mockito.Mockito;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.validation.Validator;
@@ -56,6 +59,7 @@ import static org.mockito.Mockito.when;
 @Tag("category.UnitTest")
 public class TeamManagerServiceImplTest {
     private static TeamManagerRepository managerRepository;
+    private static DoctorRepository doctorRepository;
     private static DepartmentRepository departmentRepository;
     private static Validator validator;
     private static PasswordEncoder encoder;
@@ -69,6 +73,7 @@ public class TeamManagerServiceImplTest {
     @BeforeAll
     public static void setUpMocks() {
         managerRepository = mock(TeamManagerRepository.class);
+        doctorRepository = mock(DoctorRepository.class);
         departmentRepository = mock(DepartmentRepository.class);
         validator = mock(Validator.class);
 
@@ -96,38 +101,36 @@ public class TeamManagerServiceImplTest {
         data.setHireDate(LocalDate.now());
         data.setSalary(BigDecimal.valueOf(1000));
 
-        Address address = new Address("USA", "NY", "NYC", "22", 1);
         Department department = new Department();
-        department.setAddress(address);
+        department.setAddress(new Address("USA", "NY", "NYC", "22", 1));
         department.setId(1L);
 
         manager = new TeamManager();
         manager.setPersonalData(data);
         manager.setDepartment(department);
         manager.setId(1L);
-        manager.setEmail("admin@gmail.com");
+        manager.setEmail("manager@gmail.com");
         manager.setPassword("12345678");
     }
 
     @BeforeAll
     public static void createUpdatedManager() {
-        Address address = new Address("USA", "NY", "NYC", "22", 1);
         Department department = new Department();
-        department.setAddress(address);
+        department.setAddress(new Address("USA", "NY", "NYC", "22", 1));
         department.setId(1L);
 
         updatedManager = new TeamManager();
         updatedManager.setId(1L);
         updatedManager.setDepartment(department);
-        updatedManager.setEmail("admin2@gmail.com");
-        updatedManager.setPassword("12345");
+        updatedManager.setEmail("manager@gmail.com");
+        updatedManager.setPassword("3434km33");
     }
 
     @BeforeEach
     public void beforeEach() {
         Mockito.reset(managerRepository, departmentRepository, validator);
-        managerService = new TeamManagerServiceImpl(managerRepository, departmentRepository,
-                encoder, validator, circuitBreaker);
+        managerService = new TeamManagerServiceImpl(managerRepository, doctorRepository,
+                departmentRepository, encoder, validator, circuitBreaker);
     }
 
     @Test
@@ -202,7 +205,7 @@ public class TeamManagerServiceImplTest {
 
         managerService.deleteById(1);
 
-        Optional<TeamManager> deletedManager = managerService.findById(1);
-        assertThat(deletedManager, is(Optional.empty()));
+        Optional<TeamManager> deleted = managerService.findById(1);
+        assertThat(deleted, is(Optional.empty()));
     }
 }

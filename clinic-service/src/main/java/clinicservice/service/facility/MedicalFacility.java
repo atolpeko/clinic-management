@@ -18,7 +18,7 @@ package clinicservice.service.facility;
 
 import clinicservice.service.department.Department;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -41,7 +41,6 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "facility")
-@JsonIgnoreProperties(value = "departments", allowSetters = true)
 public class MedicalFacility implements Serializable {
 
     @Id
@@ -54,6 +53,7 @@ public class MedicalFacility implements Serializable {
 
     @ManyToMany(mappedBy = "facilities", fetch = FetchType.EAGER)
     @NotEmpty(message = "Departments are mandatory")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Set<Department> departments;
 
     public MedicalFacility() {

@@ -29,7 +29,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 @Tag("category.UnitTest")
 public class DepartmentTest {
-
     private static Validator validator;
 
     @BeforeAll
@@ -48,9 +47,13 @@ public class DepartmentTest {
 
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
+        Address address = new Address();
+        address.setHouseNumber(-1);
+
         Department department = new Department();
+        department.setAddress(address);
 
         int errors = validator.validate(department).size();
-        assertThat(errors, is(1));
+        assertThat(errors, is(5));
     }
 }

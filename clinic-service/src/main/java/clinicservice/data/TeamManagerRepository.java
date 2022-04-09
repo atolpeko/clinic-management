@@ -19,6 +19,8 @@ package clinicservice.data;
 import clinicservice.service.employee.manager.teammanager.TeamManager;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -47,4 +49,15 @@ public interface TeamManagerRepository extends JpaRepository<TeamManager, Long> 
      * @return all managers with the given department ID
      */
     List<TeamManager> findAllByDepartmentId(long departmentId);
+
+    // The default implementation does not work for an unknown reason
+    @Override
+    @Query("SELECT m FROM TeamManager m WHERE m.id = ?1")
+    Optional<TeamManager> findById(Long id);
+
+    // The default implementation does not work for an unknown reason
+    @Override
+    @Modifying
+    @Query("DELETE FROM TeamManager m WHERE m.id = ?1")
+    void deleteById(Long id);
 }

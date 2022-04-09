@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package clinicservice.service.employee.doctor;
+package clinicservice.service.employee.manager.topmanager;
 
 import clinicservice.service.Address;
 import clinicservice.service.department.Department;
@@ -34,7 +34,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @Tag("category.UnitTest")
-public class DoctorTest {
+public class TopManagerTest {
+
     private static Validator validator;
 
     @BeforeAll
@@ -53,15 +54,13 @@ public class DoctorTest {
         data.setHireDate(LocalDate.now());
         data.setSalary(BigDecimal.valueOf(1000));
 
-        Doctor doctor = new Doctor();
-        doctor.setPersonalData(data);
-        doctor.setEmail("doctor@gmail.com");
-        doctor.setPassword("12345678");
-        doctor.setSpecialty("Specialty");
-        doctor.setDepartment(new Department());
-        doctor.setPracticeBeginningDate(LocalDate.now());
+        TopManager manager = new TopManager();
+        manager.setPersonalData(data);
+        manager.setEmail("admin@gmail.com");
+        manager.setPassword("12345678");
+        manager.setDepartment(new Department());
 
-        int errors = validator.validate(doctor).size();
+        int errors = validator.validate(manager).size();
         assertThat(errors, is(0));
     }
 
@@ -74,11 +73,11 @@ public class DoctorTest {
         data.setAddress(address);
         data.setSalary(BigDecimal.valueOf(-1));
 
-        Doctor doctor = new Doctor();
-        doctor.setPersonalData(data);
-        doctor.setEmail("not-a-email");
+        TopManager manager = new TopManager();
+        manager.setPersonalData(data);
+        manager.setEmail("not-a-email");
 
-        int errors = validator.validate(doctor).size();
-        assertThat(errors, is(16));
+        int errors = validator.validate(manager).size();
+        assertThat(errors, is(13));
     }
 }

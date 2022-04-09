@@ -194,7 +194,7 @@ public class FacilityServiceImpl implements FacilityService {
             circuitBreaker.decorateRunnable(delete).run();
             logger.info("All medical facilities deleted from department " + departmentId);
         } catch (EmptyResultDataAccessException e) {
-            throw new IllegalModificationException("No department with id " + departmentId);
+            throw new IllegalModificationException("No department with id " + departmentId, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Facility database unavailable", e);
         }
@@ -213,7 +213,7 @@ public class FacilityServiceImpl implements FacilityService {
         } catch (EmptyResultDataAccessException e) {
             String errorMsg = "No department with id " + departmentId +
                     " or facility with id " + facilityId;
-            throw new IllegalModificationException(errorMsg);
+            throw new IllegalModificationException(errorMsg, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Facility database unavailable", e);
         }
@@ -230,10 +230,10 @@ public class FacilityServiceImpl implements FacilityService {
             circuitBreaker.decorateRunnable(delete).run();
             logger.info("Medical facility " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
-            throw new IllegalModificationException("No facility with id " + id);
+            throw new IllegalModificationException("No facility with id " + id, e);
         } catch (DataIntegrityViolationException e) {
             String errorMsg = "Delete all departments related to this facility first";
-            throw new IllegalModificationException(errorMsg);
+            throw new IllegalModificationException(errorMsg, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Facility database unavailable", e);
         }

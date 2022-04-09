@@ -20,8 +20,6 @@ import clinicservice.service.department.Department;
 import clinicservice.service.employee.AbstractEmployee;
 import clinicservice.service.employee.PersonalData;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
@@ -36,7 +34,6 @@ import java.util.Objects;
  */
 @Entity
 @DiscriminatorValue("DOCTOR")
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class Doctor extends AbstractEmployee {
 
     @NotBlank(message = "Specialty is mandatory")
@@ -65,7 +62,7 @@ public class Doctor extends AbstractEmployee {
     }
 
     /**
-     * Constructs a new Doctor with the specified email, password, personal data, department,
+     * Constructs a new enabled Doctor with the specified email, password, personal data, department,
      * specialty and date of practice beginning.
      *
      * @param email email to set

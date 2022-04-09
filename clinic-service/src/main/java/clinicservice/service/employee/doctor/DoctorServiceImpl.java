@@ -278,7 +278,7 @@ public class DoctorServiceImpl implements DoctorService {
             circuitBreaker.decorateRunnable(delete).run();
             logger.info("Doctor " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
-            throw new IllegalModificationException("No doctor with id " + id);
+            throw new IllegalModificationException("No doctor with id " + id, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Employee database unavailable", e);
         }

@@ -229,7 +229,7 @@ public class TopManagerServiceImpl implements TopManagerService {
             circuitBreaker.decorateRunnable(delete).run();
             logger.info("Manager " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
-            throw new IllegalModificationException("No manager with id " + id);
+            throw new IllegalModificationException("No manager with id " + id, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Employee database unavailable", e);
         }

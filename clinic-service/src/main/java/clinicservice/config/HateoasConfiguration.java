@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-package clinicservice;
+package clinicservice.config;
 
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.filter.ForwardedHeaderFilter;
 
-import org.springframework.boot.test.context.SpringBootTest;
+@Configuration
+public class HateoasConfiguration {
 
-@Tag("category.IntegrationTest")
-@SpringBootTest(properties = "spring.cloud.config.enabled=false")
-public class ClinicServiceApplicationTests {
-
-    @Test
-    public void contextLoads() {
+    @Bean
+    public FilterRegistrationBean<ForwardedHeaderFilter> forwardedHeaderFilter() {
+        FilterRegistrationBean<ForwardedHeaderFilter> filter = new FilterRegistrationBean<>();
+        filter.setFilter(new ForwardedHeaderFilter());
+        filter.setOrder(0);
+        return filter;
     }
 }

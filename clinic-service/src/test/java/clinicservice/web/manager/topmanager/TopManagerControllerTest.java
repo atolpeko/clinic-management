@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -97,9 +98,15 @@ public class TopManagerControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyAccessToManagersWhenUserIsNotTopManager() throws Exception {
         getAllAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyAccessToManagersWhenUserIsNotAuthorized() throws Exception {
+        getAllAndExpect(status().isUnauthorized());
     }
 
     @Test
@@ -109,16 +116,22 @@ public class TopManagerControllerTest {
     }
 
     private void getAndExpect(ResultMatcher status) throws Exception {
-        mvc.perform(get("/top-managers/9"))
+        mvc.perform(get("/top-managers/10"))
                 .andDo(print())
                 .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyAccessToManagerByIdWhenUserIsNotTopManager() throws Exception {
         getAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyAccessToManagerByIdWhenUserIsNotAuthorized() throws Exception {
+        getAndExpect(status().isUnauthorized());
     }
 
     @Test
@@ -135,9 +148,15 @@ public class TopManagerControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyAccessToManagerByEmailWhenUserIsNotTopManager() throws Exception {
         getByEmailAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyAccessToManagerByEmailWhenUserIsNotAuthorized() throws Exception {
+        getByEmailAndExpect(status().isUnauthorized());
     }
 
     @Test
@@ -161,23 +180,29 @@ public class TopManagerControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyManagerPostingWhenUserIsNotTopManager() throws Exception {
         postAndExpect(status().isForbidden());
     }
 
     @Test
+    @WithAnonymousUser
+    public void shouldDenyManagerPostingWhenUserIsNotAuthorized() throws Exception {
+        postAndExpect(status().isUnauthorized());
+    }
+
+    @Test
     @WithMockUser(username = "william@gmail.com", authorities = "TOP_MANAGER")
     public void shouldReturnUpdatedManagerOnManagerPatchRequestWhenUserIsResourceOwner() throws Exception {
-        TopManager initial = managerService.findById(10).orElseThrow();
+        TopManager initial = managerService.findById(11).orElseThrow();
         patchAndExpect(status().isOk());
 
-        TopManager updated = managerService.findById(10).orElseThrow();
+        TopManager updated = managerService.findById(11).orElseThrow();
         assertThat(updated, is(not(equalTo(initial))));
     }
 
     private void patchAndExpect(ResultMatcher status) throws Exception {
-        mvc.perform(patch("/top-managers/10")
+        mvc.perform(patch("/top-managers/11")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateManagerJson)
                         .accept(MediaType.APPLICATION_JSON))
@@ -187,8 +212,20 @@ public class TopManagerControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = "TOP_MANAGER")
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    public void shouldDenyManagerPathingWhenUserIsNotTopManager() throws Exception {
+        patchAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "james@gmail.com", authorities = "TOP_MANAGER")
     public void shouldDenyManagerPatchingWhenUserIsNotResourceOwner() throws Exception {
+        patchAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyManagerPatchingWhenUserIsNotAuthorized() throws Exception {
         patchAndExpect(status().isUnauthorized());
     }
 
@@ -197,19 +234,31 @@ public class TopManagerControllerTest {
     public void shouldDeleteManagerOnManagerDeleteRequestWhenUserIsResourceOwner() throws Exception {
         deleteAndExpect(status().isNoContent());
 
-        Optional<TopManager> deleted = managerService.findById(7);
+        Optional<TopManager> deleted = managerService.findById(12);
         assertThat(deleted, is(Optional.empty()));
     }
 
     private void deleteAndExpect(ResultMatcher status) throws Exception {
-        mvc.perform(delete("/top-managers/11"))
+        mvc.perform(delete("/top-managers/12"))
                 .andDo(print())
                 .andExpect(status);
     }
 
     @Test
-    @WithMockUser(authorities = "TOP_MANAGER")
+    @WithMockUser(username = "william@gmail.com", authorities = "TOP_MANAGER")
     public void shouldDenyManagerDeletionWhenUserIsNotResourceOwner() throws Exception {
+        deleteAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    public void shouldDenyManagerDeletionWhenUserIsNotTopManager() throws Exception {
+        deleteAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyManagerDeletionWhenUserIsNotAuthorized() throws Exception {
         deleteAndExpect(status().isUnauthorized());
     }
 }

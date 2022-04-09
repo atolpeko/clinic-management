@@ -93,7 +93,7 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
                     .hasAnyAuthority("TEAM_MANAGER", "TOP_MANAGER")
                 .mvcMatchers("/top-managers/**")
                     .hasAuthority("TOP_MANAGER")
-                .and()
+            .and()
             .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.NEVER);
     }

@@ -27,18 +27,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
+
+import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @Tag("category.IntegrationTest")
 @SpringBootTest(properties = "spring.cloud.config.enabled=false")
@@ -81,7 +88,7 @@ public class DepartmentControllerTest {
     }
 
     @Test
-    public void shouldReturnDepartmentOnDepartmentGetRequest() throws Exception {
+    public void shouldReturnDepartmentOnDepartmentGetByIdRequest() throws Exception {
         mvc.perform(get("/departments/1"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -117,9 +124,15 @@ public class DepartmentControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyDepartmentPostingWhenUserIsNotTopManager() throws Exception {
         postAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyDepartmentPostingWhenUserIsNotAuthorized() throws Exception {
+        postAndExpect(status().isUnauthorized());
     }
 
     @Test
@@ -143,8 +156,41 @@ public class DepartmentControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyDepartmentPatchingWhenUserIsNotTopManager() throws Exception {
         patchAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyDepartmentPatchingWhenUserIsNotAuthorized() throws Exception {
+        patchAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldDeleteDepartmentOnDepartmentDeleteRequestWhenUserIsTopManager() throws Exception {
+        deleteAndExpect(status().isNoContent());
+
+        Optional<Department> deleted = departmentService.findById(3);
+        assertThat(deleted, is(Optional.empty()));
+    }
+
+    private void deleteAndExpect(ResultMatcher status) throws Exception {
+        mvc.perform(delete("/departments/3"))
+                .andDo(print())
+                .andExpect(status);
+    }
+
+    @Test
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    public void shouldDenyDepartmentDeletionWhenUserIsNotTopManager() throws Exception {
+        deleteAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyDepartmentDeletionWhenUserIsNotAuthorized() throws Exception {
+        deleteAndExpect(status().isUnauthorized());
     }
 }

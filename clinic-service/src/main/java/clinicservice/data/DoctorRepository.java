@@ -19,6 +19,8 @@ package clinicservice.data;
 import clinicservice.service.employee.doctor.Doctor;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -53,7 +55,18 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
      *
      * @param specialty specialty of the doctors to get
      *
-     * @return all doctors with the given department ID
+     * @return all doctors with the given specialty
      */
     List<Doctor> findAllBySpecialty(String specialty);
+
+    // The default implementation does not work for an unknown reason
+    @Override
+    @Query("SELECT m FROM Doctor m WHERE m.id = ?1")
+    Optional<Doctor> findById(Long id);
+
+    // The default implementation does not work for an unknown reason
+    @Override
+    @Modifying
+    @Query("DELETE FROM Doctor m WHERE m.id = ?1")
+    void deleteById(Long id);
 }

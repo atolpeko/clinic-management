@@ -187,7 +187,7 @@ public class TopManagerServiceImplTest {
 
         managerService.deleteById(1);
 
-        Optional<TopManager> deletedManager = managerService.findById(1);
-        assertThat(deletedManager, is(Optional.empty()));
+        Optional<TopManager> deleted = managerService.findById(1);
+        assertThat(deleted, is(Optional.empty()));
     }
 }

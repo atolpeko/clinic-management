@@ -31,9 +31,11 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import org.mockito.Mockito;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.validation.Validator;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -104,8 +106,8 @@ public class DoctorServiceImplTest {
         doctor = new Doctor();
         doctor.setId(1L);
         doctor.setEmail("doctor@gmail.com");
-        doctor.setPassword("12345678");
-        doctor.setSpecialty("Specialty1");
+        doctor.setPassword("gh4455fhgkj7");
+        doctor.setSpecialty("Surgery");
         doctor.setPersonalData(data);
         doctor.setDepartment(department);
         doctor.setPracticeBeginningDate(LocalDate.now());
@@ -121,8 +123,8 @@ public class DoctorServiceImplTest {
         updatedDoctor = new Doctor();
         updatedDoctor.setId(1L);
         updatedDoctor.setEmail("doctor2@gmail.com");
-        updatedDoctor.setPassword("12345678");
-        updatedDoctor.setSpecialty("Specialty2");
+        updatedDoctor.setPassword("ffdf222");
+        updatedDoctor.setSpecialty("Surgery");
         updatedDoctor.setDepartment(department);
         updatedDoctor.setPracticeBeginningDate(LocalDate.now());
     }
@@ -170,6 +172,15 @@ public class DoctorServiceImplTest {
     }
 
     @Test
+    public void shouldReturnListOfDoctorsBySpecialtyWhenContainsMultipleDoctors() {
+        List<Doctor> doctors = List.of(doctor, doctor, doctor);
+        when(doctorRepository.findAllBySpecialty("Surgery")).thenReturn(doctors);
+
+        List<Doctor> saved = doctorService.findAllBySpecialty("Surgery");
+        assertThat(saved, is(equalTo(doctors)));
+    }
+
+    @Test
     public void shouldSaveDoctorWhenDoctorIsValid() {
         Department department = doctor.getDepartment();
         when(departmentRepository.findById(department.getId())).thenReturn(Optional.of(department));
@@ -206,7 +217,7 @@ public class DoctorServiceImplTest {
 
         doctorService.deleteById(1);
 
-        Optional<Doctor> deletedDoctor = doctorService.findById(1);
-        assertThat(deletedDoctor, is(Optional.empty()));
+        Optional<Doctor> deleted = doctorService.findById(1);
+        assertThat(deleted, is(Optional.empty()));
     }
 }

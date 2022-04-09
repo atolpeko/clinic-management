@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import javax.validation.Validator;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -41,7 +42,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
@@ -162,7 +163,7 @@ public class FacilityServiceImplTest {
 
         facilityService.deleteById(1);
 
-        Optional<MedicalFacility> deletedFacility = facilityService.findById(1);
-        assertThat(deletedFacility, is(Optional.empty()));
+        Optional<MedicalFacility> deleted = facilityService.findById(1);
+        assertThat(deleted, is(Optional.empty()));
     }
 }

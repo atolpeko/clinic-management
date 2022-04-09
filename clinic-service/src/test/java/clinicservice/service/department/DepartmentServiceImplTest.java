@@ -19,6 +19,7 @@ package clinicservice.service.department;
 import clinicservice.data.DepartmentRepository;
 import clinicservice.service.Address;
 import clinicservice.service.exception.IllegalModificationException;
+import clinicservice.service.facility.MedicalFacility;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 
@@ -33,12 +34,13 @@ import javax.validation.Validator;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
@@ -72,13 +74,17 @@ public class DepartmentServiceImplTest {
         department = new Department();
         department.setId(1L);
         department.setAddress(new Address("USA", "NY", "NYC", "23", 1));
+
+        MedicalFacility facility = new MedicalFacility();
+        facility.setId(1L);
+        facility.setDepartments(Set.of(department));
     }
 
     @BeforeAll
     public static void createUpdatedDepartment() {
         updatedDepartment = new Department();
         updatedDepartment.setId(1L);
-        updatedDepartment.setAddress(new Address("USA", "California", "Los Angels", "36", 1));
+        updatedDepartment.setAddress(new Address("USA", "California", "Los Angels", "36", 2));
     }
 
     @BeforeEach
@@ -101,6 +107,15 @@ public class DepartmentServiceImplTest {
         when(repository.findAll()).thenReturn(departments);
 
         List<Department> saved = departmentService.findAll();
+        assertThat(saved, is(equalTo(departments)));
+    }
+
+    @Test
+    public void shouldReturnListODepartmentsByFacilityIdWhenContainsMultipleDepartments() {
+        List<Department> departments = List.of(department, department, department);
+        when(repository.findAllByFacilityId(1L)).thenReturn(departments);
+
+        List<Department> saved = departmentService.findAllByFacilityId(1L);
         assertThat(saved, is(equalTo(departments)));
     }
 
@@ -137,7 +152,7 @@ public class DepartmentServiceImplTest {
 
         departmentService.deleteById(1);
 
-        Optional<Department> deletedDepartment = departmentService.findById(1);
-        assertThat(deletedDepartment, is(Optional.empty()));
+        Optional<Department> deleted = departmentService.findById(1);
+        assertThat(deleted, is(Optional.empty()));
     }
 }

@@ -40,7 +40,7 @@ import java.util.Set;
 @DiscriminatorValue("TEAM_MANAGER")
 public class TeamManager extends AbstractEmployee {
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "manager_team",
             joinColumns = @JoinColumn(name = "manager_id", nullable = false),
             inverseJoinColumns = @JoinColumn(name = "employee_id", nullable = false))
@@ -65,7 +65,7 @@ public class TeamManager extends AbstractEmployee {
     }
 
     /**
-     * Constructs a new TeamManager with the specified email,
+     * Constructs a new enabled TeamManager with the specified email,
      * password, personal data, department and team.
      *
      * @param email email to set

@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -50,8 +51,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.cloud.config.enabled=false")
 @AutoConfigureMockMvc
 public class TeamManagerControllerTest {
-    private static String newManagerJson;
-    private static String updateManagerJson;
+    private static String newManager1Json;
+    private static String newManager2Json;
+    private static String updateManager1Json;
+    private static String updateManager2Json;
 
     @Autowired
     private MockMvc mvc;
@@ -60,8 +63,8 @@ public class TeamManagerControllerTest {
     private TeamManagerService managerService;
 
     @BeforeAll
-    public static void createManagerJsons() {
-        newManagerJson = "{\"name\": \"Alexander\"," +
+    public static void createNewManagerJsons() {
+        newManager1Json = "{\"name\": \"Alexander\"," +
                 "\"hireDate\": \"2022-03-01\"," +
                 "\"phone\": \"123456\"," +
                 "\"sex\": \"MALE\"," +
@@ -71,16 +74,66 @@ public class TeamManagerControllerTest {
                 "\"email\": \"team-manager@gmail.com\"," +
                 "\"password\": \"12345678\"," +
                 "\"address\":{" +
-                "\"country\":\"USA\"," +
-                "\"state\":\"NY\"," +
-                "\"city\":\"NYC\"," +
-                "\"street\":\"23\"," +
-                "\"houseNumber\":11" +
+                    "\"country\":\"USA\"," +
+                    "\"state\":\"NY\"," +
+                    "\"city\":\"NYC\"," +
+                    "\"street\":\"23\"," +
+                    "\"houseNumber\":11" +
                 "}}";
 
-        updateManagerJson = "{\"name\": \"Mark\"," +
+        newManager2Json = "{\"name\": \"Alexander\"," +
+                "\"hireDate\": \"2022-03-01\"," +
+                "\"phone\": \"123456\"," +
+                "\"sex\": \"MALE\"," +
+                "\"dateOfBirth\": \"1995-01-22\"," +
+                "\"salary\": 1000," +
                 "\"department\" : { \"id\": 2 }," +
-                "\"email\": \"team-manager2@gmail.com\"}";
+                "\"email\": \"team-manager2@gmail.com\"," +
+                "\"password\": \"12345678\"," +
+                "\"address\":{" +
+                    "\"country\":\"USA\"," +
+                    "\"state\":\"NY\"," +
+                    "\"city\":\"NYC\"," +
+                    "\"street\":\"23\"," +
+                    "\"houseNumber\":11" +
+                "}}";
+    }
+
+    @BeforeAll
+    public static void createUpdateManagerJsons() {
+        updateManager1Json = "{\"name\": \"Lucas\"," +
+                "\"hireDate\": \"2022-03-01\"," +
+                "\"phone\": \"234234\"," +
+                "\"sex\": \"FEMALE\"," +
+                "\"dateOfBirth\": \"2003-02-11\"," +
+                "\"salary\": 1200," +
+                "\"department\" : { \"id\": 2 }," +
+                "\"email\": \"lucas-manager@gmail.com\"," +
+                "\"password\": \"fhujff22df2242\"," +
+                "\"address\":{" +
+                    "\"country\":\"USA\"," +
+                    "\"state\":\"NY\"," +
+                    "\"city\":\"NYC\"," +
+                    "\"street\":\"11\"," +
+                    "\"houseNumber\":23" +
+                "}}";
+
+        updateManager2Json = "{\"name\": \"Emmeline\"," +
+                "\"hireDate\": \"2022-03-01\"," +
+                "\"phone\": \"234234\"," +
+                "\"sex\": \"FEMALE\"," +
+                "\"dateOfBirth\": \"2003-02-11\"," +
+                "\"salary\": 1200," +
+                "\"department\" : { \"id\": 2 }," +
+                "\"email\": \"emmeline-manager@gmail.com\"," +
+                "\"password\": \"dfdfdf2242\"," +
+                "\"address\":{" +
+                    "\"country\":\"USA\"," +
+                    "\"state\":\"NY\"," +
+                    "\"city\":\"NYC\"," +
+                    "\"street\":\"11\"," +
+                    "\"houseNumber\":23" +
+                "}}";
     }
 
     @Test
@@ -97,9 +150,15 @@ public class TeamManagerControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyAccessToAllManagersWhenUserIsNotTopManager() throws Exception {
-        getAllAndExpect(status().isForbidden());
+        getAllAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyAccessToAllManagesWhenUserIsNotAuthenticated() throws Exception {
+        getAllAndExpect( status().isUnauthorized());
     }
 
     @Test
@@ -122,14 +181,26 @@ public class TeamManagerControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = { "DOCTOR", "USER", "INTERNAL" })
+    public void shouldDenyAccessToManagerByEmailWhenUserIsNotTopManager() throws Exception {
+        getByEmailAndExpect(status().isForbidden());
+    }
+
+    @Test
     @WithMockUser(username = "lucas@gmail.com", authorities = "TEAM_MANAGER")
-    public void shouldDenyAccessToManagerByEmailWhenUserIsNotResourceOwnerManager() throws Exception {
+    public void shouldDenyAccessToManagersByEmailWhenUserIsNotResourceOwner() throws Exception {
+        getByEmailAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyAccessToManageByEmailWhenUserIsNotAuthenticated() throws Exception {
         getByEmailAndExpect(status().isUnauthorized());
     }
 
     @Test
     @WithMockUser(authorities = "TOP_MANAGER")
-    public void shouldReturnManagersOnManagersGetByDepartmentIdRequestWhenUserIsTopManager() throws Exception {
+    public void shouldReturnManagersOnManagerGetByDepartmentIdRequestWhenUserIsTopManager() throws Exception {
         getByDepartmentIdAndExpect(status().isOk());
     }
 
@@ -141,9 +212,15 @@ public class TeamManagerControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = { "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyAccessToManagersByDepartmentIdWhenUserIsNotTopManager() throws Exception {
         getByDepartmentIdAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyAccessToManagersByDepartmentIdlWhenUserIsNotAuthenticated() throws Exception {
+        getByDepartmentIdAndExpect(status().isUnauthorized());
     }
 
     @Test
@@ -166,8 +243,20 @@ public class TeamManagerControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = { "DOCTOR", "USER", "INTERNAL" })
+    public void shouldDenyAccessToManagerByIdWhenUserIsNotTopManager() throws Exception {
+        getByDepartmentIdAndExpect(status().isForbidden());
+    }
+
+    @Test
     @WithMockUser(username = "lucas@gmail.com", authorities = "TEAM_MANAGER")
     public void shouldDenyAccessToManagerByIdWhenUserIsNotResourceOwner() throws Exception {
+        getByDepartmentIdAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyAccessToManagerByIdlWhenUserIsNotAuthenticated() throws Exception {
         getByDepartmentIdAndExpect(status().isUnauthorized());
     }
 
@@ -175,16 +264,16 @@ public class TeamManagerControllerTest {
     @WithMockUser(authorities = "TOP_MANAGER")
     public void shouldReturnSavedManagerOnManagersPostRequestWhenUserIsTopManager() throws Exception {
         int initialCount = managerService.findAll().size();
-        postAndExpect(status().isCreated());
+        postAndExpect(newManager1Json, status().isCreated());
 
         int newCount = managerService.findAll().size();
         assertThat(newCount, is(initialCount + 1));
     }
 
-    private void postAndExpect(ResultMatcher status) throws Exception {
+    private void postAndExpect(String data, ResultMatcher status) throws Exception {
         mvc.perform(post("/team-managers")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(newManagerJson)
+                        .content(data)
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status)
@@ -192,25 +281,41 @@ public class TeamManagerControllerTest {
     }
 
     @Test
-    @WithMockUser
-    public void shouldDenyManagerPostingWhenUserIsNotTopManger() throws Exception {
-        postAndExpect(status().isForbidden());
+    @WithMockUser(authorities = "TOP_MANAGER")
+    public void shouldReturnSavedManagerOnManagersPostRequestWhenUserIsTeamManager() throws Exception {
+        int initialCount = managerService.findAll().size();
+        postAndExpect(newManager2Json, status().isCreated());
+
+        int newCount = managerService.findAll().size();
+        assertThat(newCount, is(initialCount + 1));
+    }
+
+    @Test
+    @WithMockUser(authorities = { "DOCTOR", "USER", "INTERNAL" })
+    public void shouldDenyManagerPostingWhenUserIsNotTopMangerOrTeamManager() throws Exception {
+        postAndExpect(newManager1Json, status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyManagerPostingWhenUserIsNotAuthenticated() throws Exception {
+        postAndExpect(newManager1Json, status().isUnauthorized());
     }
 
     @Test
     @WithMockUser(authorities = "TOP_MANAGER")
     public void shouldReturnUpdatedManagerOnManagerPatchRequestWhenUserIsTopManager() throws Exception {
         TeamManager initial = managerService.findById(7).orElseThrow();
-        patchAndExpect(status().isOk());
+        patchByIdAndExpect(7, updateManager1Json, status().isOk());
 
         TeamManager updated = managerService.findById(7).orElseThrow();
         assertThat(updated, is(not(equalTo(initial))));
     }
 
-    private void patchAndExpect(ResultMatcher status) throws Exception {
-        mvc.perform(patch("/team-managers/7")
+    private void patchByIdAndExpect(long id, String data, ResultMatcher status) throws Exception {
+        mvc.perform(patch("/team-managers/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(updateManagerJson)
+                        .content(data)
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status)
@@ -218,29 +323,58 @@ public class TeamManagerControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(username = "emma@gmail.com", authorities = "TEAM_MANAGER")
+    public void shouldReturnUpdatedManagerOnManagerPatchRequestWhenUserIsResourceOwner()
+            throws Exception {
+        TeamManager initial = managerService.findById(8).orElseThrow();
+        patchByIdAndExpect(8, updateManager2Json, status().isOk());
+
+        TeamManager updated = managerService.findById(8).orElseThrow();
+        assertThat(updated, is(not(equalTo(initial))));
+    }
+
+    @Test
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyManagerPatchingWhenUserIsNotTopManager() throws Exception {
-        patchAndExpect(status().isForbidden());
+        patchByIdAndExpect(8, newManager1Json, status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "oliver@gmail.com", authorities = "TEAM_MANAGER")
+    public void shouldDenyManagerPatchingWhenUserIsNotResourceOwner() throws Exception {
+        patchByIdAndExpect(8, newManager1Json, status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyManagerPatchingWhenUserIsNotAuthenticated() throws Exception {
+        patchByIdAndExpect(8, newManager1Json, status().isUnauthorized());
     }
 
     @Test
     @WithMockUser(authorities = "TOP_MANAGER")
     public void shouldDeleteManagerOnManagerDeleteRequestWhenUserIsTopManager() throws Exception {
-        deleteAndExpect(status().isNoContent());
+        deleteByIdAndExpect(9, status().isNoContent());
 
-        Optional<TeamManager> deleted = managerService.findById(8);
+        Optional<TeamManager> deleted = managerService.findById(9);
         assertThat(deleted, is(Optional.empty()));
     }
 
-    private void deleteAndExpect(ResultMatcher status) throws Exception {
-        mvc.perform(delete("/team-managers/8"))
+    private void deleteByIdAndExpect(long id, ResultMatcher status) throws Exception {
+        mvc.perform(delete("/team-managers/" + id))
                 .andDo(print())
                 .andExpect(status);
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyManagerDeletionWhenUserIsNotTopManager() throws Exception {
-        getByDepartmentIdAndExpect(status().isForbidden());
+        deleteByIdAndExpect(9, status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyManagerDeletionWhenUserIsNotAuthenticated() throws Exception {
+        deleteByIdAndExpect(9, status().isUnauthorized());
     }
 }

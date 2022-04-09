@@ -16,19 +16,9 @@
 
 package clinicservice;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.context.annotation.Bean;
-import org.springframework.dao.InvalidDataAccessResourceUsageException;
-import org.springframework.web.filter.ForwardedHeaderFilter;
-
-import java.time.Duration;
 
 @SpringBootApplication
 @EnableDiscoveryClient
@@ -36,28 +26,5 @@ public class ClinicServiceApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(ClinicServiceApplication.class, args);
-    }
-
-    @Bean
-    public CircuitBreaker circuitBreaker() {
-        CircuitBreakerConfig config = CircuitBreakerConfig
-                .custom()
-                .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
-                .slidingWindowSize(10)
-                .slowCallRateThreshold(70.0f)
-                .slowCallDurationThreshold(Duration.ofSeconds(2))
-                .recordExceptions(InvalidDataAccessResourceUsageException.class)
-                .build();
-
-        CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(config);
-        return registry.circuitBreaker("circuitBreaker");
-    }
-
-    @Bean
-    public FilterRegistrationBean<ForwardedHeaderFilter> forwardedHeaderFilter() {
-        FilterRegistrationBean<ForwardedHeaderFilter> filter = new FilterRegistrationBean<>();
-        filter.setFilter(new ForwardedHeaderFilter());
-        filter.setOrder(0);
-        return filter;
     }
 }

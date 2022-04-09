@@ -18,7 +18,7 @@ package clinicservice.service.employee;
 
 import clinicservice.service.department.Department;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 import org.hibernate.validator.constraints.Length;
@@ -49,7 +49,6 @@ import java.util.Objects;
 @Entity(name = "employee")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "role", discriminatorType = DiscriminatorType.STRING)
-@JsonIgnoreProperties(value = { "password", "department" }, allowSetters = true)
 public abstract class AbstractEmployee implements Serializable {
 
     @Id
@@ -57,13 +56,14 @@ public abstract class AbstractEmployee implements Serializable {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    @Email(message = "Valid email is mandatory")
     @NotBlank(message = "Email is mandatory")
+    @Email(message = "Email must be valid")
     private String email;
 
     @Column(nullable = false)
     @NotBlank(message = "Password is mandatory")
     @Length(min = 8, message = "Password must be at least 8 characters long")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Embedded
@@ -75,16 +75,16 @@ public abstract class AbstractEmployee implements Serializable {
     @JoinTable(name = "department_employee",
             joinColumns = @JoinColumn(name = "employee_id"),
             inverseJoinColumns = @JoinColumn(name = "department_id"))
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Department department;
 
     @Column(name = "is_enabled", nullable = false)
-    private Boolean isEnabled;
+    private Boolean isEnabled = true;
 
     /**
      * Constructs a new enabled AbstractEmployee.
      */
     public AbstractEmployee() {
-        isEnabled = true;
     }
 
     /**
@@ -111,7 +111,6 @@ public abstract class AbstractEmployee implements Serializable {
      * @param department department to set
      */
     public AbstractEmployee(String email, String password, PersonalData data, Department department) {
-        this.isEnabled = true;
         this.email = email;
         this.password = password;
         this.personalData = data;

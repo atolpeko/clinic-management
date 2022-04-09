@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -38,9 +39,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @Tag("category.IntegrationTest")
 @SpringBootTest(properties = "spring.cloud.config.enabled=false")
@@ -48,7 +53,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 public class DoctorControllerTest {
     private static String newDoctor1Json;
     private static String newDoctor2Json;
-    private static String updateDoctorJson;
+    private static String updateDoctor1Json;
+    private static String updateDoctor2Json;
 
     @Autowired
     private MockMvc mvc;
@@ -89,24 +95,49 @@ public class DoctorControllerTest {
                 "\"email\": \"a@gmail.com\"," +
                 "\"password\": \"12345678\"," +
                 "\"address\":{" +
-                "\"country\":\"USA\"," +
-                "\"state\":\"NY\"," +
-                "\"city\":\"NYC\"," +
-                "\"street\":\"23\"," +
-                "\"houseNumber\":11" +
+                    "\"country\":\"USA\"," +
+                    "\"state\":\"NY\"," +
+                    "\"city\":\"NYC\"," +
+                    "\"street\":\"23\"," +
+                    "\"houseNumber\":11" +
                 "}}";
     }
 
     @BeforeAll
     private static void createUpdateDoctorJson() {
-        updateDoctorJson = "{\"name\": \"Alex\"," +
+        updateDoctor2Json = "{\"name\": \"Rob\"," +
                 "\"specialty\": \"Emergency\"," +
                 "\"phone\": \"654321\"," +
-                "\"practiceBeginningDate\": \"2003-04-01\"}";
+                "\"practiceBeginningDate\": \"2003-04-01\"," +
+                "\"department\" : { \"id\": 1 }," +
+                "\"email\": \"robert-updated@gmail.com\"," +
+                "\"password\": \"12345678\"," +
+                "\"address\":{" +
+                    "\"country\":\"USA\"," +
+                    "\"state\":\"NY\"," +
+                    "\"city\":\"NYC\"," +
+                    "\"street\":\"23\"," +
+                    "\"houseNumber\":11" +
+                "}}";
+
+        updateDoctor1Json = "{\"name\": \"Marcus\"," +
+                "\"specialty\": \"Emergency\"," +
+                "\"phone\": \"8768934\"," +
+                "\"practiceBeginningDate\": \"2001-11-09\"," +
+                "\"department\" : { \"id\": 2 }," +
+                "\"email\": \"mark-updated@gmail.com\"," +
+                "\"password\": \"12345678\"," +
+                "\"address\":{" +
+                    "\"country\":\"USA\"," +
+                    "\"state\":\"NY\"," +
+                    "\"city\":\"NYC\"," +
+                    "\"street\":\"23\"," +
+                    "\"houseNumber\":11" +
+                "}}";
     }
 
     @Test
-    public void shouldReturnDoctorsOnDoctorsGetRequest() throws Exception {
+    public void shouldReturnAllDoctorsOnDoctorsGetRequest() throws Exception {
         mvc.perform(get("/doctors"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -114,7 +145,7 @@ public class DoctorControllerTest {
     }
 
     @Test
-    public void shouldReturnDoctorOnDoctorGetRequest() throws Exception {
+    public void shouldReturnDoctorOnDoctorGetByIdRequest() throws Exception {
         mvc.perform(get("/doctors/1"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -176,25 +207,31 @@ public class DoctorControllerTest {
     }
 
     @Test
-    @WithMockUser
-    public void shouldDenyDoctorPostingWhenUserIsNotTopManager() throws Exception {
+    @WithMockUser(authorities = { "DOCTOR", "USER", "INTERNAL" })
+    public void shouldDenyDoctorPostingWhenUserIsNotTopManagerOrTeamManager() throws Exception {
         postAndExpect(newDoctor2Json, status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyPostingPatchingWhenUserIsNotAuthenticated() throws Exception {
+        postAndExpect(newDoctor2Json, status().isUnauthorized());
     }
 
     @Test
     @WithMockUser(authorities = "TOP_MANAGER")
     public void shouldReturnUpdatedDoctorOnDoctorPatchRequestWhenUserIsTopManager() throws Exception {
         Doctor initial = doctorService.findById(2).orElseThrow();
-        patchByIdAndExpect(2, status().isOk());
+        patchByIdAndExpect(2, updateDoctor1Json, status().isOk());
 
         Doctor updated = doctorService.findById(2).orElseThrow();
         assertThat(updated, is(not(equalTo(initial))));
     }
 
-    private void patchByIdAndExpect(long id, ResultMatcher status) throws Exception {
+    private void patchByIdAndExpect(long id, String data, ResultMatcher status) throws Exception {
         mvc.perform(patch("/doctors/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(updateDoctorJson)
+                        .content(data)
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status)
@@ -205,16 +242,22 @@ public class DoctorControllerTest {
     @WithMockUser(authorities = "TEAM_MANAGER")
     public void shouldReturnUpdatedDoctorOnDoctorPatchRequestWhenUserIsTeamManager() throws Exception {
         Doctor initial = doctorService.findById(3).orElseThrow();
-        patchByIdAndExpect(3, status().isOk());
+        patchByIdAndExpect(3, updateDoctor2Json, status().isOk());
 
         Doctor updated = doctorService.findById(3).orElseThrow();
         assertThat(updated, is(not(equalTo(initial))));
     }
 
     @Test
-    @WithMockUser
-    public void shouldDenyDoctorPatchingWhenUserIsNotTopManager() throws Exception {
-        patchByIdAndExpect(3, status().isForbidden());
+    @WithMockUser(authorities = { "DOCTOR", "USER", "INTERNAL" })
+    public void shouldDenyDoctorPatchingWhenUserIsNotTopManagerOrTeamManager() throws Exception {
+        patchByIdAndExpect(3, updateDoctor1Json, status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyDoctorPatchingWhenUserIsNotAuthenticated() throws Exception {
+        patchByIdAndExpect(3, updateDoctor1Json, status().isUnauthorized());
     }
 
     @Test
@@ -242,8 +285,14 @@ public class DoctorControllerTest {
     }
 
     @Test
-    @WithMockUser
-    public void shouldDenyDoctorDeletionWhenUserIsNotTopManager() throws Exception {
+    @WithMockUser(authorities = { "DOCTOR", "USER", "INTERNAL" })
+    public void shouldDenyDoctorDeletionWhenUserIsNotTopManagerOrTeamManager() throws Exception {
         deleteByIdAndExpect(5, status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyDoctorDeletionWhenUserIsNotAuthenticated() throws Exception {
+        deleteByIdAndExpect(5, status().isUnauthorized());
     }
 }

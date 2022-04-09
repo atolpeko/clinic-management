@@ -138,7 +138,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
             Supplier<Department> update = () -> {
                 Department updated = repository.save(departmentToUpdate);
-                repository.flush();;
+                repository.flush();
                 return updated;
             };
 
@@ -186,7 +186,7 @@ public class DepartmentServiceImpl implements DepartmentService {
             throw new IllegalModificationException("No department with id " + id);
         } catch (DataIntegrityViolationException e) {
             String errorMsg = "Delete all doctors and facilities related to this department first";
-            throw new IllegalModificationException(errorMsg);
+            throw new IllegalModificationException(errorMsg, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Department database unavailable", e);
         }
