@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package clientservice;
+package clientservice.config;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.filter.ForwardedHeaderFilter;
 
-@SpringBootApplication
-@EnableDiscoveryClient
-public class ClientServiceApplication {
+@Configuration
+public class HateoasConfiguration {
 
-    public static void main(String[] args) {
-        SpringApplication.run(ClientServiceApplication.class, args);
+    @Bean
+    public FilterRegistrationBean<ForwardedHeaderFilter> forwardedHeaderFilter() {
+        FilterRegistrationBean<ForwardedHeaderFilter> filter = new FilterRegistrationBean<>();
+        filter.setFilter(new ForwardedHeaderFilter());
+        filter.setOrder(0);
+        return filter;
     }
 }

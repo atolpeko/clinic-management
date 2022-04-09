@@ -123,7 +123,7 @@ public class ExceptionInterceptor {
     @ExceptionHandler(ClientsModificationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public JsonErrorMessage handleModificationException(ClientsModificationException e,
-                                              HttpServletRequest request) {
+                                                        HttpServletRequest request) {
         String msg = e.getMessage();
         String path = request.getServletPath();
         logger.error(msg + ". Path: " + path);
@@ -133,7 +133,7 @@ public class ExceptionInterceptor {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public JsonErrorMessage handleValidationException(MethodArgumentNotValidException e,
-                                                         HttpServletRequest request) {
+                                                      HttpServletRequest request) {
         StringBuilder builder = new StringBuilder();
         e.getBindingResult().getAllErrors().forEach(error -> {
             String errorMsg = error.getDefaultMessage();
@@ -149,7 +149,7 @@ public class ExceptionInterceptor {
     @ExceptionHandler(RemoteResourceException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public JsonErrorMessage handleRemoteResourceException(RemoteResourceException e,
-                                                HttpServletRequest request) {
+                                                          HttpServletRequest request) {
         String msg = e.getMessage();
         String path = request.getServletPath();
         logger.error(msg + ". Path: " + path);

@@ -38,7 +38,7 @@ public class ClientTest {
     @Test
     public void shouldPassValidationWhenHasValidData() {
         Client client = new Client();
-        client.setEmail("atolpeko@gmail.com");
+        client.setEmail("alex@gmail.com");
         client.setPassword("12345678");
         client.setName("Alexander");
         client.setSex(Client.Sex.MALE);
@@ -51,9 +51,15 @@ public class ClientTest {
 
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
+        Address address = new Address();
+        address.setHouseNumber(-1);
+
         Client client = new Client();
+        client.setEmail("not-a-email");
+        client.setPassword("12345");
+        client.setAddress(address);
 
         int errors = validator.validate(client).size();
-        assertThat(errors, is(6));
+        assertThat(errors, is(10));
     }
 }

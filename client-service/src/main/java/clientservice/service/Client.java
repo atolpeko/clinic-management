@@ -42,7 +42,6 @@ import java.util.Objects;
  */
 @Entity
 @Table(name = "client")
-@JsonIgnoreProperties(value = "password", allowSetters = true)
 public class Client implements Serializable {
 
     /**
@@ -56,12 +55,13 @@ public class Client implements Serializable {
 
     @Column(unique = true, nullable = false)
     @NotBlank(message = "Email is mandatory")
-    @Email
+    @Email(message = "Email must be valid")
     private String email;
 
     @Column(nullable = false)
     @NotBlank(message = "Password is mandatory")
     @Size(min = 8, message = "Password must be at least 8 characters long")
+    @JsonIgnoreProperties(allowSetters = true)
     private String password;
 
     @Column(nullable = false)
@@ -109,8 +109,8 @@ public class Client implements Serializable {
     }
 
     /**
-     * Constructs a new Client with the specified email, password, name, sex, phone number,
-     * address and account status.
+     * Constructs a new enabled Client with the specified email, password,
+     * name, sex, phone number and address.
      *
      * @param email email to set
      * @param password password to set
@@ -118,17 +118,16 @@ public class Client implements Serializable {
      * @param sex sex to set
      * @param phoneNumber phone number to set
      * @param address address to set
-     * @param isEnabled account status to set
      */
     public Client(String email, String password, String name, Sex sex,
-                  String phoneNumber, Address address, boolean isEnabled) {
+                  String phoneNumber, Address address) {
+        isEnabled = true;
         this.email = email;
         this.password = password;
         this.name = name;
         this.sex = sex;
         this.phoneNumber = phoneNumber;
         this.address = address;
-        this.isEnabled = isEnabled;
     }
 
     public Long getId() {

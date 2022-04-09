@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
@@ -38,16 +39,20 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @Tag("category.IntegrationTest")
 @SpringBootTest(properties = "spring.cloud.config.enabled=false")
 @AutoConfigureMockMvc
 public class ClientControllerTest {
     private static String newClientJson;
-    private static String updateClientJson;
+    private static String updateClient1Json;
     private static String updateClient2Json;
 
     @Autowired
@@ -58,11 +63,11 @@ public class ClientControllerTest {
 
     @BeforeAll
     public static void createNewClientJson() {
-        newClientJson = "{\"email\":\"altolpeko@gmail.com\"," +
-                "\"password\":\"12345678\"," +
+        newClientJson = "{\"email\":\"alex@gmail.com\"," +
+                "\"password\":\"dfd1ld112d\"," +
                 "\"name\":\"Alexander\"," +
                 "\"sex\":\"MALE\"," +
-                "\"phoneNumber\":\"+375-34-556-70-90\"," +
+                "\"phoneNumber\":\"+375-33-556-70-90\"," +
                 "\"address\":{" +
                     "\"country\":\"USA\"," +
                     "\"state\":\"NY\"," +
@@ -74,22 +79,22 @@ public class ClientControllerTest {
 
     @BeforeAll
     public static void createUpdateClientJsons() {
-        updateClientJson = "{\"password\":\"87654321\"," +
-                "\"name\":\"Mark2\"," +
+        updateClient1Json = "{\"password\":\"fdfdef222a44\"," +
+                "\"name\":\"Rob\"," +
                 "\"sex\":\"MALE\"," +
                 "\"phoneNumber\":\"+375-21-134-54-67\"," +
                 "\"address\":{" +
                     "\"country\":\"USA\"," +
-                    "\"state\":\"LA\"," +
-                    "\"city\":\"California\"," +
+                    "\"state\":\"California\"," +
+                    "\"city\":\"LA\"," +
                     "\"street\":\"36\"," +
                     "\"houseNumber\":1" +
                 "}}";
 
-        updateClient2Json = "{\"password\":\"232424323\"," +
-                "\"name\":\"Robert2\"," +
+        updateClient2Json = "{\"password\":\"ffdf24343a\"," +
+                "\"name\":\"Markus\"," +
                 "\"sex\":\"MALE\"," +
-                "\"phoneNumber\":\"+375-21-44-54-67\"," +
+                "\"phoneNumber\":\"+375-21-54-54-67\"," +
                 "\"address\":{" +
                     "\"country\":\"USA\"," +
                     "\"state\":\"LA\"," +
@@ -101,7 +106,7 @@ public class ClientControllerTest {
 
     @Test
     @WithMockUser(authorities = "TOP_MANAGER")
-    public void shouldReturnClientsOnClientsGetRequestWhenUserIsTopManager() throws Exception {
+    public void shouldReturnClientsOnClientsGetAllRequestWhenUserIsTopManager() throws Exception {
        getAllAndExpect(status().isOk());
     }
 
@@ -113,8 +118,14 @@ public class ClientControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = "USER")
-    public void shouldDenyAccessToClientsWhenUserIsNotTopManager() throws Exception {
+    @WithMockUser(authorities = { "TEAM_MANAGER", "USER", "DOCTOR", "INTERNAL" })
+    public void shouldDenyAccessToAllClientsWhenUserIsNotTopManager() throws Exception {
+        getAllAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyAccessToAllClientsWhenUserIsNotAuthenticated() throws Exception {
         getAllAndExpect(status().isUnauthorized());
     }
 
@@ -138,14 +149,26 @@ public class ClientControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "atolpeko@gmail.com", authorities = "USER")
+    @WithMockUser(username = "alexander@gmail.com", authorities = "USER")
     public void shouldReturnClientOnClientGetByIdRequestWhenUserIsResourceOwner() throws Exception {
        getByIdAndExpect(status().isOk());
     }
 
     @Test
+    @WithMockUser(authorities = "INTERNAL")
+    public void shouldReturnClientOnClientGetByIdRequestWhenUserIsInternal() throws Exception {
+        getByIdAndExpect(status().isOk());
+    }
+
+    @Test
     @WithMockUser(username = "robert@gmail.com", authorities = "USER")
     public void shouldDenyAccessToClientByIdWhenUserIsNotResourceOwner() throws Exception {
+        getByIdAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyAccessToClientByIdWhenUserIsNotAuthenticated() throws Exception {
         getByIdAndExpect(status().isUnauthorized());
     }
 
@@ -156,7 +179,7 @@ public class ClientControllerTest {
     }
 
     private void getByEmailAndExpect(ResultMatcher status) throws Exception {
-        mvc.perform(get("/clients").param("email", "atolpeko@gmail.com"))
+        mvc.perform(get("/clients").param("email", "alexander@gmail.com"))
                 .andDo(print())
                 .andExpect(status)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
@@ -169,9 +192,15 @@ public class ClientControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "atolpeko@gmail.com", authorities = "USER")
+    @WithMockUser(username = "alexander@gmail.com", authorities = "USER")
     public void shouldReturnClientOnClientGetByEmailRequestWhenUserIsResourceOwner() throws Exception {
         getByEmailAndExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(authorities = { "TEAM_MANAGER", "INTERNAL" })
+    public void shouldDenyAccessToClientByEmailWhenUserIsNotTopManager() throws Exception {
+        getByEmailAndExpect(status().isUnauthorized());
     }
 
     @Test
@@ -181,6 +210,13 @@ public class ClientControllerTest {
     }
 
     @Test
+    @WithAnonymousUser
+    public void shouldDenyAccessToClientByEmailWhenUserIsNotAuthenticated() throws Exception {
+        getByEmailAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
     public void shouldReturnSavedClientOnClientsPostRequest() throws Exception {
         int initialCount = clientService.findAll().size();
         mvc.perform(post("/clients")
@@ -199,7 +235,7 @@ public class ClientControllerTest {
     @WithMockUser(authorities = "TOP_MANAGER")
     public void shouldReturnUpdatedClientOnClientPatchRequestWhenUserIsTopManager() throws Exception {
         Client initial = clientService.findById(2).orElseThrow();
-        patchByIdAndExpect(2, updateClientJson, status().isOk());
+        patchByIdAndExpect(2, updateClient1Json, status().isOk());
 
         Client updated = clientService.findById(2).orElseThrow();
         assertThat(updated, is(not(equalTo(initial))));
@@ -226,9 +262,21 @@ public class ClientControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "atolpeko@gmail.com", authorities = "USER")
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "INTERNAL" })
+    public void shouldDenyClientPatchingWhenUserIsNotTopManager() throws Exception {
+        patchByIdAndExpect(2, updateClient1Json, status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "alexander@gmail.com", authorities = "USER")
     public void shouldDenyClientPatchingWhenUserIsNotResourceOwner() throws Exception {
-        patchByIdAndExpect(2, "{}", status().isUnauthorized());
+        patchByIdAndExpect(2, updateClient1Json, status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyClientPatchingWhenUserIsNotAuthenticated() throws Exception {
+        patchByIdAndExpect(2, updateClient1Json, status().isUnauthorized());
     }
 
     @Test
@@ -249,9 +297,15 @@ public class ClientControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = "USER")
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyClientStatusPatchingWhenUserIsNotTopManager() throws Exception {
         patchStatusAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyClientStatusPatchingWhenUserIsNotAuthenticated() throws Exception {
+        patchStatusAndExpect(status().isUnauthorized());
     }
 
     @Test
@@ -279,8 +333,20 @@ public class ClientControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "INTERNAL" })
+    public void shouldDenyClientDeletionWhenUserIsNotTopManager() throws Exception {
+        deleteByIdAndExpect(5, status().isForbidden());
+    }
+
+    @Test
     @WithMockUser(username = "mark@gmail.com", authorities = "USER")
     public void shouldDenyClientDeletionWhenUserIsNotResourceOwner() throws Exception {
        deleteByIdAndExpect(5, status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyClientDeletionWhenUserIsNotAuthenticated() throws Exception {
+        deleteByIdAndExpect(5, status().isUnauthorized());
     }
 }

@@ -31,18 +31,24 @@ import org.mockito.Mockito;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.validation.Validator;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @Tag("category.UnitTest")
 public class ClientServiceImplTest {
@@ -78,7 +84,7 @@ public class ClientServiceImplTest {
     public static void createClient() {
         client = new Client();
         client.setId(1L);
-        client.setEmail("atolpeko@gmail.com");
+        client.setEmail("alex@gmail.com");
         client.setPassword("12345678");
         client.setName("Alexander");
         client.setSex(Client.Sex.MALE);
@@ -90,7 +96,7 @@ public class ClientServiceImplTest {
     public static void createUpdatedClient() {
         updatedClient = new Client();
         updatedClient.setId(1L);
-        updatedClient.setEmail("tolpeko@gmail.com");
+        updatedClient.setEmail("alexander@gmail.com");
         updatedClient.setPassword("87654321");
         updatedClient.setName("Alex");
         updatedClient.setSex(Client.Sex.MALE);
@@ -116,7 +122,7 @@ public class ClientServiceImplTest {
     public void shouldReturnClientByEmailWhenContainsIt() {
         when(repository.findByEmail(client.getEmail())).thenReturn(Optional.of(client));
 
-        Client saved = clientService.findByEmail("atolpeko@gmail.com").orElseThrow();
+        Client saved = clientService.findByEmail("alex@gmail.com").orElseThrow();
         assertThat(saved, is(equalTo(client)));
     }
 
@@ -147,11 +153,24 @@ public class ClientServiceImplTest {
     @Test
     public void shouldUpdateClientWhenClientIsValid() {
         when(repository.findById(1L)).thenReturn(Optional.of(client));
-        when(repository.save(updatedClient)).thenReturn(updatedClient);
+        when(repository.save(any(Client.class))).thenReturn(updatedClient);
         when(validator.validate(any(Client.class))).thenReturn(Collections.emptySet());
 
-        Client client = clientService.update(updatedClient);
-        assertThat(client, equalTo(updatedClient));
+        Client updated = clientService.update(updatedClient);
+        assertThat(updated, equalTo(updatedClient));
+    }
+
+    @Test
+    public void shouldUpdateClientStatus() {
+        Client toUpdate = new Client(client);
+        toUpdate.setEnabled(!client.isEnabled());
+
+        when(repository.findById(1L)).thenReturn(Optional.of(client));
+        when(repository.save(any(Client.class))).thenReturn(toUpdate);
+        when(validator.validate(any(Client.class))).thenReturn(Collections.emptySet());
+
+        Client updated = clientService.update(toUpdate);
+        assertThat(client.isEnabled(), not(equalTo(updated.isEnabled())));
     }
 
     @Test
@@ -162,7 +181,7 @@ public class ClientServiceImplTest {
 
         clientService.deleteById(1);
 
-        Optional<Client> deletedClient = clientService.findById(1);
-        assertThat(deletedClient, is(Optional.empty()));
+        Optional<Client> deleted = clientService.findById(1);
+        assertThat(deleted, is(Optional.empty()));
     }
 }

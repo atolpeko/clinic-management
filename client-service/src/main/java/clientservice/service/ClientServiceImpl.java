@@ -177,21 +177,25 @@ public class ClientServiceImpl implements ClientService {
             client.setPhoneNumber(updateData.getPhoneNumber());
         }
         if (updateData.getAddress() != null) {
-            if (updateData.getAddress().getCountry() != null) {
-                client.getAddress().setCountry(updateData.getAddress().getCountry());
-            }
-            if (updateData.getAddress().getState() != null) {
-                client.getAddress().setState(updateData.getAddress().getState());
-            }
-            if (updateData.getAddress().getCity() != null) {
-                client.getAddress().setCity(updateData.getAddress().getCity());
-            }
-            if (updateData.getAddress().getStreet() != null) {
-                client.getAddress().setStreet(updateData.getAddress().getStreet());
-            }
-            if (updateData.getAddress().getHouseNumber() != null) {
-                client.getAddress().setHouseNumber(updateData.getAddress().getHouseNumber());
-            }
+            prepareAddress(client.getAddress(), updateData.getAddress());
+        }
+    }
+
+    private void prepareAddress(Address address, Address source) {
+        if (source.getCountry() != null) {
+            address.setCountry(source.getCountry());
+        }
+        if (source.getState() != null) {
+            address.setState(source.getState());
+        }
+        if (source.getCity() != null) {
+            address.setCity(source.getCity());
+        }
+        if (source.getStreet() != null) {
+            address.setStreet(source.getStreet());
+        }
+        if (source.getHouseNumber() != null) {
+            address.setHouseNumber(source.getHouseNumber());
         }
     }
 

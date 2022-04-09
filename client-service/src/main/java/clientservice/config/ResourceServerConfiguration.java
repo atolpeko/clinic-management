@@ -79,7 +79,7 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
                     .hasAnyAuthority("USER", "TOP_MANAGER")
                 .mvcMatchers(HttpMethod.POST, "/clients/")
                     .permitAll()
-                .and()
+            .and()
             .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.NEVER);
     }
