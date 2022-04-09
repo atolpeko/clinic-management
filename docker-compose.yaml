@@ -64,7 +64,7 @@ services:
       - "SPRING_PROFILES_ACTIVE=docker"        
 
   api-gateway:
-    image: atolpeko/api-gateway:1.0-SNAPSHOT
+    image: atolpeko/api-gateway:1.0
     container_name: api-gateway
     restart: on-failure
     mem_limit: 1024M

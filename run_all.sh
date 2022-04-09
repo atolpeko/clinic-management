@@ -16,7 +16,7 @@ echo "Discovery server started"
 echo
 
 echo "Starting microservices"
-java -jar api-gateway/target/api-gateway-1.0-SNAPSHOT.jar > logs/api-gateway.log &
+java -jar api-gateway/target/api-gateway-1.0.jar > logs/api-gateway.log &
 java -jar auth-server/target/auth-server-1.0-SNAPSHOT.jar > logs/auth-server.log &
 java -jar client-service/target/client-service-1.0.jar > logs/client-service.log &
 java -jar clinic-service/target/clinic-service-1.0-SNAPSHOT.jar > logs/clinic-service.log &
