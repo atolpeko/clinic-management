@@ -249,7 +249,7 @@ public class ResultServiceImpl implements ResultService {
             circuitBreaker.decorateRunnable(delete).run();
             logger.info("Duty " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
-            throw new IllegalModificationException("No result with id " + id);
+            throw new IllegalModificationException("No result with id " + id, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Result database unavailable", e);
         }

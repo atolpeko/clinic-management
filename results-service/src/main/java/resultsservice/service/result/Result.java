@@ -16,7 +16,7 @@
 
 package resultsservice.service.result;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import resultsservice.service.external.client.Client;
 import resultsservice.service.external.clinic.Doctor;
@@ -41,7 +41,6 @@ import java.util.Objects;
  */
 @Entity
 @Table(name = "result")
-@JsonIgnoreProperties(value = { "dutyId", "clientId", "doctorId" }, allowSetters = true)
 public class Result implements Serializable {
 
     @Id
@@ -55,16 +54,19 @@ public class Result implements Serializable {
     @Column(nullable = false)
     @NotNull(message = "Duty ID is mandatory")
     @Positive(message = "Duty ID must be positive")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Long dutyId;
 
     @Column(nullable = false)
     @NotNull(message = "Client ID is mandatory")
     @Positive(message = "Client ID must be positive")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Long clientId;
 
     @Column(nullable = false)
     @NotNull(message = "Doctor ID is mandatory")
     @Positive(message = "Doctor ID must be positive")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Long doctorId;
 
     @Transient

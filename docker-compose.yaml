@@ -124,7 +124,7 @@ services:
       - "SPRING_PROFILES_ACTIVE=docker"       
 
   results-service:
-    image: atolpeko/results-service:1.0-SNAPSHOT
+    image: atolpeko/results-service:1.0
     restart: on-failure
     mem_limit: 1024M
     networks: 

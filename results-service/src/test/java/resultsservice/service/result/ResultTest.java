@@ -50,6 +50,9 @@ public class ResultTest {
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
         Result result = new Result();
+        result.setDoctorId(-1L);
+        result.setDutyId(-1L);
+        result.setClientId(-1L);
 
         int errors = validator.validate(result).size();
         assertThat(errors, is(4));

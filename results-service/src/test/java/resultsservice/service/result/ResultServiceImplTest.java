@@ -169,7 +169,7 @@ public class ResultServiceImplTest {
 
         resultService.deleteById(1);
 
-        Optional<Result> deletedResult = resultService.findById(1);
-        assertThat(deletedResult, is(Optional.empty()));
+        Optional<Result> deleted = resultService.findById(1);
+        assertThat(deleted, is(Optional.empty()));
     }
 }

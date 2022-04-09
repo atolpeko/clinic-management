@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -92,7 +93,7 @@ public class ResultControllerTest {
 
     @Test
     @WithMockUser(authorities = "TOP_MANAGER")
-    public void shouldReturnResultOnResultsGetAllRequestWhenUserIsTopManager() throws Exception {
+    public void shouldReturnResultsOnResultsGetAllRequestWhenUserIsTopManager() throws Exception {
         getAllAndExpect(status().isOk());
     }
 
@@ -104,9 +105,15 @@ public class ResultControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyAccessToAllResultsWhenUserIsNotTopManager() throws Exception {
-        getAllAndExpect(status().isForbidden());
+        getAllAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyAccessToAllResultsWhenUserIsNotAuthenticated() throws Exception {
+        getAllAndExpect(status().isUnauthorized());
     }
 
     @Test
@@ -137,14 +144,33 @@ public class ResultControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = { "TEAM_MANAGER", "INTERNAL" })
+    public void shouldDenyAccessToResultByIdWhenUserIsNotTopManager() throws Exception {
+        getByIdAndExpect(status().isForbidden());
+    }
+
+    @Test
     @WithMockUser(username = "robert@gmail.com", authorities = "DOCTOR")
-    public void shouldDenyAccessToResultsByIdWhenUserIsNotResourceOwner() throws Exception {
+    public void shouldDenyAccessToResultByIdWhenUserIsDoctorAndNotResourceOwner() throws Exception {
+        getByIdAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "jain@gmail.com", authorities = "USER")
+    public void shouldDenyAccessToResultByIdWhenUserIsAuthenticatedAndNotResourceOwner()
+            throws Exception {
+        getByIdAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyAccessToResultByIdWhenUserIsNotAuthenticated() throws Exception {
         getByIdAndExpect(status().isUnauthorized());
     }
 
     @Test
     @WithMockUser(authorities = "TOP_MANAGER")
-    public void shouldReturnResultsOnResultGetByClientIdRequestWhenUserIsTopManger()
+    public void shouldReturnResultsOnResultsGetByClientIdRequestWhenUserIsTopManger()
             throws Exception {
         getByClientIdAndExpect(status().isOk());
     }
@@ -158,21 +184,40 @@ public class ResultControllerTest {
 
     @Test
     @WithMockUser(username = "mark@gmail.com", authorities = "DOCTOR")
-    public void shouldReturnResultsOnResultGetByClientIdRequestWhenUserIsDoctorAndResourceOwner()
+    public void shouldReturnResultsOnResultsGetByClientIdRequestWhenUserIsDoctorAndResourceOwner()
             throws Exception {
         getByClientIdAndExpect(status().isOk());
     }
 
     @Test
     @WithMockUser(username = "emma@gmail.com", authorities = "USER")
-    public void shouldReturnResultsOnResultGetByClientIdRequestWhenUserIsAuthenticatedAndResourceOwner()
+    public void shouldReturnResultsOnResultsGetByClientIdRequestWhenUserIsAuthenticatedAndResourceOwner()
             throws Exception {
         getByClientIdAndExpect(status().isOk());
     }
 
     @Test
+    @WithMockUser(authorities = { "TEAM_MANAGER", "INTERNAL" })
+    public void shouldDenyAccessToResultsByClientIdWhenUserIsNotTopManager() throws Exception {
+        getByClientIdAndExpect(status().isForbidden());
+    }
+
+    @Test
     @WithMockUser(username = "jain@gmail.com", authorities = "DOCTOR")
-    public void shouldAccessToResultByClientIdWhenUserIsNotResourceOwner() throws Exception {
+    public void shouldDenyAccessToResultsByClientIdWhenUserIsDoctorAndNotResourceOwner() throws Exception {
+        getByClientIdAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "jain@gmail.com", authorities = "USER")
+    public void shouldDenyAccessToResultsByClientIdWhenUserIsAuthenticatedAndNotResourceOwner()
+            throws Exception {
+        getByClientIdAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyAccessToResultsByClientIdWhenUserIsNotAuthenticated() throws Exception {
         getByClientIdAndExpect(status().isUnauthorized());
     }
 
@@ -208,8 +253,20 @@ public class ResultControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = { "TEAM_MANAGER", "USER", "INTERNAL" })
+    public void shouldDenyResultPostingWhenUserIsNotTopManager() throws Exception {
+        postAndExpect(newResult1Json, status().isForbidden());
+    }
+
+    @Test
     @WithMockUser(username = "robert@gmail.com", authorities = "DOCTOR")
     public void shouldDenyResultPostingWhenUserIsNotResourceOwner() throws Exception {
+        postAndExpect(newResult1Json, status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyResultPostingByClientIdWhenUserIsNotAuthenticated() throws Exception {
         postAndExpect(newResult1Json, status().isUnauthorized());
     }
 
@@ -245,8 +302,20 @@ public class ResultControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = { "TEAM_MANAGER", "USER", "INTERNAL" })
+    public void shouldDenyResultPatchingByClientIdWhenUserIsNotTopManager() throws Exception {
+        patchByIdAndExpect(3, update2Json, status().isForbidden());
+    }
+
+    @Test
     @WithMockUser(username = "robert@gmail.com", authorities = "DOCTOR")
     public void shouldDenyResultPatchingWhenUserIsNotResourceOwner() throws Exception {
+        patchByIdAndExpect(3, update2Json, status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyResultPatchingWhenUserIsNotAuthenticated() throws Exception {
         patchByIdAndExpect(3, update2Json, status().isUnauthorized());
     }
 
@@ -267,7 +336,7 @@ public class ResultControllerTest {
 
     @Test
     @WithMockUser(username = "robert@gmail.com", authorities = "DOCTOR")
-    public void shouldDeleteResultOnResultDeleteRequestWhenUserIsDoctorAndResourceOwner() throws Exception {
+    public void shouldDeleteResultOnResultDeleteRequestWhenUserIsdResourceOwner() throws Exception {
         deleteByIdAndExpect(5, status().isNoContent());
 
         Optional<Result> deleted = resultService.findById(5);
@@ -275,8 +344,20 @@ public class ResultControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = { "TEAM_MANAGER", "USER", "INTERNAL" })
+    public void shouldDenyResultDeletionByClientIdWhenUserIsNotTopManager() throws Exception {
+        deleteByIdAndExpect(5, status().isForbidden());
+    }
+
+    @Test
     @WithMockUser(username = "mark@gmail.com", authorities = "DOCTOR")
     public void shouldDenyResultDeletionWhenUserIsNotResourceOwner() throws Exception {
+        deleteByIdAndExpect(5, status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyResultDeletionWhenUserIsNotAuthenticated() throws Exception {
         deleteByIdAndExpect(5, status().isUnauthorized());
     }
 }
