@@ -26,7 +26,7 @@ services:
       - db-volume:/var/lib/mysql
 
   config-server:
-    image: atolpeko/config-server:1.0-SNAPSHOT
+    image: atolpeko/config-server:1.0
     container_name: config-server
     restart: on-failure
     mem_limit: 1024M
