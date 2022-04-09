@@ -90,8 +90,8 @@ public class AuthProviderServiceImplTest {
         );
         userAuth.setAuthenticated(false);
 
-        Authentication authenticated = authProviderService.authenticate(userAuth);
-        assertThat(authenticated.isAuthenticated(), equalTo(true));
+        Authentication authentication = authProviderService.authenticate(userAuth);
+        assertThat(authentication.isAuthenticated(), equalTo(true));
     }
 
     @Test
@@ -102,7 +102,7 @@ public class AuthProviderServiceImplTest {
         );
         employeeAuth.setAuthenticated(false);
 
-        Authentication authenticated = authProviderService.authenticate(employeeAuth);
-        assertThat(authenticated.isAuthenticated(), equalTo(true));
+        Authentication authentication = authProviderService.authenticate(employeeAuth);
+        assertThat(authentication.isAuthenticated(), equalTo(true));
     }
 }

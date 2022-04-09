@@ -26,6 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Client properties loaded from configuration file.
+ */
 @Configuration
 @ConfigurationProperties(prefix = "oauth")
 @Component

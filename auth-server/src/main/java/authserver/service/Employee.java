@@ -19,7 +19,6 @@ package authserver.service;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -37,7 +36,6 @@ import java.util.Objects;
 public class Employee extends AbstractUser {
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Role role;
 
     public Employee() {

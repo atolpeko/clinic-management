@@ -11,8 +11,7 @@ eureka:
 spring:
   jpa:
     database: MYSQL
-    hibernate:
-      ddl-auto: update
+    generate-ddl: false
 database:
   clinic-employee-database:
     platform: mysql

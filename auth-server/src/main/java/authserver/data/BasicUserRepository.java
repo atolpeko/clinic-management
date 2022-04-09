@@ -32,9 +32,9 @@ public interface BasicUserRepository extends JpaRepository<BasicUser, Long> {
     /**
      * Retrieves the user with the specified login.
      *
-     * @param login login of user to get
+     * @param login login of the user to get
      *
-     * @return user with the specified login or Optional#empty() if none found
+     * @return a user with the specified login or Optional#empty() if none found
      */
     Optional<BasicUser> findByLogin(String login);
 }

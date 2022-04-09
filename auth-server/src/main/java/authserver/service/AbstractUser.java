@@ -41,13 +41,12 @@ public abstract class AbstractUser implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(name = "email")
     private String login;
 
-    @Column(nullable = false)
     private String password;
 
-    @Column(name = "is_enabled", nullable = false)
+    @Column(name = "is_enabled")
     private boolean isEnabled = true;
 
     /**

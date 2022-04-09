@@ -24,7 +24,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 /**
- * UserRepository abstracts a collection of Employee object.
+ * EmployeeRepository abstracts a collection of Employee object.
  */
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
@@ -32,9 +32,9 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     /**
      * Retrieves the employee with the specified login.
      *
-     * @param login login of employee to get
+     * @param login login of the employee to get
      *
-     * @return employee with the specified login or Optional#empty() if none found
+     * @return an employee with the specified login or Optional#empty() if none found
      */
     Optional<Employee> findByLogin(String login);
 }
