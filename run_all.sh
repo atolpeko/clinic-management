@@ -10,7 +10,7 @@ echo "Config server started"
 echo
 
 echo "Starting discovery server"
-java -jar discovery-server/target/discovery-server-1.0-SNAPSHOT.jar > logs/discovery-server.log &
+java -jar discovery-server/target/discovery-server-1.0.jar > logs/discovery-server.log &
 sleep 20
 echo "Discovery server started"
 echo

@@ -36,7 +36,7 @@ services:
       - 8888:8888 
 
   discovery-server:
-    image: atolpeko/discovery-server:1.0-SNAPSHOT
+    image: atolpeko/discovery-server:1.0
     container_name: discovery-server
     restart: on-failure
     mem_limit: 1024M
