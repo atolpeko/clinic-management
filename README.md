@@ -55,7 +55,7 @@ It exposes the following endpoints:
 
 All endpoints follow the REST API Resource naming conventions - e.g., hitting the `http://localhost:8080/clients/{id}` endpoint during a GET request will return the client with the specified `id`, hitting the `http://localhost:8080/clients?email={email}` during a GET request will return the client with the specified `email`, hitting the `http://localhost:8080/clients/` during a POST request will save the new client, and so on.
 
-Clinic Management Service declares 3 user roles: Top managers, Team managers, Doctors and Users. Each role has its own privileges - e.g., Top managers can edit departments and facilities, Team managers can manage their teams, Doctors have access to client registrations and test results. To authenticate and obtain an access token, hit the `oauth/token` endpoint with the following parameters:
+Clinic Management Service declares 4 user roles: Top managers, Team managers, Doctors and Users. Each role has its own privileges - e.g., Top managers can edit departments and facilities, Team managers can manage their teams, Doctors have access to client registrations and test results. To authenticate and obtain an access token, hit the `oauth/token` endpoint with the following parameters:
 
 ```
 grant_type: password
