@@ -233,7 +233,7 @@ public class ClientServiceImpl implements ClientService {
             circuitBreaker.decorateRunnable(delete).run();
             logger.info("Client " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
-            throw new ClientsModificationException("No client with id " + id);
+            throw new ClientsModificationException("No client with id " + id, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Client database unavailable", e);
         }

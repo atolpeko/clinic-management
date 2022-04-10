@@ -16,7 +16,7 @@
 
 package clientservice.service;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.persistence.Column;
 import javax.persistence.Embedded;
@@ -61,7 +61,7 @@ public class Client implements Serializable {
     @Column(nullable = false)
     @NotBlank(message = "Password is mandatory")
     @Size(min = 8, message = "Password must be at least 8 characters long")
-    @JsonIgnoreProperties(allowSetters = true)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Column(nullable = false)
@@ -83,13 +83,12 @@ public class Client implements Serializable {
     private Address address;
 
     @Column(name = "is_enabled", nullable = false)
-    private boolean isEnabled;
+    private Boolean isEnabled = true;
 
     /**
      * Constructs a new enabled client.
      */
     public Client() {
-        isEnabled = true;
     }
 
     /**
@@ -121,7 +120,6 @@ public class Client implements Serializable {
      */
     public Client(String email, String password, String name, Sex sex,
                   String phoneNumber, Address address) {
-        isEnabled = true;
         this.email = email;
         this.password = password;
         this.name = name;
@@ -186,11 +184,11 @@ public class Client implements Serializable {
         this.address = address;
     }
 
-    public boolean isEnabled() {
+    public Boolean isEnabled() {
         return isEnabled;
     }
 
-    public void setEnabled(boolean isEnabled) {
+    public void setEnabled(Boolean isEnabled) {
         this.isEnabled = isEnabled;
     }
 
@@ -211,7 +209,7 @@ public class Client implements Serializable {
                 && sex == client.sex
                 && Objects.equals(phoneNumber, client.phoneNumber)
                 && Objects.equals(address, client.address)
-                && isEnabled == client.isEnabled;
+                && Objects.equals(isEnabled, client.isEnabled);
     }
 
     @Override
