@@ -17,13 +17,13 @@ database:
     platform: mysql
     url: jdbc:mysql://mysql/clinic?createDatabaseIfNotExist=true
     username: root
-    password:
+    password: clinic33789
     driverClassName: com.mysql.cj.jdbc.Driver
   clinic-client-database:
     platform: mysql
     url: jdbc:mysql://mysql/client?createDatabaseIfNotExist=true
     username: root
-    password:
+    password: clinic33789
     driverClassName: com.mysql.cj.jdbc.Driver
 oauth:
   jwt-key: MjWP5L7CiDff90qA
