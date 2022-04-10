@@ -27,6 +27,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -59,6 +60,7 @@ public class Duty implements Serializable {
 
     @Column(nullable = false)
     @NotNull(message = "Price is mandatory")
+    @Positive(message = "Price must be positive")
     private BigDecimal price;
 
     @Transient

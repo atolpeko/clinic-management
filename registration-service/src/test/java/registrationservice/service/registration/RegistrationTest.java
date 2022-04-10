@@ -53,6 +53,8 @@ public class RegistrationTest {
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
         Registration registration = new Registration();
+        registration.setDoctorId(-1L);
+        registration.setClientId(-1L);
 
         int errors = validator.validate(registration).size();
         assertThat(errors, is(3));

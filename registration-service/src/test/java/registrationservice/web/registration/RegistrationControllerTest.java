@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -84,9 +85,15 @@ public class RegistrationControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyAccessToRegistrationsWhenUserIsNotTopManager() throws Exception {
-        getAllAndExpect(status().isForbidden());
+        getAllAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyAccessToRegistrationsWhenUserIsNotAuthenticated() throws Exception {
+        getAllAndExpect(status().isUnauthorized());
     }
 
     @Test
@@ -117,9 +124,27 @@ public class RegistrationControllerTest {
     }
 
     @Test
-    @WithMockUser
-    public void shouldDenyAccessToRegistrationByIdWhenUserIsNotResourceOwner() throws Exception {
-        getAndExpect(status().isForbidden());
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    public void shouldDenyAccessToRegistrationByIdWhenUserIsNotTopManager() throws Exception {
+        getAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "robert@gmail.com", authorities = "DOCTOR")
+    public void shouldDenyAccessToRegistrationByIdWhenUserIsDoctorAndNotResourceOwner() throws Exception {
+        getAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "jain@gmail.com", authorities = "USER")
+    public void shouldDenyAccessToRegistrationByIdWhenUserIsAuthenticatedAndNotResourceOwner() throws Exception {
+        getAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyAccessToRegistrationByIdWhenUserIsNotAuthenticated() throws Exception {
+        getAndExpect(status().isUnauthorized());
     }
 
     @Test
@@ -144,8 +169,20 @@ public class RegistrationControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = { "TEAM_MANAGER", "USER", "INTERNAL" })
+    public void shouldDenyAccessToRegistrationsByDoctorIdWhenUserIsNotTopManager() throws Exception {
+        getByDoctorIdAndExpect(status().isUnauthorized());
+    }
+
+    @Test
     @WithMockUser(username = "robert@gmail.com", authorities = "DOCTOR")
     public void shouldDenyAccessToRegistrationsByDoctorIdWhenUserIsNotResourceOwner() throws Exception {
+        getByDoctorIdAndExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyAccessToRegistrationsByDoctorIdWhenUserIsNotAuthenticated() throws Exception {
         getByDoctorIdAndExpect(status().isUnauthorized());
     }
 
@@ -178,8 +215,22 @@ public class RegistrationControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = { "TEAM_MANAGER", "INTERNAL" })
+    public void shouldDenyAccessToRegistrationsByClientIdWhenUserIsNotTopManager() throws Exception {
+        getByDoctorIdAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "jain@gmail.com", authorities = "DOCTOR")
+    public void shouldDenyAccessToRegistrationsByClientIdWhenUserIsDoctorAndNotResourceOwner()
+            throws Exception {
+        getByClientIdAndExpect(status().isUnauthorized());
+    }
+
+    @Test
     @WithMockUser(username = "jain@gmail.com", authorities = "USER")
-    public void shouldDenyAccessToRegistrationsByClientIdWhenUserIsNotResourceOwner() throws Exception {
+    public void shouldDenyAccessToRegistrationsByClientIdWhenUserIsAuthenticatedAndNotResourceOwner()
+            throws Exception {
         getByClientIdAndExpect(status().isUnauthorized());
     }
 
@@ -205,6 +256,7 @@ public class RegistrationControllerTest {
     }
 
     @Test
+    @WithAnonymousUser
     public void shouldDenyRegistrationPostingWhenUserIsNotAuthenticated() throws Exception {
         postAndExpect(status().isUnauthorized());
     }
@@ -230,13 +282,31 @@ public class RegistrationControllerTest {
 
     @Test
     @WithMockUser(username = "robert@gmail.com", authorities = "DOCTOR")
-    public void shouldReturnUpdatedRegistrationOnRegistrationStatusPatchRequestWhenUserIsDoctorAndResourceOwner()
+    public void shouldReturnUpdatedRegistrationOnRegistrationStatusPatchRequestWhenUserIsResourceOwner()
             throws Exception {
         boolean initial = registrationService.findById(3).orElseThrow().isActive();
         patchStatusByIdAndExpect(3, status().isOk());
 
         boolean updated = registrationService.findById(3).orElseThrow().isActive();
         assertThat(updated, is(not(equalTo(initial))));
+    }
+
+    @Test
+    @WithMockUser(authorities = { "TEAM_MANAGER", "USER", "INTERNAL" })
+    public void shouldDenyRegistrationsPatchingWhenUserIsNotTopManager() throws Exception {
+        patchStatusByIdAndExpect(3, status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = { "TEAM_MANAGER", "USER", "INTERNAL" })
+    public void shouldDenyRegistrationsPatchingWhenUserIsNotResourceOwner() throws Exception {
+        patchStatusByIdAndExpect(3, status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyRegistrationPatchingWhenUserIsNotAuthenticated() throws Exception {
+        patchStatusByIdAndExpect(3, status().isUnauthorized());
     }
 
     @Test
@@ -255,8 +325,14 @@ public class RegistrationControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyRegistrationDeletionWhenUserIsNotTopManager() throws Exception {
         deleteAndExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    public void shouldDenyRegistrationDeletionWhenUserIsNotAuthenticated() throws Exception {
+        deleteAndExpect(status().isUnauthorized());
     }
 }

@@ -154,7 +154,7 @@ public class RegistrationServiceImplTest {
 
         registrationService.deleteById(1);
 
-        Optional<Registration> deletedRegistration = registrationService.findById(1);
-        assertThat(deletedRegistration, is(Optional.empty()));
+        Optional<Registration> deleted = registrationService.findById(1);
+        assertThat(deleted, is(Optional.empty()));
     }
 }

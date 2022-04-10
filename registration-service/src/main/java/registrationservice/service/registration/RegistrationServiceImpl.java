@@ -230,7 +230,7 @@ public class RegistrationServiceImpl implements RegistrationService {
             circuitBreaker.decorateRunnable(delete).run();
             logger.info("Registration " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
-            throw new IllegalModificationException("No registration with id " + id);
+            throw new IllegalModificationException("No registration with id " + id, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Registration database unavailable", e);
         }

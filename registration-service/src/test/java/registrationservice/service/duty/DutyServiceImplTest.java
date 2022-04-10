@@ -159,7 +159,7 @@ public class DutyServiceImplTest {
 
         dutyService.deleteById(1);
 
-        Optional<Duty> deletedDuty = dutyService.findById(1);
-        assertThat(deletedDuty, is(Optional.empty()));
+        Optional<Duty> deleted = dutyService.findById(1);
+        assertThat(deleted, is(Optional.empty()));
     }
 }

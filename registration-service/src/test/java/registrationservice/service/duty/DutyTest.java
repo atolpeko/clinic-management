@@ -48,6 +48,7 @@ public class DutyTest {
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
         Duty duty = new Duty();
+        duty.setPrice(BigDecimal.valueOf(-1L));
 
         int errors = validator.validate(duty).size();
         assertThat(errors, is(4));

@@ -67,7 +67,7 @@ public class Registration implements Serializable {
     private Long doctorId;
 
     @Column(name = "is_active", nullable = false)
-    private boolean isActive;
+    private Boolean isActive;
 
     @Transient
     private Doctor doctor;
@@ -108,7 +108,7 @@ public class Registration implements Serializable {
      * @param isActive registration status to set
      */
     public Registration(Duty duty, Doctor doctor, LocalDateTime date,
-                        Client client, boolean isActive) {
+                        Client client, Boolean isActive) {
         this.duty = duty;
         this.date = date;
         this.doctor = doctor;
@@ -172,11 +172,11 @@ public class Registration implements Serializable {
         this.client = client;
     }
 
-    public boolean isActive() {
+    public Boolean isActive() {
         return isActive;
     }
 
-    public void setActive(boolean isActive) {
+    public void setActive(Boolean isActive) {
         this.isActive = isActive;
     }
 
@@ -190,7 +190,7 @@ public class Registration implements Serializable {
             return false;
         }
         Registration that = (Registration) other;
-        return isActive() == that.isActive()
+        return Objects.equals(isActive, that.isActive)
                 && Objects.equals(duty, that.duty)
                 && Objects.equals(date, that.date)
                 && Objects.equals(clientId, that.clientId)

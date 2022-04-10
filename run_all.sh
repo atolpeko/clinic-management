@@ -20,7 +20,7 @@ java -jar api-gateway/target/api-gateway-1.0.jar > logs/api-gateway.log &
 java -jar auth-server/target/auth-server-1.0.jar > logs/auth-server.log &
 java -jar client-service/target/client-service-1.0.jar > logs/client-service.log &
 java -jar clinic-service/target/clinic-service-1.0.jar > logs/clinic-service.log &
-java -jar registration-service/target/registration-service-1.0-SNAPSHOT.jar > logs/registration-service.log &
+java -jar registration-service/target/registration-service-1.0.jar > logs/registration-service.log &
 java -jar results-service/target/results-service-1.0.jar > logs/results-service.log &
 sleep 70
 echo "System started"

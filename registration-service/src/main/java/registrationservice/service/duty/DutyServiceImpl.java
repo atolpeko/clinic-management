@@ -229,7 +229,7 @@ public class DutyServiceImpl implements DutyService {
             circuitBreaker.decorateRunnable(deleteDuty).run();
             logger.info("Duty " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
-            throw new IllegalModificationException("No duty with id " + id);
+            throw new IllegalModificationException("No duty with id " + id, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Duty database unavailable", e);
         }
