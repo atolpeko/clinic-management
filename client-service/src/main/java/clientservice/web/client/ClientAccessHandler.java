@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package clientservice.web;
+package clientservice.web.client;
 
 import clientservice.data.ClientRepository;
 import clientservice.service.Client;

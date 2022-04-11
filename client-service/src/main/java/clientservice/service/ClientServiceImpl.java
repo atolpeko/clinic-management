@@ -93,6 +93,16 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
+    public long count() {
+        try {
+            Supplier<Long> count = repository::count;
+            return circuitBreaker.decorateSupplier(count).get();
+        } catch (Exception e) {
+            throw new RemoteResourceException("Client database unavailable", e);
+        }
+    }
+
+    @Override
     public Client register(Client client) {
         try {
             validate(client);

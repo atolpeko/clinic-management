@@ -118,7 +118,7 @@ public class ClientControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "USER", "DOCTOR", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "USER", "DOCTOR", "INTERNAL" })
     public void shouldDenyAccessToAllClientsWhenUserIsNotTopManager() throws Exception {
         getAllAndExpect(status().isUnauthorized());
     }
@@ -198,7 +198,7 @@ public class ClientControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "INTERNAL" })
     public void shouldDenyAccessToClientByEmailWhenUserIsNotTopManager() throws Exception {
         getByEmailAndExpect(status().isUnauthorized());
     }
@@ -262,7 +262,7 @@ public class ClientControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "INTERNAL" })
     public void shouldDenyClientPatchingWhenUserIsNotTopManager() throws Exception {
         patchByIdAndExpect(2, updateClient1Json, status().isForbidden());
     }
@@ -297,7 +297,7 @@ public class ClientControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyClientStatusPatchingWhenUserIsNotTopManager() throws Exception {
         patchStatusAndExpect(status().isForbidden());
     }
@@ -333,7 +333,7 @@ public class ClientControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "INTERNAL" })
     public void shouldDenyClientDeletionWhenUserIsNotTopManager() throws Exception {
         deleteByIdAndExpect(5, status().isForbidden());
     }

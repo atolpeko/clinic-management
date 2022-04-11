@@ -61,6 +61,15 @@ public interface ClientService {
     Optional<Client> findByEmail(String email);
 
     /**
+     * Counts the number of clients in the remote client repository.
+     *
+     * @return the number of clients in the remote client repository
+     *
+     * @throws RemoteResourceException if there is any problem with the remote client repository
+     */
+    long count();
+    
+    /**
      * Saves the specified client in the remote client repository.
      * Use the returned client for further operations as the save operation
      * might have changed the client instance completely.

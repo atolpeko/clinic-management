@@ -21,3 +21,12 @@ spring:
   security:
     oauth2:
       jwt-key: MjWP5L7CiDff90qA
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+        exclude: threaddump, heapdump
+  endpoint:
+    health:
+      show-details: always

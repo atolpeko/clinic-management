@@ -136,6 +136,14 @@ public class ClientServiceImplTest {
     }
 
     @Test
+    public void shouldCount5ClientsWhenContains5Clients() {
+        when(repository.count()).thenReturn(5L);
+
+        long count = clientService.count();
+        assertThat(count, is(equalTo(5L)));
+    }
+
+    @Test
     public void shouldRegisterClientWhenClientIsValid() {
         when(repository.save(any(Client.class))).thenReturn(client);
         when(validator.validate(any(Client.class))).thenReturn(Collections.emptySet());
