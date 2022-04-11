@@ -1,0 +1,32 @@
+server:
+  port: 9090
+eureka:
+  instance:
+    prefIpAdress: true;
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://discovery-server:8761/eureka/
+spring:
+  boot:
+    admin:
+      context-path: /admin
+  security:
+    oauth2:
+      jwt-key: MjWP5L7CiDff90qA
+      client:
+        client-id: admin-server
+        client-secret: 15admin9_df55
+        authorization-grant-type: client_credentials
+        scope: read
+        access-token-uri: http://auth-server:9000/oauth/token
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+        exclude: threaddump, heapdump
+  endpoint:
+    health:
+      show-details: always

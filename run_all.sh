@@ -22,7 +22,8 @@ java -jar client-service/target/client-service-1.0.jar > logs/client-service.log
 java -jar clinic-service/target/clinic-service-1.0.jar > logs/clinic-service.log &
 java -jar registration-service/target/registration-service-1.0.jar > logs/registration-service.log &
 java -jar results-service/target/results-service-1.0.jar > logs/results-service.log &
-sleep 70
+java -jar admin-server/target/admin-server-1.0.jar > logs/admin-server.log &
+sleep 40
 echo "System started"
 
 # wait for Ctrl-C

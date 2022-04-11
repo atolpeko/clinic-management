@@ -136,5 +136,20 @@ services:
       - discovery-server  
       - mysql   
     environment:
-      - "SPRING_PROFILES_ACTIVE=docker"             
+      - "SPRING_PROFILES_ACTIVE=docker"    
+
+  admin-server:
+    image: atolpeko/admin-server:1.0
+    restart: on-failure
+    mem_limit: 1024M
+    networks: 
+      - cloud-network
+    ports:
+      - 9090:9090    
+    depends_on:
+      - config-server
+      - discovery-server  
+      - auth-server
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"                 
   
