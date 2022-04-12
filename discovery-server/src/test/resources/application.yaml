@@ -10,18 +10,9 @@ spring:
   boot:
     admin:
       client:
-        url: http://localhost:9090/admin
+        url: http://localhost:9090
   application:
     name: DISCOVERY-SERVER
   security:
     oauth2:
       jwt-key: MjWP5L7CiDff90qA
-management:
-  endpoints:
-    web:
-      exposure:
-        include: '*'
-        exclude: threaddump, heapdump
-  endpoint:
-    health:
-      show-details: always
