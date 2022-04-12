@@ -58,6 +58,15 @@ public interface TopManagerService {
     Optional<TopManager> findByEmail(String email);
 
     /**
+     * Counts the number of managers in the remote manager repository.
+     *
+     * @return the number of managers in the remote manager repository
+     *
+     * @throws RemoteResourceException if there is any problem with the remote manager repository
+     */
+    long count();
+
+    /**
      * Saves the specified manager in the remote manager repository.
      * Use the returned manager for further operations as the save operation
      * might have changed the manager instance completely.

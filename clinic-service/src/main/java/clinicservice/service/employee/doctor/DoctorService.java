@@ -83,6 +83,15 @@ public interface DoctorService {
     Optional<Doctor> findByEmail(String email);
 
     /**
+     * Counts the number of doctors in the remote doctor repository.
+     *
+     * @return the number of doctors in the remote doctor repository
+     *
+     * @throws RemoteResourceException if there is any problem with the remote doctor repository
+     */
+    long count();
+    
+    /**
      * Saves the specified doctor in the remote doctor repository.
      * Use the returned doctor for further operations as the save operation
      * might have changed the doctor instance completely.

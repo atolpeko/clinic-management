@@ -181,6 +181,14 @@ public class DoctorServiceImplTest {
     }
 
     @Test
+    public void shouldCount5DoctorsWhenContains5Doctors() {
+        when(doctorRepository.count()).thenReturn(5L);
+
+        long count = doctorService.count();
+        assertThat(count, is(equalTo(5L)));
+    }
+
+    @Test
     public void shouldSaveDoctorWhenDoctorIsValid() {
         Department department = doctor.getDepartment();
         when(departmentRepository.findById(department.getId())).thenReturn(Optional.of(department));

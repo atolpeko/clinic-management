@@ -207,7 +207,7 @@ public class DoctorControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyDoctorPostingWhenUserIsNotTopManagerOrTeamManager() throws Exception {
         postAndExpect(newDoctor2Json, status().isForbidden());
     }
@@ -249,7 +249,7 @@ public class DoctorControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyDoctorPatchingWhenUserIsNotTopManagerOrTeamManager() throws Exception {
         patchByIdAndExpect(3, updateDoctor1Json, status().isForbidden());
     }
@@ -285,7 +285,7 @@ public class DoctorControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyDoctorDeletionWhenUserIsNotTopManagerOrTeamManager() throws Exception {
         deleteByIdAndExpect(5, status().isForbidden());
     }

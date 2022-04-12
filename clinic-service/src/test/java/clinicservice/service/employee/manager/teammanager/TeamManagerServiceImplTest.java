@@ -169,6 +169,14 @@ public class TeamManagerServiceImplTest {
     }
 
     @Test
+    public void shouldCount5ManagersWhenContains5Mangers() {
+        when(managerRepository.count()).thenReturn(5L);
+
+        long count = managerService.count();
+        assertThat(count, is(equalTo(5L)));
+    }
+
+    @Test
     public void shouldSaveManagerWhenManagerIsValid() {
         Department department = manager.getDepartment();
         when(departmentRepository.findById(department.getId())).thenReturn(Optional.of(department));

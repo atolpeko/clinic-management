@@ -120,6 +120,14 @@ public class DepartmentServiceImplTest {
     }
 
     @Test
+    public void shouldCount5DepartmentsWhenContains5Departments() {
+        when(repository.count()).thenReturn(5L);
+
+        long count = departmentService.count();
+        assertThat(count, is(equalTo(5L)));
+    }
+
+    @Test
     public void shouldSaveDepartmentWhenDepartmentIsValid() {
         when(repository.save(department)).thenReturn(department);
         when(validator.validate(any(Department.class))).thenReturn(Collections.emptySet());

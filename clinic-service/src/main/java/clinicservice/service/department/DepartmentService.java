@@ -62,6 +62,15 @@ public interface DepartmentService {
     List<Department> findAllByFacilityId(Long id);
 
     /**
+     * Counts the number of departments in the remote department repository.
+     *
+     * @return the number of departments in the remote department repository
+     *
+     * @throws RemoteResourceException if there is any problem with the remote department repository
+     */
+    long count();
+
+    /**
      * Saves the specified department in the remote department repository.
      * Use the returned department for further operations as the save operation
      * might have changed the department instance completely.

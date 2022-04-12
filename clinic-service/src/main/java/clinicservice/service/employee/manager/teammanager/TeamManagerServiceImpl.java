@@ -115,6 +115,16 @@ public class TeamManagerServiceImpl implements TeamManagerService {
     }
 
     @Override
+    public long count() {
+        try {
+            Supplier<Long> count = managerRepository::count;
+            return circuitBreaker.decorateSupplier(count).get();
+        } catch (Exception e) {
+            throw new RemoteResourceException("Employee database unavailable", e);
+        }
+    }
+
+    @Override
     public TeamManager save(TeamManager manager) {
         try {
             validate(manager);

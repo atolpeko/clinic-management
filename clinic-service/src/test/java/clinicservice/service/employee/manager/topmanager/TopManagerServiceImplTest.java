@@ -155,6 +155,14 @@ public class TopManagerServiceImplTest {
     }
 
     @Test
+    public void shouldCount5ManagersWhenContains5Mangers() {
+        when(managerRepository.count()).thenReturn(5L);
+
+        long count = managerService.count();
+        assertThat(count, is(equalTo(5L)));
+    }
+
+    @Test
     public void shouldSaveManagerWhenManagerIsValid() {
         when(managerRepository.save(any(TopManager.class))).thenReturn(manager);
         when(validator.validate(any(TopManager.class))).thenReturn(Collections.emptySet());

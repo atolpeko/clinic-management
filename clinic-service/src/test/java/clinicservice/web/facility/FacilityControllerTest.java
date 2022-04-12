@@ -114,7 +114,7 @@ public class FacilityControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyFacilityPostingWhenUserIsNotTopManager() throws Exception {
         postAndExpect(status().isForbidden());
     }
@@ -146,7 +146,7 @@ public class FacilityControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyFacilityPatchingWhenUserIsNotTopManager() throws Exception {
         patchAndExpect(status().isForbidden());
     }
@@ -179,7 +179,7 @@ public class FacilityControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyFacilityDeletionWhenUserIsNotTopManager() throws Exception {
         deleteAndExpect(status().isForbidden());
     }

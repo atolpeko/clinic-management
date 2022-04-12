@@ -120,6 +120,16 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     @Override
+    public long count() {
+        try {
+            Supplier<Long> count = doctorRepository::count;
+            return circuitBreaker.decorateSupplier(count).get();
+        } catch (Exception e) {
+            throw new RemoteResourceException("Employee database unavailable", e);
+        }
+    }
+
+    @Override
     public Doctor save(Doctor doctor) {
         try {
             validate(doctor);

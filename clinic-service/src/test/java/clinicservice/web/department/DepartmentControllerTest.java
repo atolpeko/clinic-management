@@ -124,7 +124,7 @@ public class DepartmentControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyDepartmentPostingWhenUserIsNotTopManager() throws Exception {
         postAndExpect(status().isForbidden());
     }
@@ -156,7 +156,7 @@ public class DepartmentControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyDepartmentPatchingWhenUserIsNotTopManager() throws Exception {
         patchAndExpect(status().isForbidden());
     }
@@ -183,7 +183,7 @@ public class DepartmentControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyDepartmentDeletionWhenUserIsNotTopManager() throws Exception {
         deleteAndExpect(status().isForbidden());
     }

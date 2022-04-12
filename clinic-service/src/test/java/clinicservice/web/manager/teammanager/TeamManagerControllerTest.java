@@ -150,7 +150,7 @@ public class TeamManagerControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyAccessToAllManagersWhenUserIsNotTopManager() throws Exception {
         getAllAndExpect(status().isUnauthorized());
     }
@@ -181,7 +181,7 @@ public class TeamManagerControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyAccessToManagerByEmailWhenUserIsNotTopManager() throws Exception {
         getByEmailAndExpect(status().isForbidden());
     }
@@ -212,7 +212,7 @@ public class TeamManagerControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyAccessToManagersByDepartmentIdWhenUserIsNotTopManager() throws Exception {
         getByDepartmentIdAndExpect(status().isForbidden());
     }
@@ -243,7 +243,7 @@ public class TeamManagerControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyAccessToManagerByIdWhenUserIsNotTopManager() throws Exception {
         getByDepartmentIdAndExpect(status().isForbidden());
     }
@@ -291,7 +291,7 @@ public class TeamManagerControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyManagerPostingWhenUserIsNotTopMangerOrTeamManager() throws Exception {
         postAndExpect(newManager1Json, status().isForbidden());
     }
@@ -334,7 +334,7 @@ public class TeamManagerControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyManagerPatchingWhenUserIsNotTopManager() throws Exception {
         patchByIdAndExpect(8, newManager1Json, status().isUnauthorized());
     }
@@ -367,7 +367,7 @@ public class TeamManagerControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyManagerDeletionWhenUserIsNotTopManager() throws Exception {
         deleteByIdAndExpect(9, status().isForbidden());
     }

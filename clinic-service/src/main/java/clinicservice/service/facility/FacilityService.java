@@ -60,6 +60,15 @@ public interface FacilityService {
     Optional<MedicalFacility> findById(long id);
 
     /**
+     * Counts the number of medical facilities in the remote facility repository.
+     *
+     * @return the number of medical facilities in the remote facility repository
+     *
+     * @throws RemoteResourceException if there is any problem with the remote facility repository
+     */
+    long count();
+
+    /**
      * Saves the specified medical facility in the remote facility repository.
      * Use the returned medical facility for further operations as the save operation
      * might have changed the medical facility instance completely.

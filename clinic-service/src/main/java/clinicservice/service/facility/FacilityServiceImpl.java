@@ -94,6 +94,16 @@ public class FacilityServiceImpl implements FacilityService {
     }
 
     @Override
+    public long count() {
+        try {
+            Supplier<Long> count = facilityRepository::count;
+            return circuitBreaker.decorateSupplier(count).get();
+        } catch (Exception e) {
+            throw new RemoteResourceException("Facility database unavailable", e);
+        }
+    }
+
+    @Override
     public MedicalFacility save(MedicalFacility facility) {
         try {
             validate(facility);

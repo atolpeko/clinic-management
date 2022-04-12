@@ -95,6 +95,16 @@ public class TopManagerServiceImpl implements TopManagerService {
     }
 
     @Override
+    public long count() {
+        try {
+            Supplier<Long> count = managerRepository::count;
+            return circuitBreaker.decorateSupplier(count).get();
+        } catch (Exception e) {
+            throw new RemoteResourceException("Employee database unavailable", e);
+        }
+    }
+
+    @Override
     public TopManager save(TopManager manager) {
         try {
             validate(manager);

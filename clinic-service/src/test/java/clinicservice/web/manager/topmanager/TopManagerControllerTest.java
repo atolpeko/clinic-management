@@ -51,7 +51,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.cloud.config.enabled=false")
 @AutoConfigureMockMvc
 public class TopManagerControllerTest {
-    private static String newManagerJson;
+    private static String newManager1Json;
+    private static String newManager2Json;
     private static String updateManagerJson;
 
     @Autowired
@@ -61,8 +62,8 @@ public class TopManagerControllerTest {
     private TopManagerService managerService;
 
     @BeforeAll
-    public static void createManagerJsons() {
-        newManagerJson = "{\"name\": \"Alexander\"," +
+    public static void createNewManagerJsons() {
+        newManager1Json = "{\"name\": \"Alexander\"," +
                 "\"hireDate\": \"2022-03-01\"," +
                 "\"phone\": \"123456\"," +
                 "\"sex\": \"MALE\"," +
@@ -72,16 +73,37 @@ public class TopManagerControllerTest {
                 "\"email\": \"top-manager@gmail.com\"," +
                 "\"password\": \"12345678\"," +
                 "\"address\":{" +
-                "\"country\":\"USA\"," +
-                "\"state\":\"NY\"," +
-                "\"city\":\"NYC\"," +
-                "\"street\":\"23\"," +
-                "\"houseNumber\":11" +
+                    "\"country\":\"USA\"," +
+                    "\"state\":\"NY\"," +
+                    "\"city\":\"NYC\"," +
+                    "\"street\":\"23\"," +
+                    "\"houseNumber\":11" +
                 "}}";
 
+        newManager2Json = "{\"name\": \"Alexander\"," +
+                "\"hireDate\": \"2022-03-01\"," +
+                "\"phone\": \"123456\"," +
+                "\"sex\": \"MALE\"," +
+                "\"dateOfBirth\": \"1995-01-22\"," +
+                "\"salary\": 1000," +
+                "\"department\" : { \"id\": 1 }," +
+                "\"email\": \"top-manager2@gmail.com\"," +
+                "\"password\": \"12345678\"," +
+                    "\"address\":{" +
+                    "\"country\":\"USA\"," +
+                    "\"state\":\"NY\"," +
+                    "\"city\":\"NYC\"," +
+                    "\"street\":\"23\"," +
+                    "\"houseNumber\":11" +
+                "}}";
+
+    }
+
+    @BeforeAll
+    public static void createUpdateManagerJson() {
         updateManagerJson = "{\"name\": \"Mark\"," +
                 "\"department\" : { \"id\": 2 }," +
-                "\"email\": \"top-manager2@gmail.com\"}";
+                "\"email\": \"top-manager3@gmail.com\"}";
     }
 
     @Test
@@ -98,7 +120,7 @@ public class TopManagerControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyAccessToManagersWhenUserIsNotTopManager() throws Exception {
         getAllAndExpect(status().isForbidden());
     }
@@ -123,7 +145,7 @@ public class TopManagerControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyAccessToManagerByIdWhenUserIsNotTopManager() throws Exception {
         getAndExpect(status().isForbidden());
     }
@@ -148,7 +170,7 @@ public class TopManagerControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyAccessToManagerByEmailWhenUserIsNotTopManager() throws Exception {
         getByEmailAndExpect(status().isForbidden());
     }
@@ -163,16 +185,26 @@ public class TopManagerControllerTest {
     @WithMockUser(authorities = "TOP_MANAGER")
     public void shouldReturnSavedManagerOnManagersPostRequestWhenUserIsTopManager() throws Exception {
         int initialCount = managerService.findAll().size();
-        postAndExpect(status().isCreated());
+        postAndExpect(newManager1Json, status().isCreated());
 
         int newCount = managerService.findAll().size();
         assertThat(newCount, is(initialCount + 1));
     }
 
-    private void postAndExpect(ResultMatcher status) throws Exception {
+    @Test
+    @WithMockUser(authorities = "ADMIN")
+    public void shouldReturnSavedManagerOnManagersPostRequestWhenUserIsAdmin() throws Exception {
+        int initialCount = managerService.findAll().size();
+        postAndExpect(newManager2Json, status().isCreated());
+
+        int newCount = managerService.findAll().size();
+        assertThat(newCount, is(initialCount + 1));
+    }
+
+    private void postAndExpect(String data, ResultMatcher status) throws Exception {
         mvc.perform(post("/top-managers")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(newManagerJson)
+                        .content(data)
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status)
@@ -182,13 +214,13 @@ public class TopManagerControllerTest {
     @Test
     @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyManagerPostingWhenUserIsNotTopManager() throws Exception {
-        postAndExpect(status().isForbidden());
+        postAndExpect(newManager1Json, status().isForbidden());
     }
 
     @Test
     @WithAnonymousUser
     public void shouldDenyManagerPostingWhenUserIsNotAuthorized() throws Exception {
-        postAndExpect(status().isUnauthorized());
+        postAndExpect(newManager2Json, status().isUnauthorized());
     }
 
     @Test
@@ -212,7 +244,7 @@ public class TopManagerControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyManagerPathingWhenUserIsNotTopManager() throws Exception {
         patchAndExpect(status().isForbidden());
     }
@@ -251,7 +283,7 @@ public class TopManagerControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyManagerDeletionWhenUserIsNotTopManager() throws Exception {
         deleteAndExpect(status().isForbidden());
     }

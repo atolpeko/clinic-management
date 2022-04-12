@@ -89,6 +89,16 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
+    public long count() {
+        try {
+            Supplier<Long> count = repository::count;
+            return circuitBreaker.decorateSupplier(count).get();
+        } catch (Exception e) {
+            throw new RemoteResourceException("Department database unavailable", e);
+        }
+    }
+
+    @Override
     public Department save(Department department) {
         try {
             validate(department);

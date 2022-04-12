@@ -129,6 +129,14 @@ public class FacilityServiceImplTest {
     }
 
     @Test
+    public void shouldCount5FacilitiesWhenContains5Facilities() {
+        when(facilityRepository.count()).thenReturn(5L);
+
+        long count = facilityService.count();
+        assertThat(count, is(equalTo(5L)));
+    }
+
+    @Test
     public void shouldSaveFacilityWhenFacilityIsValid() {
         when(departmentRepository.findById(any())).thenReturn(facility.getDepartments().stream().findAny());
         when(facilityRepository.save(any(MedicalFacility.class))).thenReturn(facility);
