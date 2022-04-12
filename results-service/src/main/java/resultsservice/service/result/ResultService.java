@@ -60,6 +60,15 @@ public interface ResultService {
     Optional<Result> findById(long id);
 
     /**
+     * Counts the number of the results in the remote result repossitory.
+     *
+     * @return the number of the results in the remote result repossitory
+     *
+     * @throws RemoteResourceException if there is any problem with the remote result repository
+     */
+    long count();
+
+    /**
      * Saves the specified result in the remote result repository.
      * Use the returned result for further operations as the save operation
      * might have changed the result instance completely.

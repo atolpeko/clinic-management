@@ -159,6 +159,16 @@ public class ResultServiceImpl implements ResultService {
     }
 
     @Override
+    public long count() {
+        try {
+            Supplier<Long> count = repository::count;;
+            return circuitBreaker.decorateSupplier(count).get();
+        } catch (Exception e) {
+            throw new RemoteResourceException("Result database unavailable", e);
+        }
+    }
+
+    @Override
     public Result save(Result result) {
         try {
             validate(result);

@@ -27,4 +27,13 @@ spring:
         client-secret: 309_res9ults_86
         authorization-grant-type: client_credentials
         scope: read
-        access-token-uri: http://localhost:9000/oauth/token
+        access-token-uri: http://auth-server:9000/oauth/token
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+        exclude: threaddump, heapdump
+  endpoint:
+    health:
+      show-details: always

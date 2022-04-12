@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package resultsservice.web;
+package resultsservice.web.result;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -137,6 +137,14 @@ public class ResultServiceImplTest {
     }
 
     @Test
+    public void shouldCount5ResultsWhenContains5Results() {
+        when(resultsRepository.count()).thenReturn(5L);
+
+        long count = resultService.count();
+        assertThat(count, is(equalTo(5L)));
+    }
+
+    @Test
     public void shouldSaveResultWhenResultIsValid() {
         when(resultsRepository.save(any(Result.class))).thenReturn(result);
         when(validator.validate(any(Result.class))).thenReturn(Collections.emptySet());

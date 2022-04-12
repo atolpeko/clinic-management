@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package resultsservice.web;
+package resultsservice.web.result;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -105,7 +105,7 @@ public class ResultControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyAccessToAllResultsWhenUserIsNotTopManager() throws Exception {
         getAllAndExpect(status().isUnauthorized());
     }
@@ -144,7 +144,7 @@ public class ResultControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "INTERNAL" })
     public void shouldDenyAccessToResultByIdWhenUserIsNotTopManager() throws Exception {
         getByIdAndExpect(status().isForbidden());
     }
@@ -197,7 +197,7 @@ public class ResultControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "INTERNAL" })
     public void shouldDenyAccessToResultsByClientIdWhenUserIsNotTopManager() throws Exception {
         getByClientIdAndExpect(status().isForbidden());
     }
@@ -253,7 +253,7 @@ public class ResultControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "USER", "INTERNAL" })
     public void shouldDenyResultPostingWhenUserIsNotTopManager() throws Exception {
         postAndExpect(newResult1Json, status().isForbidden());
     }
@@ -302,7 +302,7 @@ public class ResultControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "USER", "INTERNAL" })
     public void shouldDenyResultPatchingByClientIdWhenUserIsNotTopManager() throws Exception {
         patchByIdAndExpect(3, update2Json, status().isForbidden());
     }
@@ -344,7 +344,7 @@ public class ResultControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "USER", "INTERNAL" })
     public void shouldDenyResultDeletionByClientIdWhenUserIsNotTopManager() throws Exception {
         deleteByIdAndExpect(5, status().isForbidden());
     }

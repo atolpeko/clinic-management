@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package resultsservice.web;
+package resultsservice.web.result;
 
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;

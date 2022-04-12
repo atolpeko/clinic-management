@@ -59,9 +59,11 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
     public void configure(HttpSecurity http) throws Exception {
         http
             .requestMatchers()
-                .mvcMatchers("/results/**")
+                .mvcMatchers("/**")
             .and()
             .authorizeRequests()
+                .mvcMatchers("/actuator/**")
+                    .hasAnyAuthority("INTERNAL", "ADMIN")
                 .mvcMatchers(HttpMethod.GET, "/results/**")
                     .hasAnyAuthority("USER", "DOCTOR", "TOP_MANAGER")
                 .mvcMatchers(HttpMethod.POST, "/results/**")
