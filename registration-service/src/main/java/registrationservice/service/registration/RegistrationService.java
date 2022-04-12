@@ -73,6 +73,15 @@ public interface RegistrationService {
     Optional<Registration> findById(long id);
 
     /**
+     * Counts the number of the registrations in the remote registration repossitory.
+     *
+     * @return the number of registrations in the remote registration repossitory
+     *
+     * @throws RemoteResourceException if there is any problem with the remote registration repository
+     */
+    long count();
+
+    /**
      * Saves the specified registration in the remote registration repository.
      * Use the returned registration for further operations as the save operation
      * might have changed the registration instance completely.

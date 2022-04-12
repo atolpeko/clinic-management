@@ -132,6 +132,14 @@ public class RegistrationServiceImplTest {
     }
 
     @Test
+    public void shouldCount5RegistrationsWhenContains5Registrations() {
+        when(registrationRepository.count()).thenReturn(5L);
+
+        long count = registrationService.count();
+        assertThat(count, is(equalTo(5L)));
+    }
+
+    @Test
     public void shouldSaveRegistrationWhenRegistrationIsValid() {
         when(registrationRepository.save(any(Registration.class))).thenReturn(registration);
         when(validator.validate(any(Registration.class))).thenReturn(Collections.emptySet());

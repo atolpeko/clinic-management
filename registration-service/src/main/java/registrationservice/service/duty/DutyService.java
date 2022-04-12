@@ -61,6 +61,15 @@ public interface DutyService {
     Optional<Duty> findByName(String name);
 
     /**
+     * Counts the number of the duties in the remote duty repossitory.
+     *
+     * @return the number of duties in the remote duty repossitory
+     *
+     * @throws RemoteResourceException if there is any problem with the remote duty repository
+     */
+    long count();
+
+    /**
      * Saves the specified duty in the remote duty repository.
      * Use the returned duty for further operations as the save operation
      * might have changed the duty instance completely.

@@ -127,6 +127,14 @@ public class DutyServiceImplTest {
     }
 
     @Test
+    public void shouldCount5DutiesWhenContains5Duties() {
+        when(dutyRepository.count()).thenReturn(5L);
+
+        long count = dutyService.count();
+        assertThat(count, is(equalTo(5L)));
+    }
+
+    @Test
     public void shouldSaveDutyWhenDutyIsValid() {
         when(dutyRepository.save(any(Duty.class))).thenReturn(duty);
         when(validator.validate(any(Duty.class))).thenReturn(Collections.emptySet());

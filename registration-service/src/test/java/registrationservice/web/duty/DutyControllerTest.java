@@ -118,7 +118,7 @@ public class DutyControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyDutyPostingWhenUserIsNotTopManager() throws Exception {
         postAndExpect(status().isForbidden());
     }
@@ -150,7 +150,7 @@ public class DutyControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyDutyPatchingWhenUserIsNotTopManager() throws Exception {
         patchAndExpect(status().isForbidden());
     }
@@ -177,7 +177,7 @@ public class DutyControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyDutyDeletionWhenUserIsNotTopManager() throws Exception {
         deleteAndExpect(status().isForbidden());
     }

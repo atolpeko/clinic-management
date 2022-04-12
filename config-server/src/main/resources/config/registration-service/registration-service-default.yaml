@@ -28,3 +28,12 @@ spring:
         authorization-grant-type: client_credentials
         scope: read
         access-token-uri: http://localhost:9000/oauth/token
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+        exclude: threaddump, heapdump
+  endpoint:
+    health:
+      show-details: always

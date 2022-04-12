@@ -130,6 +130,16 @@ public class DutyServiceImpl implements DutyService {
     }
 
     @Override
+    public long count() {
+        try {
+            Supplier<Long> count = dutyRepository::count;
+            return circuitBreaker.decorateSupplier(count).get();
+        } catch (Exception e) {
+            throw new RemoteResourceException("Duty database unavailable", e);
+        }
+    }
+
+    @Override
     public Duty save(Duty duty) {
         try {
             validate(duty);

@@ -85,7 +85,7 @@ public class RegistrationControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyAccessToRegistrationsWhenUserIsNotTopManager() throws Exception {
         getAllAndExpect(status().isUnauthorized());
     }
@@ -124,7 +124,7 @@ public class RegistrationControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyAccessToRegistrationByIdWhenUserIsNotTopManager() throws Exception {
         getAndExpect(status().isUnauthorized());
     }
@@ -169,7 +169,7 @@ public class RegistrationControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "USER", "INTERNAL" })
     public void shouldDenyAccessToRegistrationsByDoctorIdWhenUserIsNotTopManager() throws Exception {
         getByDoctorIdAndExpect(status().isUnauthorized());
     }
@@ -292,13 +292,13 @@ public class RegistrationControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "USER", "INTERNAL" })
     public void shouldDenyRegistrationsPatchingWhenUserIsNotTopManager() throws Exception {
         patchStatusByIdAndExpect(3, status().isForbidden());
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "USER", "INTERNAL" })
     public void shouldDenyRegistrationsPatchingWhenUserIsNotResourceOwner() throws Exception {
         patchStatusByIdAndExpect(3, status().isForbidden());
     }
@@ -325,7 +325,7 @@ public class RegistrationControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = { "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
+    @WithMockUser(authorities = { "ADMIN", "TEAM_MANAGER", "DOCTOR", "USER", "INTERNAL" })
     public void shouldDenyRegistrationDeletionWhenUserIsNotTopManager() throws Exception {
         deleteAndExpect(status().isForbidden());
     }

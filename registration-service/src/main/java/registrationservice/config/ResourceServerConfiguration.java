@@ -62,6 +62,8 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
                 .mvcMatchers("/**")
             .and()
             .authorizeRequests()
+                .mvcMatchers("/actuator/**")
+                    .hasAnyAuthority("INTERNAL", "ADMIN")
                 .mvcMatchers(HttpMethod.GET, "/services/**")
                     .permitAll()
                 .mvcMatchers("/services/**")
