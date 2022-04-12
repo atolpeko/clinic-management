@@ -3,9 +3,27 @@ server:
 spring:
   profiles:
     active: native
+  application:
+    name: CONFIG-SERVER
   cloud:
     config:
       server:
         native:
           searchLocations: "[classpath:/, classpath:/config, classpath:/config/{application},
            classpath:/config/{application}/{profile}]"
+  boot:
+    admin:
+      client:
+        url: http://localhost:9090/admin
+  security:
+    oauth2:
+      jwt-key: MjWP5L7CiDff90qA
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+        exclude: threaddump, heapdump
+  endpoint:
+    health:
+      show-details: always

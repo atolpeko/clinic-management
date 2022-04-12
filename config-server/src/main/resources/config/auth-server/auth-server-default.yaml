@@ -28,7 +28,8 @@ database:
 oauth:
   jwt-key: MjWP5L7CiDff90qA
   clients:
-    - name: web-frontend
+    -
+      name: web-frontend
       password: 11front_45_jt590
       grantTypes:
         - password
@@ -50,8 +51,21 @@ oauth:
       accessTokenValiditySeconds: 1800
       refreshTokenValiditySeconds: 43200
 
-    - name: results-service
+    -
+      name: results-service
       password: 309_res9ults_86
+      grantTypes:
+        - client_credentials
+      authorities:
+        - INTERNAL
+      scopes:
+        - read
+      accessTokenValiditySeconds: 1800
+      refreshTokenValiditySeconds: 43200
+
+    -
+      name: admin-server
+      password: 15admin9_df55
       grantTypes:
         - client_credentials
       authorities:

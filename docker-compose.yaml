@@ -60,6 +60,7 @@ services:
       - 9000:9000
     depends_on:
       - config-server
+      - mysql
     environment:
       - "SPRING_PROFILES_ACTIVE=docker"        
 
@@ -140,6 +141,7 @@ services:
 
   admin-server:
     image: atolpeko/admin-server:1.0
+     container_name: admin-server
     restart: on-failure
     mem_limit: 1024M
     networks: 
