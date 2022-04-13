@@ -74,3 +74,12 @@ oauth:
         - read
       accessTokenValiditySeconds: 1800
       refreshTokenValiditySeconds: 43200
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+        exclude: threaddump, heapdump
+  endpoint:
+    health:
+      show-details: always
