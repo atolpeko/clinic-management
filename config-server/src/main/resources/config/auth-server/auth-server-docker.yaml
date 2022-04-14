@@ -74,6 +74,12 @@ oauth:
         - read
       accessTokenValiditySeconds: 1800
       refreshTokenValiditySeconds: 43200
+  users:
+    -
+      name: admin
+      password: admin_3377
+      authorities:
+        - ADMIN
 management:
   endpoints:
     web:

@@ -16,6 +16,8 @@
 
 package authserver.config;
 
+import authserver.config.properties.UserProperties;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,10 +33,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @EnableWebSecurity
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     private final AuthenticationProvider authenticationProvider;
+    private final UserProperties userProperties;
 
     @Autowired
-    public WebSecurityConfiguration(AuthenticationProvider authenticationProvider) {
+    public WebSecurityConfiguration(AuthenticationProvider authenticationProvider,
+                                    UserProperties userProperties) {
         this.authenticationProvider = authenticationProvider;
+        this.userProperties = userProperties;
     }
 
     @Bean
@@ -48,7 +53,14 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     }
 
     @Override
-    protected void configure(AuthenticationManagerBuilder auth) {
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.authenticationProvider(authenticationProvider);
+
+       for (UserProperties.User user : userProperties.getUsers()) {
+           auth.inMemoryAuthentication()
+                   .withUser(user.getName())
+                   .password(passwordEncoder().encode(user.getPassword()))
+                   .authorities(user.getAuthorities());
+       }
     }
 }

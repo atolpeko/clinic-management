@@ -16,6 +16,8 @@
 
 package authserver.config;
 
+import authserver.config.properties.ClientProperties;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

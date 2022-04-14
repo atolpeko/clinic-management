@@ -27,6 +27,11 @@ database:
     driverClassName: com.mysql.cj.jdbc.Driver
 oauth:
   jwt-key: MjWP5L7CiDff90qA
+  users:
+    - name: admin
+      password: admin_3377
+      authorities:
+        - ADMIN
   clients:
     - name: client1
       password: client1
