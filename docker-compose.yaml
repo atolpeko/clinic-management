@@ -111,6 +111,21 @@ services:
     environment:
       - "SPRING_PROFILES_ACTIVE=docker"       
 
+  employee-service:
+    image: atolpeko/employee-service:1.0
+    restart: on-failure
+    mem_limit: 1024M
+    networks: 
+      - cloud-network
+    ports:
+      - 5960-5970:5960    
+    depends_on:
+      - config-server
+      - discovery-server  
+      - mysql  
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"           
+
   registration-service:
     image: atolpeko/registration-service:1.0
     restart: on-failure
