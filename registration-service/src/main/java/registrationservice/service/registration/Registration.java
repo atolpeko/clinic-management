@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import registrationservice.service.duty.Duty;
 import registrationservice.service.external.client.Client;
-import registrationservice.service.external.clinic.Doctor;
+import registrationservice.service.external.employee.Doctor;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

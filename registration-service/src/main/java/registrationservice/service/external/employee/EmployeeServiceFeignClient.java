@@ -14,24 +14,26 @@
  * limitations under the License.
  */
 
-package resultsservice.service.external.clinic;
+package registrationservice.service.external.employee;
 
 import feign.FeignException.FeignClientException;
 
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import resultsservice.config.OauthFeignConfiguration;
+import registrationservice.config.OauthFeignConfiguration;
 
 import java.util.Optional;
 
 /**
- * Provides access to clinic microservice.
+ * Provides access to employee microservice.
  */
-@FeignClient(name = "clinic-service", configuration = OauthFeignConfiguration.class)
-public interface ClinicServiceFeignClient {
+@FeignClient(name = "employee-service", configuration = OauthFeignConfiguration.class)
+public interface EmployeeServiceFeignClient {
 
     /**
      * Looks for a doctor with the specified ID.
@@ -46,4 +48,18 @@ public interface ClinicServiceFeignClient {
             value = "/doctors/{id}",
             consumes = "application/json")
     Optional<Doctor> findDoctorById(@PathVariable Long id);
+
+    /**
+     * Looks for all doctors with the specified speciality.
+     *
+     * @param specialty speciality of the doctors to get
+     *
+     * @return all doctors with the specified speciality
+     *
+     * @throws FeignClientException if there is any problem with feign client
+     */
+    @RequestMapping(method = RequestMethod.GET,
+            value = "/doctors?specialty={specialty}",
+            consumes = "application/json")
+    CollectionModel<EntityModel<Doctor>> findAllDoctorsBySpecialty(@PathVariable String specialty);
 }

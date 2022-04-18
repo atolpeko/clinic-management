@@ -19,7 +19,7 @@ package resultsservice.service.result;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import resultsservice.service.external.client.Client;
-import resultsservice.service.external.clinic.Doctor;
+import resultsservice.service.external.employee.Doctor;
 import resultsservice.service.external.registration.Duty;
 
 import javax.persistence.Column;

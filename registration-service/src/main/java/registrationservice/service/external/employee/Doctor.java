@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package registrationservice.service.external.clinic;
+package registrationservice.service.external.employee;
 
 import java.io.Serializable;
 import java.util.Objects;

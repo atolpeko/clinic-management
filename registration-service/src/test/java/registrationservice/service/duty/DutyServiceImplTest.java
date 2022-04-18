@@ -28,7 +28,7 @@ import org.mockito.Mockito;
 import registrationservice.data.DutyRepository;
 import registrationservice.data.RegistrationRepository;
 import registrationservice.service.exception.IllegalModificationException;
-import registrationservice.service.external.clinic.ClinicServiceFeignClient;
+import registrationservice.service.external.employee.EmployeeServiceFeignClient;
 
 import javax.validation.Validator;
 
@@ -54,7 +54,7 @@ public class DutyServiceImplTest {
     private static DutyRepository dutyRepository;
     private static RegistrationRepository registrationRepository;
     private static Validator validator;
-    private static ClinicServiceFeignClient feignClient;
+    private static EmployeeServiceFeignClient feignClient;
     private static CircuitBreaker circuitBreaker;
 
     private static Duty duty;
@@ -67,7 +67,7 @@ public class DutyServiceImplTest {
         dutyRepository = mock(DutyRepository.class);
         registrationRepository = mock(RegistrationRepository.class);
         validator = mock(Validator.class);
-        feignClient = mock(ClinicServiceFeignClient.class);
+        feignClient = mock(EmployeeServiceFeignClient.class);
 
         circuitBreaker = mock(CircuitBreaker.class);
         when(circuitBreaker.decorateSupplier(any())).then(returnsFirstArg());

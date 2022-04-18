@@ -31,8 +31,8 @@ import resultsservice.service.exception.IllegalModificationException;
 import resultsservice.service.exception.RemoteResourceException;
 import resultsservice.service.external.client.Client;
 import resultsservice.service.external.client.ClientServiceFeignClient;
-import resultsservice.service.external.clinic.ClinicServiceFeignClient;
-import resultsservice.service.external.clinic.Doctor;
+import resultsservice.service.external.employee.EmployeeServiceFeignClient;
+import resultsservice.service.external.employee.Doctor;
 import resultsservice.service.external.registration.Duty;
 import resultsservice.service.external.registration.RegistrationServiceFeignClient;
 
@@ -56,7 +56,7 @@ public class ResultServiceImpl implements ResultService {
     private final CircuitBreaker circuitBreaker;
 
     private final ClientServiceFeignClient clientService;
-    private final ClinicServiceFeignClient clinicService;
+    private final EmployeeServiceFeignClient employeeService;
     private final RegistrationServiceFeignClient registrationService;
 
     @Autowired
@@ -64,13 +64,13 @@ public class ResultServiceImpl implements ResultService {
                              Validator validator,
                              CircuitBreaker circuitBreaker,
                              ClientServiceFeignClient clientService,
-                             ClinicServiceFeignClient clinicService,
+                             EmployeeServiceFeignClient employeeService,
                              RegistrationServiceFeignClient registrationService) {
         this.repository = repository;
         this.validator = validator;
         this.circuitBreaker = circuitBreaker;
         this.clientService = clientService;
-        this.clinicService = clinicService;
+        this.employeeService = employeeService;
         this.registrationService = registrationService;
     }
 
@@ -108,13 +108,13 @@ public class ResultServiceImpl implements ResultService {
     
     private Doctor loadDoctor(long doctorId) {
         try {
-            Supplier<Optional<Doctor>> findDoctor = () -> clinicService.findDoctorById(doctorId);
+            Supplier<Optional<Doctor>> findDoctor = () -> employeeService.findDoctorById(doctorId);
             return circuitBreaker.decorateSupplier(findDoctor).get().orElseThrow();
         } catch (NoSuchElementException e) {
             logger.error("Doctor not found: " + doctorId);
             return null;
         } catch (Exception e) {
-            String errorMsg = "Clinic microservice unavailable: " + e.getMessage();
+            String errorMsg = "Employee microservice unavailable: " + e.getMessage();
             logger.error(errorMsg);
             return null;
         }

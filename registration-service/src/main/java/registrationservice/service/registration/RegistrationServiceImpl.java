@@ -31,8 +31,8 @@ import registrationservice.service.exception.IllegalModificationException;
 import registrationservice.service.exception.RemoteResourceException;
 import registrationservice.service.external.client.Client;
 import registrationservice.service.external.client.ClientServiceFeignClient;
-import registrationservice.service.external.clinic.ClinicServiceFeignClient;
-import registrationservice.service.external.clinic.Doctor;
+import registrationservice.service.external.employee.EmployeeServiceFeignClient;
+import registrationservice.service.external.employee.Doctor;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
@@ -53,19 +53,19 @@ public class RegistrationServiceImpl implements RegistrationService {
     private final Validator validator;
     private final CircuitBreaker circuitBreaker;
 
-    private final ClinicServiceFeignClient clinicService;
+    private final EmployeeServiceFeignClient employeeService;
     private final ClientServiceFeignClient clientService;
 
     @Autowired
     public RegistrationServiceImpl(RegistrationRepository repository,
                                    Validator validator,
                                    CircuitBreaker circuitBreaker,
-                                   ClinicServiceFeignClient clinicService,
+                                   EmployeeServiceFeignClient employeeService,
                                    ClientServiceFeignClient clientService) {
         this.repository = repository;
         this.validator = validator;
         this.circuitBreaker = circuitBreaker;
-        this.clinicService = clinicService;
+        this.employeeService = employeeService;
         this.clientService = clientService;
     }
 
@@ -88,13 +88,13 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     private Doctor loadDoctor(long doctorId) {
         try {
-            Supplier<Optional<Doctor>> findDoctor = () -> clinicService.findDoctorById(doctorId);
+            Supplier<Optional<Doctor>> findDoctor = () -> employeeService.findDoctorById(doctorId);
             return circuitBreaker.decorateSupplier(findDoctor).get().orElseThrow();
         } catch (NoSuchElementException e) {
             logger.error("Doctor not found: " + doctorId);
             return null;
         } catch (Exception e) {
-            String errorMsg = "Clinic microservice unavailable: " + e.getMessage();
+            String errorMsg = "Employee microservice unavailable: " + e.getMessage();
             logger.error(errorMsg);
             return null;
         }

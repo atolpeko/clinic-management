@@ -29,7 +29,7 @@ import registrationservice.data.RegistrationRepository;
 import registrationservice.service.duty.Duty;
 import registrationservice.service.exception.IllegalModificationException;
 import registrationservice.service.external.client.ClientServiceFeignClient;
-import registrationservice.service.external.clinic.ClinicServiceFeignClient;
+import registrationservice.service.external.employee.EmployeeServiceFeignClient;
 
 import javax.validation.Validator;
 
@@ -55,7 +55,7 @@ public class RegistrationServiceImplTest {
     private static RegistrationRepository registrationRepository;
     private static Validator validator;
     private static CircuitBreaker circuitBreaker;
-    private static ClinicServiceFeignClient clinicService;
+    private static EmployeeServiceFeignClient employeeService;
     private static ClientServiceFeignClient clientService;
 
     private static Registration registration;
@@ -66,7 +66,7 @@ public class RegistrationServiceImplTest {
     public static void setUpMocks() {
         registrationRepository = mock(RegistrationRepository.class);
         validator = mock(Validator.class);
-        clinicService = mock(ClinicServiceFeignClient.class);
+        employeeService = mock(EmployeeServiceFeignClient.class);
 
         circuitBreaker = mock(CircuitBreaker.class);
         when(circuitBreaker.decorateSupplier(any())).then(returnsFirstArg());
@@ -93,7 +93,7 @@ public class RegistrationServiceImplTest {
     public void beforeEach() {
         Mockito.reset(registrationRepository, validator);
         registrationService = new RegistrationServiceImpl(registrationRepository,
-                validator, circuitBreaker, clinicService, clientService);
+                validator, circuitBreaker, employeeService, clientService);
     }
 
     @Test

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package resultsservice.service.external.clinic;
+package resultsservice.service.external.employee;
 
 import java.io.Serializable;
 import java.util.Objects;

@@ -29,8 +29,8 @@ import resultsservice.data.ResultsRepository;
 import resultsservice.service.exception.IllegalModificationException;
 import resultsservice.service.external.client.Client;
 import resultsservice.service.external.client.ClientServiceFeignClient;
-import resultsservice.service.external.clinic.ClinicServiceFeignClient;
-import resultsservice.service.external.clinic.Doctor;
+import resultsservice.service.external.employee.EmployeeServiceFeignClient;
+import resultsservice.service.external.employee.Doctor;
 import resultsservice.service.external.registration.Duty;
 import resultsservice.service.external.registration.RegistrationServiceFeignClient;
 
@@ -58,7 +58,7 @@ public class ResultServiceImplTest {
     private static Validator validator;
     private static CircuitBreaker circuitBreaker;
     private static ClientServiceFeignClient clientService;
-    private static ClinicServiceFeignClient clinicService;
+    private static EmployeeServiceFeignClient employeeService;
     private static RegistrationServiceFeignClient registrationService;
 
     private static Result result;
@@ -78,8 +78,8 @@ public class ResultServiceImplTest {
         clientService = mock(ClientServiceFeignClient.class);
         when(clientService.findClientById(any(Long.class))).thenReturn(Optional.of(new Client()));
 
-        clinicService = mock(ClinicServiceFeignClient.class);
-        when(clinicService.findDoctorById(any(Long.class))).thenReturn(Optional.of(new Doctor()));
+        employeeService = mock(EmployeeServiceFeignClient.class);
+        when(employeeService.findDoctorById(any(Long.class))).thenReturn(Optional.of(new Doctor()));
 
         registrationService = mock(RegistrationServiceFeignClient.class);
         when(registrationService.findDutyById(any(Long.class))).thenReturn(Optional.of(new Duty()));
@@ -107,7 +107,7 @@ public class ResultServiceImplTest {
     public void beforeEach() {
         Mockito.reset(resultsRepository, validator);
         resultService = new ResultServiceImpl(resultsRepository, validator, circuitBreaker,
-                clientService, clinicService, registrationService);
+                clientService, employeeService, registrationService);
     }
 
     @Test

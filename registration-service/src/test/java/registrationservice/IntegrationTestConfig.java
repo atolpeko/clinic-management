@@ -29,8 +29,8 @@ import registrationservice.service.duty.DutyService;
 import registrationservice.service.duty.DutyServiceImpl;
 import registrationservice.service.external.client.Client;
 import registrationservice.service.external.client.ClientServiceFeignClient;
-import registrationservice.service.external.clinic.ClinicServiceFeignClient;
-import registrationservice.service.external.clinic.Doctor;
+import registrationservice.service.external.employee.EmployeeServiceFeignClient;
+import registrationservice.service.external.employee.Doctor;
 import registrationservice.service.registration.RegistrationService;
 import registrationservice.service.registration.RegistrationServiceImpl;
 
@@ -59,14 +59,14 @@ public class IntegrationTestConfig {
     @Primary
     public RegistrationService registrationService() {
         return new RegistrationServiceImpl(registrationRepository, validator, circuitBreaker,
-                clinicServiceFeignClient(), clientServiceFeignClient());
+                employeeServiceFeignClient(), clientServiceFeignClient());
     }
 
     @Bean
     @Primary
     public DutyService dutyService() {
         return new DutyServiceImpl(dutyRepository, registrationRepository, validator,
-                clinicServiceFeignClient(), circuitBreaker);
+                employeeServiceFeignClient(), circuitBreaker);
     }
 
     @Bean
@@ -82,11 +82,11 @@ public class IntegrationTestConfig {
     }
 
     @Bean
-    public ClinicServiceFeignClient clinicServiceFeignClient() {
+    public EmployeeServiceFeignClient employeeServiceFeignClient() {
         Doctor firstDoctor = new Doctor(1L, "mark@gmail.com", "Mark", "Surgery");
         Doctor secondDoctor = new Doctor(2L, "robert@gmail.com", "Robert", "Surgery");
 
-        ClinicServiceFeignClient feignClient = mock(ClinicServiceFeignClient.class);
+        EmployeeServiceFeignClient feignClient = mock(EmployeeServiceFeignClient.class);
         when(feignClient.findDoctorById(1L)).thenReturn(Optional.of(firstDoctor));
         when(feignClient.findDoctorById(2L)).thenReturn(Optional.of(secondDoctor));
 

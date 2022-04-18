@@ -26,8 +26,8 @@ import org.springframework.context.annotation.Primary;
 import resultsservice.data.ResultsRepository;
 import resultsservice.service.external.client.Client;
 import resultsservice.service.external.client.ClientServiceFeignClient;
-import resultsservice.service.external.clinic.ClinicServiceFeignClient;
-import resultsservice.service.external.clinic.Doctor;
+import resultsservice.service.external.employee.EmployeeServiceFeignClient;
+import resultsservice.service.external.employee.Doctor;
 import resultsservice.service.external.registration.Duty;
 import resultsservice.service.external.registration.RegistrationServiceFeignClient;
 import resultsservice.service.result.ResultService;
@@ -57,7 +57,8 @@ public class IntegrationTestConfig {
     @Primary
     public ResultService resultService() {
         return new ResultServiceImpl(resultsRepository, validator, circuitBreaker,
-                clientServiceFeignClient(), clinicServiceFeignClient(), registrationServiceFeignClient());
+                clientServiceFeignClient(), employeeServiceFeignClient(),
+                registrationServiceFeignClient());
     }
 
     @Bean
@@ -73,11 +74,11 @@ public class IntegrationTestConfig {
     }
 
     @Bean
-    public ClinicServiceFeignClient clinicServiceFeignClient() {
+    public EmployeeServiceFeignClient employeeServiceFeignClient() {
         Doctor firstDoctor = new Doctor(1L, "mark@gmail.com", "Mark", "Surgery");
         Doctor secondDoctor = new Doctor(2L, "robert@gmail.com", "Robert", "Surgery");
 
-        ClinicServiceFeignClient feignClient = mock(ClinicServiceFeignClient.class);
+        EmployeeServiceFeignClient feignClient = mock(EmployeeServiceFeignClient.class);
         when(feignClient.findDoctorById(1L)).thenReturn(Optional.of(firstDoctor));
         when(feignClient.findDoctorById(2L)).thenReturn(Optional.of(secondDoctor));
 

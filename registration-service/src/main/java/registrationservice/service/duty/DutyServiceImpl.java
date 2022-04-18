@@ -32,8 +32,8 @@ import registrationservice.data.DutyRepository;
 import registrationservice.data.RegistrationRepository;
 import registrationservice.service.exception.IllegalModificationException;
 import registrationservice.service.exception.RemoteResourceException;
-import registrationservice.service.external.clinic.ClinicServiceFeignClient;
-import registrationservice.service.external.clinic.Doctor;
+import registrationservice.service.external.employee.EmployeeServiceFeignClient;
+import registrationservice.service.external.employee.Doctor;
 import registrationservice.service.registration.Registration;
 
 import javax.validation.ConstraintViolation;
@@ -55,14 +55,14 @@ public class DutyServiceImpl implements DutyService {
     private final DutyRepository dutyRepository;
     private final RegistrationRepository registrationRepository;
     private final Validator validator;
-    private final ClinicServiceFeignClient feignClient;
+    private final EmployeeServiceFeignClient feignClient;
     private final CircuitBreaker circuitBreaker;
 
     @Autowired
     public DutyServiceImpl(DutyRepository dutyRepository,
                            RegistrationRepository registrationRepository,
                            Validator validator,
-                           ClinicServiceFeignClient clinicService,
+                           EmployeeServiceFeignClient clinicService,
                            CircuitBreaker circuitBreaker) {
         this.dutyRepository = dutyRepository;
         this.registrationRepository = registrationRepository;
@@ -97,7 +97,7 @@ public class DutyServiceImpl implements DutyService {
                     .collect(Collectors.toSet());
             duty.setDoctors(doctors);
         } catch (Exception e) {
-            logger.error("Clinic microservice unavailable: " + e.getMessage());
+            logger.error("Employee microservice unavailable: " + e.getMessage());
         }
     }
 

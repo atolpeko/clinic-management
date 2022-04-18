@@ -16,7 +16,7 @@
 
 package registrationservice.service.duty;
 
-import registrationservice.service.external.clinic.Doctor;
+import registrationservice.service.external.employee.Doctor;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
