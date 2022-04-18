@@ -21,3 +21,9 @@ spring:
   security:
     oauth2:
       jwt-key: MjWP5L7CiDff90qA
+      client:
+        client-id: client
+        client-secret: secret
+        authorization-grant-type: client_credentials
+        scope: read
+        access-token-uri: http://localhost:9000/oauth/token

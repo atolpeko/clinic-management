@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package clinicservice.service;
+package clinicservice.service.department;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;

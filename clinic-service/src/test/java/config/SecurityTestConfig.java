@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package clinicservice;
+package config;
 
 import clinicservice.config.ResourceServerConfiguration;
 

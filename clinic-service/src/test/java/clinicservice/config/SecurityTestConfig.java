@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package employeeservice.config;
+package clinicservice.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;

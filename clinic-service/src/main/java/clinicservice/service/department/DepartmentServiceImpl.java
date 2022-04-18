@@ -63,6 +63,8 @@ public class DepartmentServiceImpl implements DepartmentService {
         try {
             Supplier<List<Department>> findAll = repository::findAll;
             return circuitBreaker.decorateSupplier(findAll).get();
+        } catch (RemoteResourceException e) {
+            throw e;
         } catch (Exception e) {
             throw new RemoteResourceException("Department database unavailable", e);
         }
@@ -73,6 +75,8 @@ public class DepartmentServiceImpl implements DepartmentService {
         try {
             Supplier<List<Department>> findAll = () -> repository.findAllByFacilityId(id);
             return circuitBreaker.decorateSupplier(findAll).get();
+        } catch (RemoteResourceException e) {
+            throw e;
         } catch (Exception e) {
             throw new RemoteResourceException("Department database unavailable", e);
         }
@@ -83,6 +87,8 @@ public class DepartmentServiceImpl implements DepartmentService {
         try {
             Supplier<Optional<Department>> findById = () -> repository.findById(id);
             return circuitBreaker.decorateSupplier(findById).get();
+        } catch (RemoteResourceException e) {
+            throw e;
         } catch (Exception e) {
             throw new RemoteResourceException("Department database unavailable", e);
         }

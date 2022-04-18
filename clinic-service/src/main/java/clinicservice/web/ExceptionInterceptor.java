@@ -123,7 +123,7 @@ public class ExceptionInterceptor {
     @ExceptionHandler(IllegalModificationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public JsonErrorMessage handleModificationException(IllegalModificationException e,
-                                                        HttpServletRequest request) {
+                                                       HttpServletRequest request) {
         String msg = e.getMessage();
         String path = request.getServletPath();
         logger.error(msg + ". Path: " + path);

@@ -17,7 +17,6 @@
 package clinicservice.service.department;
 
 import clinicservice.data.DepartmentRepository;
-import clinicservice.service.Address;
 import clinicservice.service.exception.IllegalModificationException;
 import clinicservice.service.facility.MedicalFacility;
 

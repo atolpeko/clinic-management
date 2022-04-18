@@ -17,7 +17,6 @@
 package clinicservice.web.department;
 
 import clinicservice.service.department.Department;
-import clinicservice.web.doctor.DoctorController;
 import clinicservice.web.facility.FacilityController;
 
 import org.springframework.hateoas.CollectionModel;
@@ -39,7 +38,6 @@ public class DepartmentModelAssembler
     public EntityModel<Department> toModel(Department entity) {
         long id = entity.getId();
         return EntityModel.of(entity,
-                linkTo(methodOn(DoctorController.class).getAllByDepartmentId(id)).withRel("doctors"),
                 linkTo(methodOn(FacilityController.class).getAllByDepartmentId(id)).withRel("facilities"),
                 linkTo(methodOn(DepartmentController.class).getById(id)).withSelfRel(),
                 linkTo(methodOn(DepartmentController.class).getAll()).withRel("all"));
