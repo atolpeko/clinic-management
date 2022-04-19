@@ -15,4 +15,4 @@ spring:
     name: DISCOVERY-SERVER
   security:
     oauth2:
-      jwt-key: MjWP5L7CiDff90qA
+      jwt-key: key

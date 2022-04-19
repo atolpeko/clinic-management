@@ -15,12 +15,12 @@ spring:
     driverClassName: org.h2.Driver
   security:
     oauth2:
-      jwt-key: MjWP5L7CiDff90qA
+      jwt-key: key
       client:
-        client-id: results-service
-        client-secret: 309_res9ults_86
-        authorization-grant-type: client_credentials
-        scope: read
+        client-id: client
+        client-secret: secret
+        authorization-grant-type: grant
+        scope: scope
         access-token-uri: http://localhost:9000/oauth/token
   h2:
     console:

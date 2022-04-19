@@ -15,43 +15,31 @@ spring:
 database:
   clinic-employee-database:
     platform: mysql
-    url: jdbc:mysql://localhost:3306/clinic?createDatabaseIfNotExist=true
-    username: root
+    url: jdbc:h2:mem:testdb;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    username: sa
     password:
-    driverClassName: com.mysql.cj.jdbc.Driver
+    driverClassName: org.h2.Driver
   clinic-client-database:
     platform: mysql
-    url: jdbc:mysql://localhost:3306/client?createDatabaseIfNotExist=true
-    username: root
+    url: jdbc:h2:mem:testdb;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    username: sa
     password:
-    driverClassName: com.mysql.cj.jdbc.Driver
+    driverClassName: org.h2.Driver
 oauth:
-  jwt-key: MjWP5L7CiDff90qA
+  jwt-key: key
   users:
-    - name: admin
+    - name: user
       password: admin_3377
       authorities:
-        - ADMIN
+        - auth
   clients:
-    - name: client1
-      password: client1
+    - name: client
+      password: client
       grantTypes:
-        - client_credentials
+        - grant
       authorities:
-        - AUTH
+        - auth
       scopes:
-        - read
-        - write
+        - scope
       accessTokenValiditySeconds: 10
       refreshTokenValiditySeconds: 10
-    - name: client2
-      password: client2
-      grantTypes:
-        - client_credentials
-      authorities:
-        - AUTH
-      scopes:
-        - read
-        - write
-      accessTokenValiditySeconds: 20
-      refreshTokenValiditySeconds: 20
