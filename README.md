@@ -83,9 +83,10 @@ endpoint to get it.
 
 ## Clinic Management Service Internals
 
-Clinic management is made up of 8 microservices: <br>
+Clinic management is made up of 10 microservices: <br>
 * Client Service - port 5980
 * Clinic Service - port 6120
+* Employee Service - port 5960
 * Registration Service - port 6340
 * Results Service - port 6450
 * Discovery Server - port 8761
@@ -96,7 +97,7 @@ Clinic management is made up of 8 microservices: <br>
 
 You can see the architecture on the chart:
 
-![Clinic Management System](https://user-images.githubusercontent.com/83589564/163432355-27aece8d-a82d-4132-872a-4d2bc78d9c17.png)
+![Clinic Management System](https://user-images.githubusercontent.com/83589564/164301584-5b60fa7f-ef1e-4e1c-8097-1d282f6125c0.png)
 
 ### Configuration
 At startup, each microservice contacts the Configuration server for configurations. All configurations are under version control in the [configuration repository](https://github.com/atolpeko/clinic-config).
