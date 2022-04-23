@@ -77,7 +77,7 @@ public class TeamManagerServiceImplTest {
         validator = mock(Validator.class);
 
         serviceFeignClient = mock(ClinicServiceFeignClient.class);
-        when(serviceFeignClient.findDepartmentById(1L)).thenReturn(Optional.of(new Department(1L)));
+        when(serviceFeignClient.findDepartmentById(1L)).thenReturn(new Department(1L));
 
         encoder = mock(PasswordEncoder.class);
         when(encoder.encode(anyString())).then(returnsFirstArg());

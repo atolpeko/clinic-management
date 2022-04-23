@@ -25,8 +25,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import java.util.Optional;
-
 /**
  * Provides access to clinic microservice.
  */
@@ -38,12 +36,12 @@ public interface ClinicServiceFeignClient {
      *
      * @param id ID of the department to get
      *
-     * @return department with the specified ID or Optional#empty() if none found
+     * @return department with the specified ID 
      *
      * @throws FeignException.FeignClientException if there is any problem with feign client
      */
     @RequestMapping(method = RequestMethod.GET,
             value = "/departments/{id}",
             consumes = "application/json")
-    Optional<Department> findDepartmentById(@PathVariable Long id);
+    Department findDepartmentById(@PathVariable Long id);
 }

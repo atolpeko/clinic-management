@@ -35,8 +35,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.validation.Validator;
 
-import java.util.Optional;
-
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -78,8 +76,8 @@ public class IntegrationTestConfig {
         Department secondDepartment = new Department(2L);
 
         ClinicServiceFeignClient feignClient = mock(ClinicServiceFeignClient.class);
-        when(feignClient.findDepartmentById(1L)).thenReturn(Optional.of(firstDepartment));
-        when(feignClient.findDepartmentById(2L)).thenReturn(Optional.of(secondDepartment));
+        when(feignClient.findDepartmentById(1L)).thenReturn(firstDepartment);
+        when(feignClient.findDepartmentById(2L)).thenReturn(secondDepartment);
 
         return feignClient;
     }

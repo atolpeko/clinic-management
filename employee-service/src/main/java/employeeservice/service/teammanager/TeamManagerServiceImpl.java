@@ -155,26 +155,26 @@ public class TeamManagerServiceImpl implements TeamManagerService {
             throw new IllegalModificationException(msg);
         }
 
-        if (manager.getDepartment() == null || manager.getDepartment().getId() == null) {
+        if (manager.getDepartment() == null) {
             throw new IllegalModificationException("Department is mandatory");
         }
 
-        if (!departmentExists(manager.getDepartment().getId())) {
-            String msg = "No department with id: " + manager.getDepartment().getId();
-            throw new IllegalModificationException(msg);
-        }
-
+        validateDepartment(manager.getDepartment());
         validateTeam(manager.getTeam());
     }
 
-    private boolean departmentExists(long id) {
+    private void validateDepartment(Department department) {
         try {
-            Supplier<Optional<Department>> findById = () -> clinicFeignClient.findDepartmentById(id);
-            Optional<Department> department = circuitBreaker.decorateSupplier(findById).get();
-            return department.isPresent();
+            if (department.getId() == null) {
+                throw new IllegalModificationException("Department ID is mandatory");
+            }
+
+            long id = department.getId();
+            Supplier<Department> findById = () -> clinicFeignClient.findDepartmentById(id);
+            circuitBreaker.decorateSupplier(findById).get();
         } catch (FeignException e) {
             if (e.status() == 404) {
-                throw new IllegalModificationException("No department with id " + id);
+                throw new IllegalModificationException("No department with id " + department.getId());
             } else {
                 logger.error(e.getMessage());
                 throw new RemoteResourceException("Clinic service unavailable", e);

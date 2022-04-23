@@ -74,7 +74,7 @@ public class DoctorServiceImplTest {
         validator = mock(Validator.class);
 
         serviceFeignClient = mock(ClinicServiceFeignClient.class);
-        when(serviceFeignClient.findDepartmentById(any())).thenReturn(Optional.of(new Department(1L)));
+        when(serviceFeignClient.findDepartmentById(any())).thenReturn(new Department(1L));
 
         encoder = mock(PasswordEncoder.class);
         when(encoder.encode(anyString())).then(returnsFirstArg());
