@@ -37,7 +37,13 @@ public class AddressTest {
 
     @Test
     public void shouldPassValidationWhenHasValidData() {
-        Address address = new Address("USA", "NY", "NYC", "23", 1);
+        Address address = Address.builder()
+                .withCountry("USA")
+                .withState("NY")
+                .withCity("NYC")
+                .withStreet("23")
+                .withHouseNumber(1)
+                .build();
 
         int errors = validator.validate(address).size();
         assertThat(errors, is(0));
@@ -45,8 +51,7 @@ public class AddressTest {
 
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
-        Address address = new Address();
-        address.setHouseNumber(-1);
+        Address address = Address.builder().withHouseNumber(-1).build();
 
         int errors = validator.validate(address).size();
         assertThat(errors, is(5));

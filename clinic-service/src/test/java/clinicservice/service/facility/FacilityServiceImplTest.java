@@ -75,24 +75,24 @@ public class FacilityServiceImplTest {
 
     @BeforeAll
     public static void createFacility() {
-        Department department = new Department();
-        department.setId(1L);
+        Department department = Department.builder().withId(1L).build();
 
-        facility = new MedicalFacility();
-        facility.setId(1L);
-        facility.setName("Facility1");
-        facility.setDepartments(new HashSet<>(Set.of(department)));
+        facility = MedicalFacility.builder()
+                .withId(1L)
+                .withName("Facility1")
+                .withDepartments(new HashSet<>(Set.of(department)))
+                .build();
     }
 
     @BeforeAll
     public static void createUpdatedFacility() {
-        Department department = new Department();
-        department.setId(1L);
+        Department department = Department.builder().withId(1L).build();
 
-        updatedFacility = new MedicalFacility();
-        updatedFacility.setId(1L);
-        updatedFacility.setName("Facility2");
-        updatedFacility.setDepartments(new HashSet<>(Set.of(department)));
+        updatedFacility = MedicalFacility.builder()
+                .withId(1L)
+                .withName("Facility2")
+                .withDepartments(new HashSet<>(Set.of(department)))
+                .build();
     }
 
     @BeforeEach

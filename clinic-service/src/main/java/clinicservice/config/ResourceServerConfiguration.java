@@ -23,8 +23,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
@@ -52,11 +50,6 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
         return converter;
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
     @Override
     public void configure(ResourceServerSecurityConfigurer resources) {
         resources.tokenStore(tokenStore());
@@ -71,17 +64,13 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
             .authorizeRequests()
                 .mvcMatchers("/actuator/**")
                     .hasAnyAuthority("INTERNAL", "ADMIN")
-                .mvcMatchers(HttpMethod.POST, "/departments/**")
+                .mvcMatchers(HttpMethod.GET, "/departments/**")
+                    .permitAll()
+                .mvcMatchers("/departments/**")
                     .hasAuthority("TOP_MANAGER")
-                .mvcMatchers(HttpMethod.PATCH, "/departments/**")
-                    .hasAuthority("TOP_MANAGER")
-                .mvcMatchers(HttpMethod.DELETE, "/departments/**")
-                    .hasAuthority("TOP_MANAGER")
-                .mvcMatchers(HttpMethod.POST, "/facilities/**")
-                    .hasAuthority("TOP_MANAGER")
-                .mvcMatchers(HttpMethod.PATCH, "/facilities/**")
-                    .hasAuthority("TOP_MANAGER")
-                .mvcMatchers(HttpMethod.DELETE, "/facilities/**")
+                .mvcMatchers(HttpMethod.GET, "/facilities/**")
+                    .permitAll()
+                .mvcMatchers("/facilities/**")
                     .hasAuthority("TOP_MANAGER")
             .and()
             .sessionManagement()

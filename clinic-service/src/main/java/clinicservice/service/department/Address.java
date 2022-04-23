@@ -52,6 +52,24 @@ public class Address implements Serializable {
     @Positive(message = "House number must be positive")
     private Integer houseNumber;
 
+    /**
+     * @return Address builder
+     */
+    public static Builder builder() {
+        return new Address().new Builder();
+    }
+
+    /**
+     * Returns an Address builder with predefined fields copied from the specified address.
+     *
+     * @param data address to copy data from
+     *
+     * @return Address builder
+     */
+    public static Builder builder(Address data) {
+        return new Address(data).new Builder();
+    }
+    
     public Address() {
     }
 
@@ -66,23 +84,6 @@ public class Address implements Serializable {
         state = other.state;
         street = other.street;
         houseNumber = other.houseNumber;
-    }
-
-    /**
-     * Constructs a new Address with the specified country, state, city, street and house number.
-     *
-     * @param country country to set
-     * @param state state to set
-     * @param city city to set
-     * @param street street to set
-     * @param houseNumber house number to set
-     */
-    public Address(String country, String state, String city, String street, Integer houseNumber) {
-        this.country = country;
-        this.state = state;
-        this.city = city;
-        this.street = street;
-        this.houseNumber = houseNumber;
     }
 
     public String getCountry() {
@@ -157,5 +158,70 @@ public class Address implements Serializable {
                 ", street='" + street + '\'' +
                 ", houseNumber=" + houseNumber +
                 '}';
+    }
+
+    /**
+     * Address object builder.
+     */
+    public class Builder {
+
+        private Builder() {
+        }
+
+        public Address build() {
+            return Address.this;
+        }
+
+        public Builder withCountry(String country) {
+            Address.this.country = country;
+            return this;
+        }
+
+        public Builder withState(String state) {
+            Address.this.state = state;
+            return this;
+        }
+
+        public Builder withCity(String city) {
+            Address.this.city = city;
+            return this;
+        }
+
+        public Builder withStreet(String street) {
+            Address.this.street = street;
+            return this;
+        }
+
+        public Builder withHouseNumber(int houseNumber) {
+            Address.this.houseNumber = houseNumber;
+            return this;
+        }
+
+        /**
+         * Copies not null fields from the specified address.
+         *
+         * @param address address to copy data from
+         *
+         * @return this builder
+         */
+        public Builder copyNonNullFields(Address address) {
+            if (address.country != null) {
+                Address.this.country = address.country;
+            }
+            if (address.state != null) {
+                Address.this.state = address.state;
+            }
+            if (address.city != null) {
+                Address.this.city = address.city;
+            }
+            if (address.street != null) {
+                Address.this.street = address.street;
+            }
+            if (address.houseNumber != null) {
+                Address.this.houseNumber = address.houseNumber;
+            }
+
+            return this;
+        }
     }
 }

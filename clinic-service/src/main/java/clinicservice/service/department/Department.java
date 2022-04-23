@@ -37,6 +37,7 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Department domain class.
@@ -61,6 +62,24 @@ public class Department implements Serializable {
     @JsonIgnore
     private Set<MedicalFacility> facilities;
 
+    /**
+     * @return Department builder
+     */
+    public static Builder builder() {
+        return new Department().new Builder();
+    }
+
+    /**
+     * Returns a Department builder with predefined fields copied from the specified department.
+     *
+     * @param data department to copy data from
+     *
+     * @return Department builder
+     */
+    public static Builder builder(Department data) {
+        return new Department(data).new Builder();
+    }
+
     public Department() {
         facilities = new HashSet<>();
     }
@@ -74,17 +93,6 @@ public class Department implements Serializable {
         id = other.id;
         address = (other.address == null) ? null : new Address(other.address);
         facilities = new HashSet<>(other.facilities);
-    }
-
-    /**
-     * Constructs a new Department with the specified address and medical facilities.
-     *
-     * @param address address to set
-     * @param facilities facilities to set
-     */
-    public Department(Address address, Set<MedicalFacility> facilities) {
-        this.address = address;
-        this.facilities = facilities;
     }
 
     /**
@@ -164,5 +172,56 @@ public class Department implements Serializable {
                 ", address=" + address +
                 ", facilities=" + facilities +
                 '}';
+    }
+
+    /**
+     * Department object builder.
+     */
+    public class Builder {
+
+        private Builder() {
+        }
+
+        public Department build() {
+            return Department.this;
+        }
+
+        public Builder withId(Long id) {
+            Department.this.id = id;
+            return this;
+        }
+
+        public Builder withAdress(Address address) {
+            Department.this.address = address;
+            return this;
+        }
+
+        public Builder withFacilities(Set<MedicalFacility> facilities) {
+            Department.this.facilities = facilities;
+            return this;
+        }
+
+        /**
+         * Copies not null fields from the specified department.
+         *
+         * @param department department to copy data from
+         *
+         * @return this builder
+         */
+        public Builder copyNonNullFields(Department department) {
+            if (department.id != null) {
+                Department.this.id = department.id;
+            }
+            if (department.address != null) {
+                Department.this.address = Address.builder(Department.this.address)
+                        .copyNonNullFields(department.address)
+                        .build();
+            }
+            if (!department.facilities.isEmpty()) {
+                Department.this.facilities = new HashSet<>(department.facilities);
+            }
+
+            return this;
+        }
     }
 }

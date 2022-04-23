@@ -31,24 +31,23 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Produces;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 
-@ControllerAdvice
-@ResponseBody
+@RestControllerAdvice
+@Produces("application/json")
 public class ExceptionInterceptor {
     private static final Logger logger = LogManager.getLogger(ExceptionInterceptor.class);
 
-    public static class JsonErrorMessage implements Serializable {
+    public static class JsonErrorMessage {
         private final LocalDateTime timestamp;
         private final int status;
         private final String error;
@@ -81,10 +80,13 @@ public class ExceptionInterceptor {
     @ExceptionHandler({ NoSuchElementException.class, MethodArgumentTypeMismatchException.class })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public JsonErrorMessage handleNotFoundException(Exception e, HttpServletRequest request) {
-        String msg = e.getMessage();
+        return handleException(e.getMessage(), request, HttpStatus.NOT_FOUND);
+    }
+
+    private JsonErrorMessage handleException(String msg, HttpServletRequest request, HttpStatus status) {
         String path = request.getServletPath();
         logger.error(msg + ". Path:" + path);
-        return new JsonErrorMessage(msg, path, HttpStatus.NOT_FOUND);
+        return new JsonErrorMessage(msg, path, status);
     }
 
     @ExceptionHandler({ HttpMessageNotReadableException.class,
@@ -94,40 +96,28 @@ public class ExceptionInterceptor {
             RequestRejectedException.class })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public JsonErrorMessage handleBadRequestException(Exception e, HttpServletRequest request) {
-        String msg = e.getMessage();
-        String path = request.getServletPath();
-        logger.error(msg + ". Path:" + path);
-        return new JsonErrorMessage(msg, path, HttpStatus.BAD_REQUEST);
+        return handleException(e.getMessage(), request, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     public JsonErrorMessage handleNotSupportedException(HttpRequestMethodNotSupportedException e,
                                                         HttpServletRequest request) {
-        String msg = e.getMessage();
-        String path = request.getServletPath();
-        logger.error(msg + ". Path:" + path);
-        return new JsonErrorMessage(msg, path, HttpStatus.METHOD_NOT_ALLOWED);
+        return handleException(e.getMessage(), request, HttpStatus.METHOD_NOT_ALLOWED);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public JsonErrorMessage handleAccessDeniedException(AccessDeniedException e,
                                                         HttpServletRequest request) {
-        String msg = e.getMessage();
-        String path = request.getServletPath();
-        logger.error(msg + ". Path: " + path);
-        return new JsonErrorMessage(msg, path, HttpStatus.UNAUTHORIZED);
+        return handleException(e.getMessage(), request, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(IllegalModificationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public JsonErrorMessage handleModificationException(IllegalModificationException e,
-                                                       HttpServletRequest request) {
-        String msg = e.getMessage();
-        String path = request.getServletPath();
-        logger.error(msg + ". Path: " + path);
-        return new JsonErrorMessage(msg, path, HttpStatus.BAD_REQUEST);
+                                                        HttpServletRequest request) {
+        return handleException(e.getMessage(), request, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -141,26 +131,19 @@ public class ExceptionInterceptor {
         });
         builder.delete(builder.lastIndexOf(","), builder.length());
 
-        String path = request.getServletPath();
-        logger.error(builder + ". Path: " + path);
-        return new JsonErrorMessage(builder.toString(), path, HttpStatus.BAD_REQUEST);
+        return handleException(builder.toString(), request, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(RemoteResourceException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public JsonErrorMessage handleRemoteResourceException(RemoteResourceException e,
                                                           HttpServletRequest request) {
-        String msg = e.getMessage();
-        String path = request.getServletPath();
-        logger.error(msg + ". Path: " + path);
-        return new JsonErrorMessage(msg, path, HttpStatus.INTERNAL_SERVER_ERROR);
+        return handleException(e.getMessage(), request, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public JsonErrorMessage handleUnknownException(Exception e, HttpServletRequest request) {
-        String path = request.getServletPath();
-        logger.error(e.getMessage() + ". Path: " + path);
-        return new JsonErrorMessage("Unknown error", path, HttpStatus.INTERNAL_SERVER_ERROR);
+        return handleException(e.getMessage(), request, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

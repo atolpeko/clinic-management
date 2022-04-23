@@ -63,8 +63,6 @@ public class DepartmentServiceImpl implements DepartmentService {
         try {
             Supplier<List<Department>> findAll = repository::findAll;
             return circuitBreaker.decorateSupplier(findAll).get();
-        } catch (RemoteResourceException e) {
-            throw e;
         } catch (Exception e) {
             throw new RemoteResourceException("Department database unavailable", e);
         }
@@ -75,8 +73,6 @@ public class DepartmentServiceImpl implements DepartmentService {
         try {
             Supplier<List<Department>> findAll = () -> repository.findAllByFacilityId(id);
             return circuitBreaker.decorateSupplier(findAll).get();
-        } catch (RemoteResourceException e) {
-            throw e;
         } catch (Exception e) {
             throw new RemoteResourceException("Department database unavailable", e);
         }
@@ -87,8 +83,6 @@ public class DepartmentServiceImpl implements DepartmentService {
         try {
             Supplier<Optional<Department>> findById = () -> repository.findById(id);
             return circuitBreaker.decorateSupplier(findById).get();
-        } catch (RemoteResourceException e) {
-            throw e;
         } catch (Exception e) {
             throw new RemoteResourceException("Department database unavailable", e);
         }
@@ -108,16 +102,8 @@ public class DepartmentServiceImpl implements DepartmentService {
     public Department save(Department department) {
         try {
             validate(department);
-            Department departmentToSave = new Department(department);
-            departmentToSave.setId(null);
-
-            Supplier<Department> save = () -> {
-                Department saved = repository.save(departmentToSave);
-                repository.flush();
-                return saved;
-            };
-
-            Department saved = circuitBreaker.decorateSupplier(save).get();
+            Department departmentToSave = prepareSaveData(department);
+            Department saved = persistDepartment(departmentToSave);
             logger.info("Department saved. ID - " + saved.getId());
             return saved;
         } catch (IllegalModificationException e) {
@@ -141,24 +127,33 @@ public class DepartmentServiceImpl implements DepartmentService {
         }
     }
 
+    private Department prepareSaveData(Department department) {
+        Department departmentToSave = new Department(department);
+        departmentToSave.setId(null);
+
+        return departmentToSave;
+    }
+
+    private Department persistDepartment(Department department) {
+        Supplier<Department> save = () -> {
+            Department saved = repository.save(department);
+            repository.flush();
+            return saved;
+        };
+
+        return circuitBreaker.decorateSupplier(save).get();
+    }
+
     @Override
     public Department update(Department department) {
         try {
-            Supplier<Optional<Department>> findById = () -> repository.findById(department.getId());
-            String errorMsg = "No department with id " + department.getId();
-            Department departmentToUpdate = circuitBreaker.decorateSupplier(findById)
-                    .get()
-                    .orElseThrow(() -> new IllegalModificationException(errorMsg));
-            prepareUpdateData(departmentToUpdate, department);
+            long id = department.getId();
+            Department departmentToUpdate = findById(id)
+                    .orElseThrow(() -> new IllegalModificationException("No department with id " + id));
+            departmentToUpdate = prepareUpdateData(departmentToUpdate, department);
             validate(departmentToUpdate);
 
-            Supplier<Department> update = () -> {
-                Department updated = repository.save(departmentToUpdate);
-                repository.flush();
-                return updated;
-            };
-
-            Department updated = circuitBreaker.decorateSupplier(update).get();
+            Department updated = persistDepartment(departmentToUpdate);
             logger.info("Department " + updated.getId() + " updated");
             return updated;
         } catch (IllegalModificationException e) {
@@ -168,35 +163,16 @@ public class DepartmentServiceImpl implements DepartmentService {
         }
     }
 
-    private void prepareUpdateData(Department department, Department updateData) {
-        if (updateData.getAddress() != null) {
-            if (updateData.getAddress().getCountry() != null) {
-                department.getAddress().setCountry(updateData.getAddress().getCountry());
-            }
-            if (updateData.getAddress().getState() != null) {
-                department.getAddress().setState(updateData.getAddress().getState());
-            }
-            if (updateData.getAddress().getCity() != null) {
-                department.getAddress().setCity(updateData.getAddress().getCity());
-            }
-            if (updateData.getAddress().getStreet() != null) {
-                department.getAddress().setStreet(updateData.getAddress().getStreet());
-            }
-            if (updateData.getAddress().getHouseNumber() != null) {
-                department.getAddress().setHouseNumber(updateData.getAddress().getHouseNumber());
-            }
-        }
+    private Department prepareUpdateData(Department savedDepartment, Department data) {
+        return Department.builder(savedDepartment)
+                .copyNonNullFields(data)
+                .build();
     }
 
     @Override
     public void deleteById(long id) {
         try {
-            Runnable delete = () -> {
-                repository.deleteById(id);
-                repository.flush();
-            };
-
-            circuitBreaker.decorateRunnable(delete).run();
+            deleteDepartment(id);
             logger.info("Department " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
             throw new IllegalModificationException("No department with id " + id);
@@ -206,5 +182,14 @@ public class DepartmentServiceImpl implements DepartmentService {
         } catch (Exception e) {
             throw new RemoteResourceException("Department database unavailable", e);
         }
+    }
+
+    private void deleteDepartment(long id) {
+        Runnable delete = () -> {
+            repository.deleteById(id);
+            repository.flush();
+        };
+
+        circuitBreaker.decorateRunnable(delete).run();
     }
 }

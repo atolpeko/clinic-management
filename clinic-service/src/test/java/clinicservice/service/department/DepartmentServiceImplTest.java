@@ -70,20 +70,37 @@ public class DepartmentServiceImplTest {
 
     @BeforeAll
     public static void createDepartment() {
-        department = new Department();
-        department.setId(1L);
-        department.setAddress(new Address("USA", "NY", "NYC", "23", 1));
+        Address address = Address.builder()
+                .withCountry("USA")
+                .withState("NY")
+                .withCity("NYC")
+                .withStreet("23")
+                .withHouseNumber(1)
+                .build();
 
-        MedicalFacility facility = new MedicalFacility();
-        facility.setId(1L);
+        department = Department.builder()
+                .withId(1L)
+                .withAdress(address)
+                .build();
+
+        MedicalFacility facility = MedicalFacility.builder().withId(1L).build();
         facility.setDepartments(Set.of(department));
     }
 
     @BeforeAll
     public static void createUpdatedDepartment() {
-        updatedDepartment = new Department();
-        updatedDepartment.setId(1L);
-        updatedDepartment.setAddress(new Address("USA", "California", "Los Angels", "36", 2));
+        Address address = Address.builder()
+                .withCountry("USA")
+                .withState("California")
+                .withCity("Los Angels")
+                .withStreet("36")
+                .withHouseNumber(2)
+                .build();
+
+        updatedDepartment = Department.builder()
+                .withId(1L)
+                .withAdress(address)
+                .build();
     }
 
     @BeforeEach
