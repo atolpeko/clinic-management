@@ -47,6 +47,23 @@ public class TeamManager extends AbstractEmployee {
     private Set<Doctor> team;
 
     /**
+     * @return TeamManager builder
+     */
+    public static Builder builder() {
+        return new TeamManager().new Builder();
+    }
+
+    /**
+     * Returns a TeamManager builder with predefined fields copied from the specified manager.
+     *
+     * @param data manager to copy data from
+     *
+     * @return TeamManager builder
+     */
+    public static Builder builder(TeamManager data) {
+        return new TeamManager(data).new Builder();
+    }
+    /**
      * Constructs a new enabled TeamManager.
      */
     public TeamManager() {
@@ -62,22 +79,6 @@ public class TeamManager extends AbstractEmployee {
     public TeamManager(TeamManager other) {
         super(other);
         team = new HashSet<>(other.team);
-    }
-
-    /**
-     * Constructs a new enabled TeamManager with the specified email,
-     * password, personal data, department and team.
-     *
-     * @param email email to set
-     * @param password password to set
-     * @param data personal data to set
-     * @param department department to set
-     * @param team team to set
-     */
-    public TeamManager(String email, String password, PersonalData data,
-                       Department department, Set<Doctor> team) {
-        super(email, password, data, department);
-        this.team = team;
     }
 
     @Override
@@ -122,5 +123,70 @@ public class TeamManager extends AbstractEmployee {
         return getClass().getName() + "{" +
                 "team=" + team +
                 '}';
+    }
+
+    /**
+     * TeamManager object builder
+     */
+    public class Builder extends AbstractEmployee.Builder {
+
+        private Builder() {
+        }
+
+        @Override
+        public TeamManager build() {
+            return TeamManager.this;
+        }
+
+        @Override
+        public Builder withId(Long id) {
+            super.withId(id);
+            return this;
+        }
+
+        @Override
+        public Builder withEmail(String email) {
+            super.withEmail(email);
+            return this;
+        }
+
+        @Override
+        public Builder withPassword(String password) {
+            super.withPassword(password);
+            return this;
+        }
+
+        @Override
+        public Builder withPersonalData(PersonalData data) {
+            super.withPersonalData(data);
+            return this;
+        }
+
+        @Override
+        public Builder withDepartment(Department department) {
+            super.withDepartment(department);
+            return this;
+        }
+        
+        public Builder withTeam(Set<Doctor> team) {
+            TeamManager.this.team = team;
+            return this;
+        }
+
+        /**
+         * Copies not null fields from the specified manager.
+         *
+         * @param manager manager to copy data from
+         *
+         * @return this builder
+         */
+        public Builder copyNonNullFields(TeamManager manager) {
+            super.copyNonNullFields(manager);
+            if (!manager.team.isEmpty()) {
+                TeamManager.this.team = new HashSet<>(manager.team);
+            }
+
+            return this;
+        }
     }
 }

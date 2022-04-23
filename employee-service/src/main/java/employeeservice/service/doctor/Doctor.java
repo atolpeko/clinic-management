@@ -43,6 +43,24 @@ public class Doctor extends AbstractEmployee {
     private LocalDate practiceBeginningDate;
 
     /**
+     * @return Doctor builder
+     */
+    public static Builder builder() {
+        return new Doctor().new Builder();
+    }
+
+    /**
+     * Returns a Doctor builder with predefined fields copied from the specified doctor.
+     *
+     * @param data doctor to copy data from
+     *
+     * @return Doctor builder
+     */
+    public static Builder builder(Doctor data) {
+        return new Doctor(data).new Builder();
+    }
+
+    /**
      * Constructs a new enabled Doctor.
      */
     public Doctor() {
@@ -58,24 +76,6 @@ public class Doctor extends AbstractEmployee {
         super(other);
         specialty = other.specialty;
         practiceBeginningDate = LocalDate.from(other.practiceBeginningDate);
-    }
-
-    /**
-     * Constructs a new enabled Doctor with the specified email, password, personal data,
-     * department, specialty and date of practice beginning.
-     *
-     * @param email email to set
-     * @param password password to set
-     * @param data personal data to set
-     * @param specialty specialty to set
-     * @param department department to set
-     * @param practiceBeginningDate date of practice beginning to set
-     */
-    public Doctor(String email, String password, PersonalData data, String specialty,
-                  Department department, LocalDate practiceBeginningDate) {
-        super(email, password, data, department);
-        this.specialty = specialty;
-        this.practiceBeginningDate = practiceBeginningDate;
     }
 
     @Override
@@ -130,5 +130,84 @@ public class Doctor extends AbstractEmployee {
                 "specialty='" + specialty + '\'' +
                 ", practiceBeginningDate=" + practiceBeginningDate +
                 '}';
+    }
+
+    /**
+     * Doctor object builder
+     */
+    public class Builder extends AbstractEmployee.Builder {
+
+        private Builder() {
+        }
+
+        @Override
+        public Doctor build() {
+            return Doctor.this;
+        }
+
+        @Override
+        public Builder withId(Long id) {
+            super.withId(id);
+            return this;
+        }
+
+        @Override
+        public Builder withEmail(String email) {
+            super.withEmail(email);
+            return this;
+        }
+
+        @Override
+        public Builder withPassword(String password) {
+            super.withPassword(password);
+            return this;
+        }
+
+        @Override
+        public Builder withPersonalData(PersonalData data) {
+            super.withPersonalData(data);
+            return this;
+        }
+
+        @Override
+        public Builder withDepartment(Department department) {
+            super.withDepartment(department);
+            return this;
+        }
+
+        @Override
+        public Builder copyNonNullFields(AbstractEmployee employee) {
+            super.copyNonNullFields(employee);
+            return this;
+        }
+
+        public Builder withSpecialty(String specialty) {
+            Doctor.this.specialty = specialty;
+            return this;
+        }
+
+        public Builder withPracticeBeginningDate(LocalDate date) {
+            Doctor.this.practiceBeginningDate = date;
+            return this;
+        }
+
+        /**
+         * Copies not null fields from the specified doctor.
+         *
+         * @param doctor doctor to copy data from
+         *
+         * @return this builder
+         */
+        public Builder copyNonNullFields(Doctor doctor) {
+            super.copyNonNullFields(doctor);
+            if (doctor.specialty != null) {
+                Doctor.this.specialty = doctor.specialty;
+            }
+            if (doctor.practiceBeginningDate != null) {
+                Doctor.this.practiceBeginningDate = doctor.practiceBeginningDate;
+            }
+
+            return this;
+        }
     }
 }

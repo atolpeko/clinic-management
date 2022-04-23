@@ -17,8 +17,6 @@
 package employeeservice.service.doctor;
 
 import employeeservice.data.DoctorRepository;
-import employeeservice.service.Address;
-import employeeservice.service.PersonalData;
 import employeeservice.service.exception.IllegalModificationException;
 import employeeservice.service.exception.RemoteResourceException;
 import employeeservice.service.external.ClinicServiceFeignClient;
@@ -135,17 +133,8 @@ public class DoctorServiceImpl implements DoctorService {
     public Doctor save(Doctor doctor) {
         try {
             validate(doctor);
-            Doctor doctorToSave = new Doctor(doctor);
-            doctorToSave.setId(null);
-            doctorToSave.setPassword(passwordEncoder.encode(doctor.getPassword()));
-
-            Supplier<Doctor> save = () -> {
-                Doctor saved = doctorRepository.save(doctorToSave);
-                doctorRepository.flush();
-                return saved;
-            };
-
-            Doctor saved = circuitBreaker.decorateSupplier(save).get();
+            Doctor doctorToSave = prepareSaveData(doctor);
+            Doctor saved = persistDoctor(doctorToSave);
             logger.info("Doctor " + saved.getEmail() + " saved. ID - " + saved.getId());
             return saved;
         } catch (IllegalModificationException | RemoteResourceException e) {
@@ -196,23 +185,35 @@ public class DoctorServiceImpl implements DoctorService {
         }
     }
 
+    private Doctor prepareSaveData(Doctor doctor) {
+        String password = passwordEncoder.encode(doctor.getPassword());
+        Doctor doctorToSave = new Doctor(doctor);
+        doctorToSave.setId(null);
+        doctorToSave.setPassword(password);
+
+        return doctorToSave;
+    }
+
+    private Doctor persistDoctor(Doctor doctor) {
+        Supplier<Doctor> save = () -> {
+            Doctor saved = doctorRepository.save(doctor);
+            doctorRepository.flush();
+            return saved;
+        };
+
+        return circuitBreaker.decorateSupplier(save).get();
+    }
+
     @Override
     public Doctor update(Doctor doctor) {
         try {
-            Supplier<Optional<Doctor>> findById = () -> doctorRepository.findById(doctor.getId());
-            Doctor doctorToUpdate = circuitBreaker.decorateSupplier(findById)
-                    .get()
-                    .orElseThrow(() -> new IllegalModificationException("No doctor with id " + doctor.getId()));
-            prepareUpdateData(doctorToUpdate, doctor);
+            long id = doctor.getId();
+            Doctor doctorToUpdate = findById(id)
+                    .orElseThrow(() -> new IllegalModificationException("No doctor with id " + id));
+            doctorToUpdate = prepareUpdateData(doctorToUpdate, doctor);
             validate(doctorToUpdate);
 
-            Supplier<Doctor> update = () -> {
-                Doctor updated = doctorRepository.save(doctorToUpdate);
-                doctorRepository.flush();
-                return updated;
-            };
-
-            Doctor updated = circuitBreaker.decorateSupplier(update).get();
+            Doctor updated = persistDoctor(doctorToUpdate);
             logger.info("Doctor " + updated.getId() + " updated");
             return updated;
         } catch (IllegalModificationException | RemoteResourceException e) {
@@ -225,83 +226,30 @@ public class DoctorServiceImpl implements DoctorService {
         }
     }
 
-    private void prepareUpdateData(Doctor doctor, Doctor updateData) {
-        if (updateData.getEmail() != null) {
-            doctor.setEmail(updateData.getEmail());
-        }
-        if (updateData.getPassword() != null) {
-            doctor.setPassword(passwordEncoder.encode(updateData.getPassword()));
-        }
-        if (updateData.getDepartment() != null) {
-            doctor.setDepartment(updateData.getDepartment());
-        }
-        if (updateData.getSpecialty() != null) {
-            doctor.setSpecialty(updateData.getSpecialty());
-        }
-        if (updateData.getPracticeBeginningDate() != null) {
-            doctor.setPracticeBeginningDate(updateData.getPracticeBeginningDate());
-        }
-        if (updateData.getPersonalData() != null) {
-            preparePersonalData(updateData.getPersonalData(), doctor.getPersonalData());
-        }
-    }
-
-    private void preparePersonalData(PersonalData source, PersonalData target) {
-        if (source.getName() != null) {
-            target.setName(source.getName());
-        }
-        if (source.getPhone() != null) {
-            target.setPhone(source.getPhone());
-        }
-        if (source.getSalary() != null) {
-            target.setSalary(source.getSalary());
-        }
-        if (source.getHireDate() != null) {
-            target.setHireDate(source.getHireDate());
-        }
-        if (source.getDateOfBirth() != null) {
-            target.setDateOfBirth(source.getDateOfBirth());
-        }
-        if (source.getSex() != null) {
-            target.setSex(source.getSex());
-        }
-        if (source.getAddress() != null) {
-            prepareAddress(source.getAddress(), target.getAddress());
-        }
-    }
-
-    private void prepareAddress(Address source, Address target) {
-        if (source.getCountry() != null) {
-            target.setCountry(source.getCountry());
-        }
-        if (source.getState() != null) {
-            target.setState(source.getState());
-        }
-        if (source.getCity() != null) {
-            target.setCity(source.getCity());
-        }
-        if (source.getStreet() != null) {
-            target.setStreet(source.getStreet());
-        }
-        if (source.getHouseNumber() != null) {
-            target.setHouseNumber(source.getHouseNumber());
-        }
+    private Doctor prepareUpdateData(Doctor savedDoctor, Doctor updateData) {
+        return Doctor.builder(savedDoctor)
+                .copyNonNullFields(updateData)
+                .build();
     }
 
     @Override
     public void deleteById(long id) {
         try {
-            Runnable delete = () -> {
-                doctorRepository.deleteById(id);
-                doctorRepository.flush();
-            };
-
-            circuitBreaker.decorateRunnable(delete).run();
+            deleteDoctor(id);
             logger.info("Doctor " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
             throw new IllegalModificationException("No doctor with id " + id, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Employee database unavailable", e);
         }
+    }
+
+    private void deleteDoctor(long id) {
+        Runnable delete = () -> {
+            doctorRepository.deleteById(id);
+            doctorRepository.flush();
+        };
+
+        circuitBreaker.decorateRunnable(delete).run();
     }
 }

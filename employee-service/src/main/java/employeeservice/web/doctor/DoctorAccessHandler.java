@@ -16,10 +16,8 @@
 
 package employeeservice.web.doctor;
 
-import employeeservice.data.DoctorRepository;
 import employeeservice.service.doctor.Doctor;
-
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import employeeservice.service.doctor.DoctorService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -27,21 +25,17 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
-import java.util.function.Supplier;
 
 /**
  * Decides if a user has access to doctors.
  */
 @Component
 public class DoctorAccessHandler {
-    private final DoctorRepository repository;
-    private final CircuitBreaker circuitBreaker;
+    private final DoctorService doctorService;
 
     @Autowired
-    public DoctorAccessHandler(DoctorRepository repository,
-                               CircuitBreaker circuitBreaker) {
-        this.repository = repository;
-        this.circuitBreaker = circuitBreaker;
+    public DoctorAccessHandler(DoctorService doctorService) {
+        this.doctorService = doctorService;
     }
 
     /**
@@ -57,24 +51,25 @@ public class DoctorAccessHandler {
             return false;
         }
 
-        boolean isManager = authentication.getAuthorities().stream()
+        return isManager(authentication) || isOwner(id, authentication);
+    }
+
+    private boolean isManager(Authentication authentication) {
+        return authentication.getAuthorities().stream()
                 .anyMatch(authority -> {
                     String auth = authority.getAuthority();
                     return auth.equals("TOP_MANAGER") || auth.equals("TEAM_MANAGER");
                 });
-
-        return isManager || isOwner(id, authentication);
     }
 
-    private boolean isOwner(long ownerId, Authentication currAuth) {
-        Supplier<Optional<Doctor>> findById = () -> repository.findById(ownerId);
-        Optional<Doctor> doctor = circuitBreaker.decorateSupplier(findById).get();
+    private boolean isOwner(long ownerId, Authentication authentication) {
+        Optional<Doctor> doctor = doctorService.findById(ownerId);
         if (doctor.isEmpty()) {
             return false;
         }
 
         String ownerEmail = doctor.get().getEmail();
-        return ownerEmail.equals(currAuth.getName());
+        return authentication.getName().equals(ownerEmail);
     }
 
     /**

@@ -16,8 +16,6 @@
 
 package employeeservice.service;
 
-import employeeservice.service.Address;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import javax.persistence.Column;
@@ -78,6 +76,24 @@ public class PersonalData implements Serializable {
     @Positive(message = "Salary must be positive")
     private BigDecimal salary;
 
+    /**
+     * @return PersonalData builder
+     */
+    public static Builder builder() {
+        return new PersonalData().new Builder();
+    }
+
+    /**
+     * Returns a PersonalData builder with predefined fields copied from the specified personal data.
+     *
+     * @param data personal data to copy data from
+     *
+     * @return PersonalData builder
+     */
+    public static Builder builder(PersonalData data) {
+        return new PersonalData(data).new Builder();
+    }
+
     public PersonalData() {
     }
 
@@ -94,29 +110,6 @@ public class PersonalData implements Serializable {
         sex = other.sex;
         hireDate = other.hireDate;
         salary = other.salary;
-    }
-
-    /**
-     * Constructs a new PersonalData with the specified name, phone, date of birth,
-     * address, sex, hire date and salary.
-     *
-     * @param name name to set
-     * @param phone phone to set
-     * @param dateOfBirth date of birth to set
-     * @param address address to set
-     * @param sex sex to set
-     * @param hireDate hire date to set
-     * @param salary salary to set
-     */
-    public PersonalData(String name, String phone, LocalDate dateOfBirth,
-                        Address address, Sex sex, LocalDate hireDate, BigDecimal salary) {
-        this.name = name;
-        this.phone = phone;
-        this.dateOfBirth = dateOfBirth;
-        this.address = address;
-        this.sex = sex;
-        this.hireDate = hireDate;
-        this.salary = salary;
     }
 
     public String getName() {
@@ -211,5 +204,88 @@ public class PersonalData implements Serializable {
                 ", hireDate=" + hireDate +
                 ", salary=" + salary +
                 '}';
+    }
+
+    /**
+     * PersonalData object builder.
+     */
+    public class Builder {
+
+        private Builder() {
+        }
+
+        public PersonalData build() {
+            return PersonalData.this;
+        }
+
+        public Builder withName(String name) {
+            PersonalData.this.name = name;
+            return this;
+        }
+
+        public Builder withPhone(String phone) {
+            PersonalData.this.phone = phone;
+            return this;
+        }
+
+        public Builder withDateOfBirth(LocalDate dateOfBirth) {
+            PersonalData.this.dateOfBirth = dateOfBirth;
+            return this;
+        }
+
+        public Builder withAddress(Address address) {
+            PersonalData.this.address = address;
+            return this;
+        }
+
+        public Builder withSex(Sex sex) {
+            PersonalData.this.sex = sex;
+            return this;
+        }
+
+        public Builder withHireDate(LocalDate hireDate) {
+            PersonalData.this.hireDate = hireDate;
+            return this;
+        }
+
+        public Builder withSalary(BigDecimal salary) {
+            PersonalData.this.salary = salary;
+            return this;
+        }
+
+        /**
+         * Copies not null fields from the specified personal data.
+         *
+         * @param data personal data to copy data from
+         *
+         * @return this builder
+         */
+        public Builder copyNonNullFields(PersonalData data) {
+            if (data.name != null) {
+                PersonalData.this.name = data.name;
+            }
+            if (data.phone != null) {
+                PersonalData.this.phone = data.phone;
+            }
+            if (data.dateOfBirth != null) {
+                PersonalData.this.dateOfBirth = data.dateOfBirth;
+            }
+            if (data.sex != null) {
+                PersonalData.this.sex = data.sex;
+            }
+            if (data.hireDate != null) {
+                PersonalData.this.hireDate = data.hireDate;
+            }
+            if (data.salary != null) {
+                PersonalData.this.salary = data.salary;
+            }
+            if (data.address != null) {
+                PersonalData.this.address = Address.builder(PersonalData.this.address)
+                        .copyNonNullFields(data.address)
+                        .build();
+            }
+
+            return this;
+        }
     }
 }

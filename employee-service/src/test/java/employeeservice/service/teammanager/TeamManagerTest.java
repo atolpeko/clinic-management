@@ -44,20 +44,30 @@ public class TeamManagerTest {
 
     @Test
     public void shouldPassValidationWhenHasValidData() {
-        PersonalData data = new PersonalData();
-        data.setName("Name");
-        data.setAddress(new Address("USA", "NY", "NYC", "23", 1));
-        data.setPhone("1234567");
-        data.setSex(PersonalData.Sex.MALE);
-        data.setDateOfBirth(LocalDate.now());
-        data.setHireDate(LocalDate.now());
-        data.setSalary(BigDecimal.valueOf(1000));
+        Address address = Address.builder()
+                .withCountry("USA")
+                .withState("NY")
+                .withCity("NYC")
+                .withStreet("23")
+                .withHouseNumber(1)
+                .build();
 
-        TeamManager manager = new TeamManager();
-        manager.setPersonalData(data);
-        manager.setDepartment(new Department(1L));
-        manager.setEmail("admin@gmail.com");
-        manager.setPassword("12345678");
+        PersonalData data = PersonalData.builder()
+                .withAddress(address)
+                .withName("Client")
+                .withDateOfBirth(LocalDate.now())
+                .withHireDate(LocalDate.now())
+                .withSalary(BigDecimal.TEN)
+                .withPhone("1234567")
+                .withSex(PersonalData.Sex.MALE)
+                .build();
+
+        TeamManager manager = TeamManager.builder()
+                .withPersonalData(data)
+                .withEmail("manager@gmail.com")
+                .withPassword("12345678")
+                .withDepartment(new Department(1L))
+                .build();
 
         int errors = validator.validate(manager).size();
         assertThat(errors, is(0));
@@ -65,16 +75,17 @@ public class TeamManagerTest {
 
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
-        Address address = new Address();
-        address.setHouseNumber(-1);
+        Address address = Address.builder().withHouseNumber(-1).build();
+        PersonalData data = PersonalData.builder()
+                .withAddress(address)
+                .withSalary(BigDecimal.valueOf(-1))
+                .build();
 
-        PersonalData data = new PersonalData();
-        data.setAddress(address);
-        data.setSalary(BigDecimal.valueOf(-1));
-
-        TeamManager manager = new TeamManager();
-        manager.setPersonalData(data);
-        manager.setEmail("not-a-email");
+        TeamManager manager = TeamManager.builder()
+                .withPersonalData(data)
+                .withEmail("not-a-email")
+                .withPassword("123")
+                .build();
 
         int errors = validator.validate(manager).size();
         assertThat(errors, is(14));

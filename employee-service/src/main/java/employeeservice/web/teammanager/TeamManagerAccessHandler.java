@@ -16,10 +16,8 @@
 
 package employeeservice.web.teammanager;
 
-import employeeservice.data.TeamManagerRepository;
 import employeeservice.service.teammanager.TeamManager;
-
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import employeeservice.service.teammanager.TeamManagerService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -27,21 +25,17 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
-import java.util.function.Supplier;
 
 /**
  * Decides if a user has access to team managers.
  */
 @Component
 public class TeamManagerAccessHandler {
-    private final TeamManagerRepository repository;
-    private final CircuitBreaker circuitBreaker;
+    private final TeamManagerService managerService;
 
     @Autowired
-    public TeamManagerAccessHandler(TeamManagerRepository repository,
-                                    CircuitBreaker circuitBreaker) {
-        this.repository = repository;
-        this.circuitBreaker = circuitBreaker;
+    public TeamManagerAccessHandler(TeamManagerService managerService) {
+        this.managerService = managerService;
     }
 
     /**
@@ -57,20 +51,22 @@ public class TeamManagerAccessHandler {
             return false;
         }
 
-        boolean isTopManager = auth.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("TOP_MANAGER"));
-        return isTopManager || isOwner(id, auth);
+        return isManager(auth) || isOwner(id, auth);
     }
 
-    private boolean isOwner(long ownerId, Authentication currAuth) {
-        Supplier<Optional<TeamManager>> findById = () -> repository.findById(ownerId);
-        Optional<TeamManager> manager = circuitBreaker.decorateSupplier(findById).get();
+    private boolean isManager(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("TOP_MANAGER"));
+    }
+
+    private boolean isOwner(long ownerId, Authentication authentication) {
+        Optional<TeamManager> manager = managerService.findById(ownerId);
         if (manager.isEmpty()) {
             return false;
         }
 
         String ownerEmail = manager.get().getEmail();
-        return ownerEmail.equals(currAuth.getName());
+        return authentication.getName().equals(ownerEmail);
     }
 
     /**

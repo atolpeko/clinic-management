@@ -30,6 +30,24 @@ import javax.persistence.Entity;
 public class TopManager extends AbstractEmployee {
 
     /**
+     * @return TopManager builder
+     */
+    public static Builder builder() {
+        return new TopManager().new Builder();
+    }
+
+    /**
+     * Returns a TopManager builder with predefined fields copied from the specified manager.
+     *
+     * @param data manager to copy data from
+     *
+     * @return TopManager builder
+     */
+    public static Builder builder(TopManager data) {
+        return new TopManager(data).new Builder();
+    }
+
+    /**
      * Constructs a new enabled TopManager.
      */
     public TopManager() {
@@ -45,17 +63,6 @@ public class TopManager extends AbstractEmployee {
         super(other);
     }
 
-    /**
-     * Constructs a new TopManager with the specified email, password and personal data.
-     *
-     * @param email email to set
-     * @param password password to set
-     * @param data personal data to set
-     */
-    public TopManager(String email, String password, PersonalData data) {
-        super(email, password, data, null);
-    }
-
     @Override
     @JsonIgnore
     public Department getDepartment() {
@@ -66,5 +73,55 @@ public class TopManager extends AbstractEmployee {
     @JsonIgnore
     public void setDepartment(Department department) {
         super.setDepartment(null);
+    }
+
+    /**
+     * TopManager object builder
+     */
+    public class Builder extends AbstractEmployee.Builder {
+
+        private Builder() {
+        }
+
+        @Override
+        public TopManager build() {
+            return TopManager.this;
+        }
+
+        @Override
+        public Builder withId(Long id) {
+            super.withId(id);
+            return this;
+        }
+
+        @Override
+        public Builder withEmail(String email) {
+            super.withEmail(email);
+            return this;
+        }
+
+        @Override
+        public Builder withPassword(String password) {
+            super.withPassword(password);
+            return this;
+        }
+
+        @Override
+        public Builder withPersonalData(PersonalData data) {
+            super.withPersonalData(data);
+            return this;
+        }
+
+        @Override
+        public Builder withDepartment(Department department) {
+            super.withDepartment(department);
+            return this;
+        }
+
+        @Override
+        public Builder copyNonNullFields(AbstractEmployee employee) {
+            super.copyNonNullFields(employee);
+            return this;
+        }
     }
 }

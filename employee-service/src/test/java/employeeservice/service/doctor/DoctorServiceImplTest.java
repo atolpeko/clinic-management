@@ -91,34 +91,64 @@ public class DoctorServiceImplTest {
 
     @BeforeAll
     public static void createDoctor() {
-        PersonalData data = new PersonalData();
-        data.setName("Name");
-        data.setAddress(new Address("USA", "NY", "NYC", "23", 1));
-        data.setPhone("1234567");
-        data.setSex(PersonalData.Sex.MALE);
-        data.setDateOfBirth(LocalDate.now());
-        data.setHireDate(LocalDate.now());
-        data.setSalary(BigDecimal.valueOf(1000));
+        Address address = Address.builder()
+                .withCountry("USA")
+                .withState("NY")
+                .withCity("NYC")
+                .withStreet("23")
+                .withHouseNumber(1)
+                .build();
 
-        doctor = new Doctor();
-        doctor.setId(1L);
-        doctor.setEmail("doctor@gmail.com");
-        doctor.setPassword("gh4455fhgkj7");
-        doctor.setSpecialty("Surgery");
-        doctor.setPersonalData(data);
-        doctor.setDepartment(new Department(1L));
-        doctor.setPracticeBeginningDate(LocalDate.now());
+        PersonalData data = PersonalData.builder()
+                .withAddress(address)
+                .withName("Client")
+                .withDateOfBirth(LocalDate.now())
+                .withHireDate(LocalDate.now())
+                .withSalary(BigDecimal.TEN)
+                .withPhone("1234567")
+                .withSex(PersonalData.Sex.MALE)
+                .build();
+
+        doctor = Doctor.builder()
+                .withId(1L)
+                .withPersonalData(data)
+                .withEmail("doctor@gmail.com")
+                .withPassword("12345678")
+                .withSpecialty("Specialty")
+                .withDepartment(new Department(1L))
+                .withPracticeBeginningDate(LocalDate.now())
+                .build();
     }
 
     @BeforeAll
     public static void createUpdatedDoctor() {
-        updatedDoctor = new Doctor();
-        updatedDoctor.setId(1L);
-        updatedDoctor.setEmail("doctor2@gmail.com");
-        updatedDoctor.setPassword("ffdf222");
-        updatedDoctor.setSpecialty("Surgery");
-        updatedDoctor.setDepartment(new Department(1L));
-        updatedDoctor.setPracticeBeginningDate(LocalDate.now());
+        Address address = Address.builder()
+                .withCountry("USA")
+                .withState("NY")
+                .withCity("NYC")
+                .withStreet("23")
+                .withHouseNumber(1)
+                .build();
+
+        PersonalData data = PersonalData.builder()
+                .withAddress(address)
+                .withName("Doctor")
+                .withDateOfBirth(LocalDate.now())
+                .withHireDate(LocalDate.now())
+                .withSalary(BigDecimal.ONE)
+                .withPhone("534987364")
+                .withSex(PersonalData.Sex.MALE)
+                .build();
+
+        updatedDoctor = Doctor.builder()
+                .withId(1L)
+                .withPersonalData(data)
+                .withEmail("doctor2@gmail.com")
+                .withPassword("87654321")
+                .withSpecialty("Specialty2")
+                .withDepartment(new Department(1L))
+                .withPracticeBeginningDate(LocalDate.now())
+                .build();
     }
 
     @BeforeEach

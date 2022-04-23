@@ -18,8 +18,6 @@ package employeeservice.service.teammanager;
 
 import employeeservice.data.DoctorRepository;
 import employeeservice.data.TeamManagerRepository;
-import employeeservice.service.Address;
-import employeeservice.service.PersonalData;
 import employeeservice.service.doctor.Doctor;
 import employeeservice.service.exception.IllegalModificationException;
 import employeeservice.service.exception.RemoteResourceException;
@@ -130,17 +128,8 @@ public class TeamManagerServiceImpl implements TeamManagerService {
     public TeamManager save(TeamManager manager) {
         try {
             validate(manager);
-            TeamManager managerToSave = new TeamManager(manager);
-            managerToSave.setId(null);
-            managerToSave.setPassword(passwordEncoder.encode(manager.getPassword()));
-
-            Supplier<TeamManager> save = () -> {
-                TeamManager saved = managerRepository.save(managerToSave);
-                managerRepository.flush();
-                return saved;
-            };
-
-            TeamManager saved = circuitBreaker.decorateSupplier(save).get();
+            TeamManager managerToSave = prepareSaveData(manager);
+            TeamManager saved = persistManger(managerToSave);
             logger.info("Manager " + saved.getEmail() + " saved. ID - " + saved.getId());
             return saved;
         } catch (IllegalModificationException | RemoteResourceException e) {
@@ -204,23 +193,35 @@ public class TeamManagerServiceImpl implements TeamManagerService {
         }
     }
 
+    private TeamManager prepareSaveData(TeamManager manager) {
+        String password = passwordEncoder.encode(manager.getPassword());
+        TeamManager managerToSave = new TeamManager(manager);
+        managerToSave.setId(null);
+        managerToSave.setPassword(password);
+
+        return managerToSave;
+    }
+
+    private TeamManager persistManger(TeamManager manager) {
+        Supplier<TeamManager> save = () -> {
+            TeamManager saved = managerRepository.save(manager);
+            managerRepository.flush();
+            return saved;
+        };
+
+        return circuitBreaker.decorateSupplier(save).get();
+    }
+
     @Override
     public TeamManager update(TeamManager manager) {
         try {
-            Supplier<Optional<TeamManager>> findById = () -> managerRepository.findById(manager.getId());
-            TeamManager managerToUpdate = circuitBreaker.decorateSupplier(findById)
-                    .get()
-                    .orElseThrow(() -> new IllegalModificationException("No manager with id " + manager.getId()));
-            prepareUpdateData(managerToUpdate, manager);
+            long id = manager.getId();
+            TeamManager managerToUpdate = findById(id)
+                    .orElseThrow(() -> new IllegalModificationException("No manager with id " +id));
+            managerToUpdate = prepareUpdateData(managerToUpdate, manager);
             validate(managerToUpdate);
 
-            Supplier<TeamManager> update = () -> {
-                TeamManager updated = managerRepository.save(managerToUpdate);
-                managerRepository.flush();
-                return updated;
-            };
-
-            TeamManager updated = circuitBreaker.decorateSupplier(update).get();
+            TeamManager updated = persistManger(manager);
             logger.info("Manager " + updated.getId() + " updated");
             return updated;
         } catch (IllegalModificationException | RemoteResourceException e) {
@@ -233,80 +234,30 @@ public class TeamManagerServiceImpl implements TeamManagerService {
         }
     }
 
-    private void prepareUpdateData(TeamManager manager, TeamManager updateData) {
-        if (updateData.getEmail() != null) {
-            manager.setEmail(updateData.getEmail());
-        }
-        if (updateData.getPassword() != null) {
-            manager.setPassword(passwordEncoder.encode(updateData.getPassword()));
-        }
-        if (updateData.getDepartment() != null) {
-            manager.setDepartment(updateData.getDepartment());
-        }
-        if (!updateData.getTeam().isEmpty()) {
-            manager.setTeam(updateData.getTeam());
-        }
-        if (updateData.getPersonalData() != null) {
-            preparePersonalData(updateData.getPersonalData(), manager.getPersonalData());
-        }
-    }
-
-    private void preparePersonalData(PersonalData source, PersonalData target) {
-        if (source.getName() != null) {
-            target.setName(source.getName());
-        }
-        if (source.getPhone() != null) {
-            target.setPhone(source.getPhone());
-        }
-        if (source.getSalary() != null) {
-            target.setSalary(source.getSalary());
-        }
-        if (source.getHireDate() != null) {
-            target.setHireDate(source.getHireDate());
-        }
-        if (source.getDateOfBirth() != null) {
-            target.setDateOfBirth(source.getDateOfBirth());
-        }
-        if (source.getSex() != null) {
-            target.setSex(source.getSex());
-        }
-        if (source.getAddress() != null) {
-            prepareAddress(source.getAddress(), target.getAddress());
-        }
-    }
-
-    private void prepareAddress(Address source, Address target) {
-        if (source.getCountry() != null) {
-            target.setCountry(source.getCountry());
-        }
-        if (source.getState() != null) {
-            target.setState(source.getState());
-        }
-        if (source.getCity() != null) {
-            target.setCity(source.getCity());
-        }
-        if (source.getStreet() != null) {
-            target.setStreet(source.getStreet());
-        }
-        if (source.getHouseNumber() != null) {
-            target.setHouseNumber(source.getHouseNumber());
-        }
+    private TeamManager prepareUpdateData(TeamManager saved, TeamManager data) {
+        return TeamManager.builder(saved)
+                .copyNonNullFields(data)
+                .build();
     }
 
     @Override
     public void deleteById(long id) {
         try {
-            Runnable delete = () -> {
-                managerRepository.deleteById(id);
-                managerRepository.flush();
-            };
-
-            circuitBreaker.decorateRunnable(delete).run();
+            deleteManager(id);
             logger.info("Manager " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
             throw new IllegalModificationException("No manager with id " + id, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Employee database unavailable", e);
         }
+    }
+
+    private void deleteManager(long id) {
+        Runnable delete = () -> {
+            managerRepository.deleteById(id);
+            managerRepository.flush();
+        };
+
+        circuitBreaker.decorateRunnable(delete).run();
     }
 }

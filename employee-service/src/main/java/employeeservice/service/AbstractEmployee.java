@@ -94,22 +94,6 @@ public abstract class AbstractEmployee implements Serializable {
         isEnabled = other.isEnabled;
     }
 
-    /**
-     * Constructs a new enabled AbstractEmployee with the specified email,
-     * password, personal data and department.
-     *
-     * @param email email to set
-     * @param password password to set
-     * @param data personal data to set
-     * @param department department to set
-     */
-    public AbstractEmployee(String email, String password, PersonalData data, Department department) {
-        this.email = email;
-        this.password = password;
-        this.personalData = data;
-        this.department = department;
-    }
-
     public Long getId() {
         return id;
     }
@@ -192,5 +176,70 @@ public abstract class AbstractEmployee implements Serializable {
                 ", department=" + department +
                 ", isEnabled=" + isEnabled +
                 '}';
+    }
+
+    /**
+     * Employee object base builder.
+     */
+    protected abstract class Builder {
+
+        protected Builder() {
+        }
+
+        public abstract AbstractEmployee build();
+
+        public Builder withId(Long id) {
+            AbstractEmployee.this.id = id;
+            return this;
+        }
+
+        public Builder withEmail(String email) {
+            AbstractEmployee.this.email = email;
+            return this;
+        }
+
+        public Builder withPassword(String password) {
+            AbstractEmployee.this.password = password;
+            return this;
+        }
+
+        public Builder withPersonalData(PersonalData data) {
+            AbstractEmployee.this.personalData = data;
+            return this;
+        }
+
+        public Builder withDepartment(Department department) {
+            AbstractEmployee.this.setDepartment(department);
+            return this;
+        }
+
+        /**
+         * Copies not null fields from the specified employee.
+         *
+         * @param employee employee to copy data from
+         *
+         * @return this builder
+         */
+        public Builder copyNonNullFields(AbstractEmployee employee) {
+            if (employee.id != null) {
+                AbstractEmployee.this.id = employee.getId();
+            }
+            if (employee.email != null) {
+                AbstractEmployee.this.email = employee.getEmail();
+            }
+            if (employee.password != null) {
+                AbstractEmployee.this.password = employee.getPassword();
+            }
+            if (employee.department != null) {
+                AbstractEmployee.this.department = employee.getDepartment();
+            }
+            if (employee.personalData != null) {
+                AbstractEmployee.this.personalData = PersonalData.builder(AbstractEmployee.this.personalData)
+                        .copyNonNullFields(employee.personalData)
+                        .build();
+            }
+
+            return this;
+        }
     }
 }

@@ -43,22 +43,32 @@ public class DoctorTest {
 
     @Test
     public void shouldPassValidationWhenHasValidData() {
-        PersonalData data = new PersonalData();
-        data.setName("Name");
-        data.setAddress(new Address("USA", "NY", "NYC", "23", 1));
-        data.setPhone("1234567");
-        data.setSex(PersonalData.Sex.MALE);
-        data.setDateOfBirth(LocalDate.now());
-        data.setHireDate(LocalDate.now());
-        data.setSalary(BigDecimal.valueOf(1000));
+        Address address = Address.builder()
+                .withCountry("USA")
+                .withState("NY")
+                .withCity("NYC")
+                .withStreet("23")
+                .withHouseNumber(1)
+                .build();
 
-        Doctor doctor = new Doctor();
-        doctor.setPersonalData(data);
-        doctor.setEmail("doctor@gmail.com");
-        doctor.setPassword("12345678");
-        doctor.setSpecialty("Specialty");
-        doctor.setDepartment(new Department(1L));
-        doctor.setPracticeBeginningDate(LocalDate.now());
+        PersonalData data = PersonalData.builder()
+                .withAddress(address)
+                .withName("Client")
+                .withDateOfBirth(LocalDate.now())
+                .withHireDate(LocalDate.now())
+                .withSalary(BigDecimal.TEN)
+                .withPhone("1234567")
+                .withSex(PersonalData.Sex.MALE)
+                .build();
+
+        Doctor doctor = Doctor.builder()
+                .withPersonalData(data)
+                .withEmail("doctor@gmail.com")
+                .withPassword("12345678")
+                .withSpecialty("Specialty")
+                .withDepartment(new Department(1L))
+                .withPracticeBeginningDate(LocalDate.now())
+                .build();
 
         int errors = validator.validate(doctor).size();
         assertThat(errors, is(0));
@@ -66,16 +76,17 @@ public class DoctorTest {
 
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
-        Address address = new Address();
-        address.setHouseNumber(-1);
+        Address address = Address.builder().withHouseNumber(-1).build();
+        PersonalData data = PersonalData.builder()
+                .withAddress(address)
+                .withSalary(BigDecimal.valueOf(-1))
+                .build();
 
-        PersonalData data = new PersonalData();
-        data.setAddress(address);
-        data.setSalary(BigDecimal.valueOf(-1));
-
-        Doctor doctor = new Doctor();
-        doctor.setPersonalData(data);
-        doctor.setEmail("not-a-email");
+        Doctor doctor = Doctor.builder()
+                .withPersonalData(data)
+                .withEmail("not-a-email")
+                .withPassword("123")
+                .build();
 
         int errors = validator.validate(doctor).size();
         assertThat(errors, is(16));

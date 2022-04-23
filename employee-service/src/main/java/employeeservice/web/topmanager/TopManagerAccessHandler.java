@@ -16,10 +16,8 @@
 
 package employeeservice.web.topmanager;
 
-import employeeservice.data.TopManagerRepository;
 import employeeservice.service.topmanager.TopManager;
-
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import employeeservice.service.topmanager.TopManagerService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -27,21 +25,17 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
-import java.util.function.Supplier;
 
 /**
  * Decides if a user has access to top managers.
  */
 @Component
 public class TopManagerAccessHandler {
-    private final TopManagerRepository repository;
-    private final CircuitBreaker circuitBreaker;
+    private final TopManagerService managerService;
 
     @Autowired
-    public TopManagerAccessHandler(TopManagerRepository repository,
-                                   CircuitBreaker circuitBreaker) {
-        this.repository = repository;
-        this.circuitBreaker = circuitBreaker;
+    public TopManagerAccessHandler(TopManagerService managerService) {
+        this.managerService = managerService;
     }
 
     /**
@@ -57,14 +51,13 @@ public class TopManagerAccessHandler {
             return false;
         }
 
-        Supplier<Optional<TopManager>> findById = () -> repository.findById(id);
-        Optional<TopManager> manager = circuitBreaker.decorateSupplier(findById).get();
+        Optional<TopManager> manager = managerService.findById(id);
         if (manager.isEmpty()) {
             return false;
         }
 
         String ownerEmail = manager.get().getEmail();
-        return ownerEmail.equals(auth.getName());
+        return auth.getName().equals(ownerEmail);
     }
 
     /**

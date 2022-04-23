@@ -39,14 +39,23 @@ public class PersonalDataTest {
 
     @Test
     public void shouldPassValidationWhenHasValidData() {
-        PersonalData data = new PersonalData();
-        data.setName("Name");
-        data.setAddress(new Address("USA", "NY", "NYC", "23", 1));
-        data.setPhone("1234567");
-        data.setSex(PersonalData.Sex.MALE);
-        data.setDateOfBirth(LocalDate.now());
-        data.setHireDate(LocalDate.now());
-        data.setSalary(BigDecimal.valueOf(1000));
+        Address address = Address.builder()
+                .withCountry("USA")
+                .withState("NY")
+                .withCity("NYC")
+                .withStreet("23")
+                .withHouseNumber(1)
+                .build();
+
+        PersonalData data = PersonalData.builder()
+                .withAddress(address)
+                .withName("Name")
+                .withSex(PersonalData.Sex.MALE)
+                .withHireDate(LocalDate.now())
+                .withDateOfBirth(LocalDate.now())
+                .withSalary(BigDecimal.TEN)
+                .withPhone("+375334558876")
+                .build();
 
         int errors = validator.validate(data).size();
         assertThat(errors, is(0));
@@ -54,10 +63,13 @@ public class PersonalDataTest {
 
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
-        PersonalData data = new PersonalData();
-        data.setSalary(BigDecimal.valueOf(-1));
+        Address address = Address.builder().withHouseNumber(-1).build();
+        PersonalData data = PersonalData.builder()
+                .withSalary(BigDecimal.valueOf(-1))
+                .withAddress(address)
+                .build();
 
         int errors = validator.validate(data).size();
-        assertThat(errors, is(7));
+        assertThat(errors, is(11));
     }
 }

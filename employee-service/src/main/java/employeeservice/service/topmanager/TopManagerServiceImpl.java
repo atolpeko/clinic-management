@@ -17,8 +17,6 @@
 package employeeservice.service.topmanager;
 
 import employeeservice.data.TopManagerRepository;
-import employeeservice.service.Address;
-import employeeservice.service.PersonalData;
 import employeeservice.service.exception.IllegalModificationException;
 import employeeservice.service.exception.RemoteResourceException;
 
@@ -108,17 +106,8 @@ public class TopManagerServiceImpl implements TopManagerService {
     public TopManager save(TopManager manager) {
         try {
             validate(manager);
-            TopManager managerToSave = new TopManager(manager);
-            managerToSave.setId(null);
-            managerToSave.setPassword(passwordEncoder.encode(manager.getPassword()));
-
-            Supplier<TopManager> save = () -> {
-                TopManager saved = managerRepository.save(managerToSave);
-                managerRepository.flush();
-                return saved;
-            };
-
-            TopManager saved = circuitBreaker.decorateSupplier(save).get();
+            TopManager managerToSave = prepareSaveData(manager);
+            TopManager saved = persistManager(managerToSave);
             logger.info("Manager " + saved.getEmail() + " saved. ID - " + saved.getId());
             return saved;
         } catch (IllegalModificationException e) {
@@ -145,23 +134,35 @@ public class TopManagerServiceImpl implements TopManagerService {
         }
     }
 
+    private TopManager prepareSaveData(TopManager manager) {
+        String password = passwordEncoder.encode(manager.getPassword());
+        TopManager managerToSave = new TopManager(manager);
+        managerToSave.setId(null);
+        managerToSave.setPassword(password);
+
+        return managerToSave;
+    }
+
+    private TopManager persistManager(TopManager manager) {
+        Supplier<TopManager> save = () -> {
+            TopManager saved = managerRepository.save(manager);
+            managerRepository.flush();
+            return saved;
+        };
+
+        return circuitBreaker.decorateSupplier(save).get();
+    }
+
     @Override
     public TopManager update(TopManager manager) {
         try {
-            Supplier<Optional<TopManager>> findById = () -> managerRepository.findById(manager.getId());
-            TopManager managerToUpdate = circuitBreaker.decorateSupplier(findById)
-                    .get()
-                    .orElseThrow(() -> new IllegalModificationException("No manager with id " + manager.getId()));
-            prepareUpdateData(managerToUpdate, manager);
+            long id = manager.getId();
+            TopManager managerToUpdate = findById(id)
+                    .orElseThrow(() -> new IllegalModificationException("No manager with id " + id));
+            managerToUpdate = prepareUpdateData(managerToUpdate, manager);
             validate(managerToUpdate);
 
-            Supplier<TopManager> update = () -> {
-                TopManager updated = managerRepository.save(managerToUpdate);
-                managerRepository.flush();
-                return updated;
-            };
-
-            TopManager updated = circuitBreaker.decorateSupplier(update).get();
+            TopManager updated = persistManager(managerToUpdate);
             logger.info("Manager " + updated.getId() + " updated");
             return updated;
         } catch (IllegalModificationException e) {
@@ -174,74 +175,30 @@ public class TopManagerServiceImpl implements TopManagerService {
         }
     }
 
-    private void prepareUpdateData(TopManager manager, TopManager updateData) {
-        if (updateData.getEmail() != null) {
-            manager.setEmail(updateData.getEmail());
-        }
-        if (updateData.getPassword() != null) {
-            manager.setPassword(passwordEncoder.encode(updateData.getPassword()));
-        }
-        if (updateData.getPersonalData() != null) {
-            preparePersonalData(updateData.getPersonalData(), manager.getPersonalData());
-        }
-    }
-
-    private void preparePersonalData(PersonalData source, PersonalData target) {
-        if (source.getName() != null) {
-            target.setName(source.getName());
-        }
-        if (source.getPhone() != null) {
-            target.setPhone(source.getPhone());
-        }
-        if (source.getSalary() != null) {
-            target.setSalary(source.getSalary());
-        }
-        if (source.getHireDate() != null) {
-            target.setHireDate(source.getHireDate());
-        }
-        if (source.getDateOfBirth() != null) {
-            target.setDateOfBirth(source.getDateOfBirth());
-        }
-        if (source.getSex() != null) {
-            target.setSex(source.getSex());
-        }
-        if (source.getAddress() != null) {
-            prepareAddress(source.getAddress(), target.getAddress());
-        }
-    }
-
-    private void prepareAddress(Address source, Address target) {
-        if (source.getCountry() != null) {
-            target.setCountry(source.getCountry());
-        }
-        if (source.getState() != null) {
-            target.setState(source.getState());
-        }
-        if (source.getCity() != null) {
-            target.setCity(source.getCity());
-        }
-        if (source.getStreet() != null) {
-            target.setStreet(source.getStreet());
-        }
-        if (source.getHouseNumber() != null) {
-            target.setHouseNumber(source.getHouseNumber());
-        }
+    private TopManager prepareUpdateData(TopManager savedManager, TopManager data) {
+        return TopManager.builder(savedManager)
+                .copyNonNullFields(data)
+                .build();
     }
 
     @Override
     public void deleteById(long id) {
         try {
-            Runnable delete = () -> {
-                managerRepository.deleteById(id);
-                managerRepository.flush();
-            };
-
-            circuitBreaker.decorateRunnable(delete).run();
+            deleteManager(id);
             logger.info("Manager " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
             throw new IllegalModificationException("No manager with id " + id, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Employee database unavailable", e);
         }
+    }
+
+    private void deleteManager(long id) {
+        Runnable delete = () -> {
+            managerRepository.deleteById(id);
+            managerRepository.flush();
+        };
+
+        circuitBreaker.decorateRunnable(delete).run();
     }
 }

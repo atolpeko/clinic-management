@@ -94,30 +94,60 @@ public class TeamManagerServiceImplTest {
 
     @BeforeAll
     public static void createManager() {
-        PersonalData data = new PersonalData();
-        data.setName("Name");
-        data.setAddress(new Address("USA", "NY", "NYC", "23", 1));
-        data.setPhone("1234567");
-        data.setSex(PersonalData.Sex.MALE);
-        data.setDateOfBirth(LocalDate.now());
-        data.setHireDate(LocalDate.now());
-        data.setSalary(BigDecimal.valueOf(1000));
+        Address address = Address.builder()
+                .withCountry("USA")
+                .withState("NY")
+                .withCity("NYC")
+                .withStreet("23")
+                .withHouseNumber(1)
+                .build();
 
-        manager = new TeamManager();
-        manager.setPersonalData(data);
-        manager.setDepartment(new Department(1L));
-        manager.setId(1L);
-        manager.setEmail("manager@gmail.com");
-        manager.setPassword("12345678");
+        PersonalData data = PersonalData.builder()
+                .withAddress(address)
+                .withName("Client")
+                .withDateOfBirth(LocalDate.now())
+                .withHireDate(LocalDate.now())
+                .withSalary(BigDecimal.TEN)
+                .withPhone("1234567")
+                .withSex(PersonalData.Sex.MALE)
+                .build();
+
+        manager = TeamManager.builder()
+                .withId(1L)
+                .withPersonalData(data)
+                .withEmail("manager@gmail.com")
+                .withPassword("87654321")
+                .withDepartment(new Department(1L))
+                .build();
     }
 
     @BeforeAll
     public static void createUpdatedManager() {
-        updatedManager = new TeamManager();
-        updatedManager.setId(1L);
-        updatedManager.setDepartment(new Department(1L));
-        updatedManager.setEmail("manager@gmail.com");
-        updatedManager.setPassword("3434km33");
+        Address address = Address.builder()
+                .withCountry("USA")
+                .withState("NY")
+                .withCity("NYC")
+                .withStreet("23")
+                .withHouseNumber(1)
+                .build();
+
+        PersonalData data = PersonalData.builder()
+                .withAddress(address)
+                .withName("Client")
+                .withDateOfBirth(LocalDate.now())
+                .withHireDate(LocalDate.now())
+                .withSalary(BigDecimal.TEN)
+                .withPhone("1234567")
+                .withSex(PersonalData.Sex.MALE)
+                .build();
+
+        updatedManager = TeamManager.builder()
+                .withId(1L)
+                .withPersonalData(data)
+                .withEmail("manager2@gmail.com")
+                .withPassword("12345678")
+                .withDepartment(new Department(1L))
+                .build();
     }
 
     @BeforeEach

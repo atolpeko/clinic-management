@@ -20,6 +20,7 @@ import employeeservice.data.TopManagerRepository;
 import employeeservice.service.Address;
 import employeeservice.service.PersonalData;
 import employeeservice.service.exception.IllegalModificationException;
+import employeeservice.service.external.Department;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 
@@ -85,28 +86,60 @@ public class TopManagerServiceImplTest {
 
     @BeforeAll
     public static void createManager() {
-        PersonalData data = new PersonalData();
-        data.setName("Name");
-        data.setAddress(new Address("USA", "NY", "NYC", "23", 1));
-        data.setPhone("1234567");
-        data.setSex(PersonalData.Sex.MALE);
-        data.setDateOfBirth(LocalDate.now());
-        data.setHireDate(LocalDate.now());
-        data.setSalary(BigDecimal.valueOf(1000));
+        Address address = Address.builder()
+                .withCountry("USA")
+                .withState("NY")
+                .withCity("NYC")
+                .withStreet("23")
+                .withHouseNumber(1)
+                .build();
 
-        manager = new TopManager();
-        manager.setPersonalData(data);
-        manager.setId(1L);
-        manager.setEmail("admin@gmail.com");
-        manager.setPassword("12345678");
+        PersonalData data = PersonalData.builder()
+                .withAddress(address)
+                .withName("Client")
+                .withDateOfBirth(LocalDate.now())
+                .withHireDate(LocalDate.now())
+                .withSalary(BigDecimal.TEN)
+                .withPhone("1234567")
+                .withSex(PersonalData.Sex.MALE)
+                .build();
+
+        manager = TopManager.builder()
+                .withId(1L)
+                .withPersonalData(data)
+                .withEmail("doctor@gmail.com")
+                .withPassword("12345678")
+                .withDepartment(new Department(1L))
+                .build();
     }
 
     @BeforeAll
     public static void createUpdatedManager() {
-        updatedManager = new TopManager();
-        updatedManager.setId(1L);
-        updatedManager.setEmail("admin2@gmail.com");
-        updatedManager.setPassword("12345");
+        Address address = Address.builder()
+                .withCountry("USA")
+                .withState("NY")
+                .withCity("NYC")
+                .withStreet("23")
+                .withHouseNumber(1)
+                .build();
+
+        PersonalData data = PersonalData.builder()
+                .withAddress(address)
+                .withName("Client")
+                .withDateOfBirth(LocalDate.now())
+                .withHireDate(LocalDate.now())
+                .withSalary(BigDecimal.TEN)
+                .withPhone("1234567")
+                .withSex(PersonalData.Sex.MALE)
+                .build();
+
+        updatedManager = TopManager.builder()
+                .withId(1L)
+                .withPersonalData(data)
+                .withEmail("doctor@gmail.com")
+                .withPassword("87654321")
+                .withDepartment(new Department(1L))
+                .build();
     }
 
     @BeforeEach
