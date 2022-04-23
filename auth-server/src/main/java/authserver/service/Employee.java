@@ -38,19 +38,24 @@ public class Employee extends AbstractUser {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    /**
+     * @return Employee builder
+     */
+    public static Builder builder() {
+        return new Employee().new Builder();
+    }
+
     public Employee() {
     }
 
     /**
-     * Constructs a new Employee with the specified login, password and role.
+     * Constructs a new Employee copying data from the passed one.
      *
-     * @param login login to set
-     * @param password password to set
-     * @param role role to set
+     * @param other employee to copy data from
      */
-    public Employee(String login, String password, Role role) {
-        super(login, password);
-        this.role = role;
+    public Employee(Employee other) {
+        super(other);
+        role = other.role;
     }
 
     @Override
@@ -95,5 +100,43 @@ public class Employee extends AbstractUser {
         return getClass().getName() + "{" +
                 "role=" + role +
                 '}';
+    }
+
+    /**
+     * Employee object builder.
+     */
+    public class Builder {
+
+        private Builder() {
+        }
+
+        public Employee build() {
+            return Employee.this;
+        }
+
+        public Builder withId(Long id) {
+            Employee.this.setId(id);
+            return this;
+        }
+
+        public Builder withLogin(String login) {
+            Employee.this.setLogin(login);
+            return this;
+        }
+
+        public Builder withPassword(String password) {
+            Employee.this.setPassword(password);
+            return this;
+        }
+
+        public Builder withRole(Role role) {
+            Employee.this.role = role;
+            return this;
+        }
+
+        public Builder isEnabled(Boolean isEnabled) {
+            Employee.this.setEnabled(isEnabled);
+            return this;
+        }
     }
 }

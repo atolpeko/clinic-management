@@ -32,8 +32,60 @@ import java.util.List;
 public class BasicUser extends AbstractUser {
     private static final GrantedAuthority authority = new SimpleGrantedAuthority(Role.USER.toString());
 
+    /**
+     * @return BasicUser builder
+     */
+    public static Builder builder() {
+        return new BasicUser().new Builder();
+    }
+
+    public BasicUser() {
+    }
+
+    /**
+     * Constructs a new BasicUser copying data from the passed one.
+     *
+     * @param other user to copy data from
+     */
+    public BasicUser(BasicUser other) {
+        super(other);
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(authority);
+    }
+
+    /**
+     * BasicUser object builder.
+     */
+    public class Builder {
+
+        private Builder() {
+        }
+
+        public BasicUser build() {
+            return BasicUser.this;
+        }
+
+        public Builder withId(Long id) {
+            BasicUser.this.setId(id);
+            return this;
+        }
+
+        public Builder withLogin(String login) {
+            BasicUser.this.setLogin(login);
+            return this;
+        }
+
+        public Builder withPassword(String password) {
+            BasicUser.this.setPassword(password);
+            return this;
+        }
+
+        public Builder isEnabled(Boolean isEnabled) {
+            BasicUser.this.setEnabled(isEnabled);
+            return this;
+        }
     }
 }

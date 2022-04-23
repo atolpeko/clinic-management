@@ -64,19 +64,21 @@ public class UserDetailsServiceImplTest {
 
     @BeforeAll
     public static void createUser() {
-        user = new BasicUser();
-        user.setId(1L);
-        user.setLogin("user@gmail.com");
-        user.setPassword("12345678");
+        user = BasicUser.builder()
+                .withId(1L)
+                .withLogin("user@gmail.com")
+                .withPassword("12345678")
+                .build();
     }
 
     @BeforeAll
     public static void createEmployee() {
-        employee = new Employee();
-        employee.setId(2L);
-        employee.setLogin("emplayee@gmail.com");
-        employee.setPassword("12345678");
-        employee.setRole(AbstractUser.Role.TEAM_MANAGER);
+        employee = Employee.builder()
+                .withId(2L)
+                .withLogin("employee@gmail.com")
+                .withPassword("12345678")
+                .withRole(AbstractUser.Role.TEAM_MANAGER)
+                .build();
     }
 
     @BeforeEach
