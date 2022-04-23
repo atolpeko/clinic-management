@@ -85,7 +85,7 @@ public class ClientController {
     @PostMapping(consumes = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
     public EntityModel<Client> register(@RequestBody @Valid Client client) {
-        Client saved = clientService.register(client);
+        Client saved = clientService.save(client);
         return modelAssembler.toModel(saved);
     }
 

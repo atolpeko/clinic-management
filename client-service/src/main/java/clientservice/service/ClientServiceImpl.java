@@ -103,20 +103,11 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public Client register(Client client) {
+    public Client save(Client client) {
         try {
             validate(client);
-            Client clientToSave = new Client(client);
-            clientToSave.setId(null);
-            clientToSave.setPassword(passwordEncoder.encode(client.getPassword()));
-
-            Supplier<Client> save = () -> {
-                Client saved = repository.save(clientToSave);
-                repository.flush();
-                return saved;
-            };
-
-            Client saved = circuitBreaker.decorateSupplier(save).get();
+            Client clientToSave = prepareSaveData(client);
+            Client saved = persistClient(clientToSave);
             logger.info("Client " + saved.getEmail() + " registered. ID - " + saved.getId());
             return saved;
         } catch (ClientsModificationException e) {
@@ -142,23 +133,35 @@ public class ClientServiceImpl implements ClientService {
         }
     }
 
+    private Client prepareSaveData(Client client) {
+        String password = passwordEncoder.encode(client.getPassword());
+        Client clientToSave = new Client(client);
+        clientToSave.setId(null);
+        clientToSave.setPassword(password);
+
+        return clientToSave;
+    }
+
+    private Client persistClient(Client client) {
+        Supplier<Client> persist = () -> {
+            Client persisted = repository.save(client);
+            repository.flush();
+            return persisted;
+        };
+
+        return circuitBreaker.decorateSupplier(persist).get();
+    }
+
     @Override
     public Client update(Client client) {
         try {
-            Supplier<Optional<Client>> findById = () -> repository.findById(client.getId());
-            Client clientToUpdate = circuitBreaker.decorateSupplier(findById)
-                    .get()
-                    .orElseThrow(() -> new ClientsModificationException("No client with id " + client.getId()));
-            prepareUpdateData(clientToUpdate, client);
+            long id = client.getId();
+            Client clientToUpdate = findById(id)
+                    .orElseThrow(() -> new ClientsModificationException("No client with id " + id));
+            clientToUpdate = prepareUpdateData(clientToUpdate, client);
             validate(clientToUpdate);
 
-            Supplier<Client> update = () -> {
-                Client updated = repository.save(clientToUpdate);
-                repository.flush();
-                return updated;
-            };
-
-            Client updated = circuitBreaker.decorateSupplier(update).get();
+            Client updated = persistClient(clientToUpdate);
             logger.info("Client " + updated.getId() + " updated");
             return updated;
         } catch (ClientsModificationException e) {
@@ -170,61 +173,20 @@ public class ClientServiceImpl implements ClientService {
         }
     }
 
-    private void prepareUpdateData(Client client, Client updateData) {
-        if (updateData.getEmail() != null) {
-            client.setEmail(updateData.getEmail());
-        }
-        if (updateData.getPassword() != null) {
-            client.setPassword(passwordEncoder.encode(updateData.getPassword()));
-        }
-        if (updateData.getName() != null) {
-            client.setName(updateData.getName());
-        }
-        if (updateData.getSex() != null) {
-            client.setSex(updateData.getSex());
-        }
-        if (updateData.getPhoneNumber() != null) {
-            client.setPhoneNumber(updateData.getPhoneNumber());
-        }
-        if (updateData.getAddress() != null) {
-            prepareAddress(client.getAddress(), updateData.getAddress());
-        }
-    }
-
-    private void prepareAddress(Address address, Address source) {
-        if (source.getCountry() != null) {
-            address.setCountry(source.getCountry());
-        }
-        if (source.getState() != null) {
-            address.setState(source.getState());
-        }
-        if (source.getCity() != null) {
-            address.setCity(source.getCity());
-        }
-        if (source.getStreet() != null) {
-            address.setStreet(source.getStreet());
-        }
-        if (source.getHouseNumber() != null) {
-            address.setHouseNumber(source.getHouseNumber());
-        }
+    private Client prepareUpdateData(Client savedClient, Client updateData) {
+        return Client.builder(savedClient)
+                .copyNonNullFields(updateData)
+                .build();
     }
 
     @Override
     public Client setEnabled(long id, boolean isEnabled) {
         try {
-            Supplier<Optional<Client>> findById = () -> repository.findById(id);
-            Client clientToUpdate = circuitBreaker.decorateSupplier(findById)
-                    .get()
+            Client clientToUpdate = findById(id)
                     .orElseThrow(() -> new ClientsModificationException("No client with id " + id));
             clientToUpdate.setEnabled(isEnabled);
 
-            Supplier<Client> update = () -> {
-                Client updated = repository.save(clientToUpdate);
-                repository.flush();
-                return updated;
-            };
-
-            Client updated = circuitBreaker.decorateSupplier(update).get();
+            Client updated = persistClient(clientToUpdate);
             logger.info("Account status of client " + id + " changed");
             return updated;
         } catch (Exception e) {
@@ -235,17 +197,21 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public void deleteById(long id) {
         try {
-            Runnable delete = () -> {
-                repository.deleteById(id);
-                repository.flush();
-            };
-
-            circuitBreaker.decorateRunnable(delete).run();
+            delete(id);
             logger.info("Client " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
             throw new ClientsModificationException("No client with id " + id, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Client database unavailable", e);
         }
+    }
+
+    private void delete(long id) {
+        Runnable delete = () -> {
+            repository.deleteById(id);
+            repository.flush();
+        };
+
+        circuitBreaker.decorateRunnable(delete).run();
     }
 }

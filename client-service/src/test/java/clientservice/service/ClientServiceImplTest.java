@@ -82,26 +82,54 @@ public class ClientServiceImplTest {
 
     @BeforeAll
     public static void createClient() {
-        client = new Client();
-        client.setId(1L);
-        client.setEmail("alex@gmail.com");
-        client.setPassword("12345678");
-        client.setName("Alexander");
-        client.setSex(Client.Sex.MALE);
-        client.setPhoneNumber("+375-34-556-70-90");
-        client.setAddress(new Address("USA", "NY", "NYC", "23", 1));
+        Address address = Address.builder()
+                .withCountry("USA")
+                .withState("NY")
+                .withCity("NYC")
+                .withStreet("23")
+                .withHouseNumber(1)
+                .build();
+
+        PersonalData data = PersonalData.builder()
+                .withAddress(address)
+                .withName("Alexander")
+                .withPhoneNumber("+375334558876")
+                .withSex(PersonalData.Sex.MALE)
+                .build();
+
+        client = Client.builder()
+                .withId(1L)
+                .withEmail("alex@gmail.com")
+                .withPassword("12345678")
+                .withPersonalData(data)
+                .isEnabled(true)
+                .build();
     }
 
     @BeforeAll
     public static void createUpdatedClient() {
-        updatedClient = new Client();
-        updatedClient.setId(1L);
-        updatedClient.setEmail("alexander@gmail.com");
-        updatedClient.setPassword("87654321");
-        updatedClient.setName("Alex");
-        updatedClient.setSex(Client.Sex.MALE);
-        updatedClient.setPhoneNumber("+375-44-546-60-54");
-        updatedClient.setAddress(new Address("USA", "California", "LA", "36", 10));
+        Address address = Address.builder()
+                .withCountry("USA")
+                .withState("California")
+                .withCity("LA")
+                .withStreet("36")
+                .withHouseNumber(10)
+                .build();
+
+        PersonalData data = PersonalData.builder()
+                .withName("Alex")
+                .withPhoneNumber("+375345567090")
+                .withSex(PersonalData.Sex.MALE)
+                .withAddress(address)
+                .build();
+
+        updatedClient = Client.builder()
+                .withId(1L)
+                .withEmail("alexander@gmail.com")
+                .withPassword("87654321")
+                .withPersonalData(data)
+                .isEnabled(true)
+                .build();
     }
 
     @BeforeEach
@@ -148,14 +176,14 @@ public class ClientServiceImplTest {
         when(repository.save(any(Client.class))).thenReturn(client);
         when(validator.validate(any(Client.class))).thenReturn(Collections.emptySet());
 
-        Client registered = clientService.register(client);
+        Client registered = clientService.save(client);
         assertThat(registered, equalTo(client));
     }
 
     @Test
     public void shouldThrowExceptionWhenClientIsInvalid() {
         when(validator.validate(any(Client.class))).thenThrow(ClientsModificationException.class);
-        assertThrows(ClientsModificationException.class, () -> clientService.register(new Client()));
+        assertThrows(ClientsModificationException.class, () -> clientService.save(new Client()));
     }
 
     @Test
@@ -171,13 +199,11 @@ public class ClientServiceImplTest {
     @Test
     public void shouldUpdateClientStatus() {
         Client toUpdate = new Client(client);
-        toUpdate.setEnabled(!client.isEnabled());
-
         when(repository.findById(1L)).thenReturn(Optional.of(client));
         when(repository.save(any(Client.class))).thenReturn(toUpdate);
         when(validator.validate(any(Client.class))).thenReturn(Collections.emptySet());
 
-        Client updated = clientService.update(toUpdate);
+        Client updated = clientService.setEnabled(1, !client.isEnabled());
         assertThat(client.isEnabled(), not(equalTo(updated.isEnabled())));
     }
 

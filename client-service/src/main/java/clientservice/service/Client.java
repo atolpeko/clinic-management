@@ -17,21 +17,18 @@
 package clientservice.service;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import java.io.Serializable;
@@ -43,11 +40,6 @@ import java.util.Objects;
 @Entity
 @Table(name = "client")
 public class Client implements Serializable {
-
-    /**
-     * An enumeration denoting client's sex.
-     */
-    public enum Sex { MALE, FEMALE }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -64,26 +56,31 @@ public class Client implements Serializable {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
-    @Column(nullable = false)
-    @NotBlank(message = "Name is mandatory")
-    private String name;
-
-    @Column(nullable = false)
-    @Enumerated(value = EnumType.STRING)
-    @NotNull(message = "Sex is mandatory")
-    private Sex sex;
-
-    @Column(name = "phone_number", nullable = false)
-    @NotBlank(message = "Phone number is mandatory")
-    private String phoneNumber;
-
-    @Embedded
-    @NotNull(message = "Address in mandatory")
-    @Valid
-    private Address address;
-
     @Column(name = "is_enabled", nullable = false)
     private Boolean isEnabled = true;
+
+    @Embedded
+    @JsonUnwrapped
+    @Valid
+    private PersonalData personalData;
+
+    /**
+     * @return Client builder
+     */
+    public static Builder builder() {
+        return new Client().new Builder();
+    }
+
+    /**
+     * Returns a Client builder with predefined fields copied from the specified client.
+     *
+     * @param data client to copy data from
+     *
+     * @return Client builder
+     */
+    public static Builder builder(Client data) {
+        return new Client(data).new Builder();
+    }
 
     /**
      * Constructs a new enabled client.
@@ -100,32 +97,8 @@ public class Client implements Serializable {
         id = other.id;
         email = other.email;
         password = other.password;
-        name = other.name;
-        sex = other.sex;
-        phoneNumber = other.phoneNumber;
-        address = new Address(other.address);
         isEnabled = other.isEnabled;
-    }
-
-    /**
-     * Constructs a new enabled Client with the specified email, password,
-     * name, sex, phone number and address.
-     *
-     * @param email email to set
-     * @param password password to set
-     * @param name name to set
-     * @param sex sex to set
-     * @param phoneNumber phone number to set
-     * @param address address to set
-     */
-    public Client(String email, String password, String name, Sex sex,
-                  String phoneNumber, Address address) {
-        this.email = email;
-        this.password = password;
-        this.name = name;
-        this.sex = sex;
-        this.phoneNumber = phoneNumber;
-        this.address = address;
+        personalData = (other.personalData == null) ? null : other.personalData;
     }
 
     public Long getId() {
@@ -152,44 +125,24 @@ public class Client implements Serializable {
         this.password = password;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Sex getSex() {
-        return sex;
-    }
-
-    public void setSex(Sex sex) {
-        this.sex = sex;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public Address getAddress() {
-        return address;
-    }
-
-    public void setAddress(Address address) {
-        this.address = address;
-    }
-
     public Boolean isEnabled() {
+        return isEnabled;
+    }
+
+    public Boolean getEnabled() {
         return isEnabled;
     }
 
     public void setEnabled(Boolean isEnabled) {
         this.isEnabled = isEnabled;
+    }
+
+    public PersonalData getPersonalData() {
+        return personalData;
+    }
+
+    public void setPersonalData(PersonalData personalData) {
+        this.personalData = personalData;
     }
 
     @Override
@@ -205,16 +158,13 @@ public class Client implements Serializable {
         Client client = (Client) other;
         return Objects.equals(email, client.email)
                 && Objects.equals(password, client.password)
-                && Objects.equals(name, client.name)
-                && sex == client.sex
-                && Objects.equals(phoneNumber, client.phoneNumber)
-                && Objects.equals(address, client.address)
-                && Objects.equals(isEnabled, client.isEnabled);
+                && Objects.equals(isEnabled, client.isEnabled)
+                && Objects.equals(personalData, client.personalData);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(email, password, name, sex, phoneNumber, address, isEnabled);
+        return Objects.hash(email, password, isEnabled, personalData);
     }
 
     @Override
@@ -223,10 +173,75 @@ public class Client implements Serializable {
                 "id=" + id +
                 ", email='" + email + '\'' +
                 ", password='" + password + '\'' +
-                ", name='" + name + '\'' +
-                ", sex=" + sex +
-                ", address=" + address +
-                ", phoneNumber='" + phoneNumber  +
+                ", isEnabled=" + isEnabled +
+                ", personalData=" + personalData +
                 '}';
+    }
+
+    /**
+     * Client object builder.
+     */
+    public class Builder {
+
+        private Builder() {
+        }
+
+        public Client build() {
+            return Client.this;
+        }
+
+        public Builder withId(Long id) {
+            Client.this.id = id;
+            return this;
+        }
+
+        public Builder withEmail(String email) {
+            Client.this.email = email;
+            return this;
+        }
+
+        public Builder withPassword(String password) {
+            Client.this.password = password;
+            return this;
+        }
+
+        public Builder withPersonalData(PersonalData data) {
+            Client.this.personalData = data;
+            return this;
+        }
+
+        public Builder isEnabled(Boolean enabled) {
+            Client.this.isEnabled = enabled;
+            return this;
+        }
+
+        /**
+         * Copies not null fields from the specified client.
+         *
+         * @param client client to copy data from
+         *
+         * @return this builder
+         */
+        public Builder copyNonNullFields(Client client) {
+            if (client.id != null) {
+                Client.this.id = client.id;
+            }
+            if (client.email != null) {
+                Client.this.email = client.email;
+            }
+            if (client.password != null) {
+                Client.this.password = client.password;
+            }
+            if (client.isEnabled != null) {
+                Client.this.isEnabled = client.isEnabled;
+            }
+            if (client.personalData != null) {
+                Client.this.personalData = PersonalData.builder(Client.this.personalData)
+                        .copyNonNullFields(client.personalData)
+                        .build();
+            }
+
+            return this;
+        }
     }
 }

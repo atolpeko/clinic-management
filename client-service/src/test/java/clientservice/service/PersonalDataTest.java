@@ -27,7 +27,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @Tag("category.UnitTest")
-public class AddressTest {
+public class PersonalDataTest {
     private static Validator validator;
 
     @BeforeAll
@@ -45,15 +45,24 @@ public class AddressTest {
                 .withHouseNumber(1)
                 .build();
 
-        int errors = validator.validate(address).size();
+        PersonalData data = PersonalData.builder()
+                .withAddress(address)
+                .withName("Client")
+                .withSex(PersonalData.Sex.MALE)
+                .withPhoneNumber("+375334558876")
+                .build();
+
+        int errors = validator.validate(data).size();
         assertThat(errors, is(0));
     }
 
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
         Address address = Address.builder().withHouseNumber(-1).build();
+        PersonalData data = PersonalData.builder().withAddress(address).build();
 
-        int errors = validator.validate(address).size();
-        assertThat(errors, is(5));
+        int errors = validator.validate(data).size();
+        assertThat(errors, is(8));
     }
+
 }
