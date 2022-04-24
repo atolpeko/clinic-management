@@ -1,0 +1,30 @@
+server:
+  port: 0
+spring:
+  jpa:
+    show-sql: true
+    generate-ddl: true
+    hibernate:
+      ddl-auto: create-drop
+      dialect: org.hibernate.dialect.H2Dialect
+    defer-datasource-initialization: true
+  datasource:
+    url: jdbc:h2:mem:testdb;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    username: sa
+    password:
+    driverClassName: org.h2.Driver
+  security:
+    oauth2:
+      jwt-key: key
+      client:
+        client-id: client
+        client-secret: secret
+        authorization-grant-type: grant
+        scope: scope
+        access-token-uri: http://localhost:9000/oauth/token
+  h2:
+    console:
+      enabled: true
+  sql:
+    init:
+      platform: h2

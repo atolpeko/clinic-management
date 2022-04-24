@@ -16,22 +16,19 @@
 
 package resultsservice.service.result;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import resultsservice.service.external.client.Client;
-import resultsservice.service.external.clinic.Doctor;
+import resultsservice.service.external.employee.Doctor;
 import resultsservice.service.external.registration.Duty;
 
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -51,33 +48,36 @@ public class Result implements Serializable {
     @NotBlank(message = "Data is mandatory")
     private String data;
 
-    @Column(nullable = false)
-    @NotNull(message = "Duty ID is mandatory")
-    @Positive(message = "Duty ID must be positive")
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private Long dutyId;
-
-    @Column(nullable = false)
-    @NotNull(message = "Client ID is mandatory")
-    @Positive(message = "Client ID must be positive")
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private Long clientId;
-
-    @Column(nullable = false)
-    @NotNull(message = "Doctor ID is mandatory")
-    @Positive(message = "Doctor ID must be positive")
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private Long doctorId;
-
-    @Transient
+    @Embedded
+    @NotNull(message = "Duty is mandatory")
     private Duty duty;
 
-    @Transient
+    @Embedded
+    @NotNull(message = "Client is mandatory")
     private Client client;
 
-    @Transient
+    @Embedded
+    @NotNull(message = "Doctor is mandatory")
     private Doctor doctor;
 
+    /**
+     * @return Result builder
+     */
+    public static Builder builder() {
+        return new Result().new Builder();
+    }
+
+    /**
+     * Returns a Result builder with predefined fields copied from the specified result.
+     *
+     * @param data result to copy data from
+     *
+     * @return Result builder
+     */
+    public static Builder builder(Result data) {
+        return new Result(data).new Builder();
+    }
+    
     public Result() {
     }
 
@@ -89,27 +89,9 @@ public class Result implements Serializable {
     public Result(Result other) {
         id = other.id;
         data = other.data;
-        dutyId = other.dutyId;
-        clientId = other.clientId;
-        doctorId = other.doctorId;
         duty = (other.duty == null) ? null : new Duty(other.duty);
         client = (other.client == null) ? null : new Client(other.client);
         doctor = (other.doctor == null) ? null : new Doctor(other.doctor);
-    }
-
-    /**
-     * Constructs a new Result with the specified data, duty ID, client ID and doctor ID.
-     *
-     * @param data data to set
-     * @param dutyId duty ID to set
-     * @param clientId client ID to set
-     * @param doctorId doctor ID to set
-     */
-    public Result(String data, Long dutyId, Long clientId, Long doctorId) {
-        this.data = data;
-        this.dutyId = dutyId;
-        this.clientId = clientId;
-        this.doctorId = doctorId;
     }
 
     public Long getId() {
@@ -126,30 +108,6 @@ public class Result implements Serializable {
 
     public void setData(String data) {
         this.data = data;
-    }
-
-    public Long getDutyId() {
-        return dutyId;
-    }
-
-    public void setDutyId(Long dutyId) {
-        this.dutyId = dutyId;
-    }
-
-    public Long getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(Long clientId) {
-        this.clientId = clientId;
-    }
-
-    public Long getDoctorId() {
-        return doctorId;
-    }
-
-    public void setDoctorId(Long doctorId) {
-        this.doctorId = doctorId;
     }
 
     public Duty getDuty() {
@@ -188,9 +146,6 @@ public class Result implements Serializable {
 
         Result result = (Result) other;
         return Objects.equals(data, result.data)
-                && Objects.equals(dutyId, result.dutyId)
-                && Objects.equals(clientId, result.clientId)
-                && Objects.equals(doctorId, result.doctorId)
                 && Objects.equals(duty, result.duty)
                 && Objects.equals(client, result.client)
                 && Objects.equals(doctor, result.doctor);
@@ -198,7 +153,7 @@ public class Result implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(data, dutyId, clientId, doctorId, doctor, client, duty);
+        return Objects.hash(data, doctor, client, duty);
     }
 
     @Override
@@ -206,12 +161,74 @@ public class Result implements Serializable {
         return getClass().getName() + "{" +
                 "id=" + id +
                 ", data='" + data + '\'' +
-                ", dutyId=" + dutyId +
-                ", clientId=" + clientId +
-                ", doctorId=" + doctorId +
                 ", duty=" + duty +
                 ", client=" + client +
                 ", doctor=" + doctor +
                 '}';
+    }
+
+    /**
+     * Result object builder.
+     */
+    public class Builder {
+
+        private Builder() {
+        }
+
+        public Result build() {
+            return Result.this;
+        }
+
+        public Builder withId(Long id) {
+            Result.this.id = id;
+            return this;
+        }
+
+        public Builder withData(String data) {
+            Result.this.data = data;
+            return this;
+        }
+
+        public Builder withDuty(Duty duty) {
+            Result.this.duty = duty;
+            return this;
+        }
+
+        public Builder withClient(Client client) {
+            Result.this.client = client;
+            return this;
+        }
+
+        public Builder withDoctor(Doctor doctor) {
+            Result.this.doctor = doctor;
+            return this;
+        }
+
+        /**
+         * Copies not null fields from the specified result.
+         *
+         * @param result result to copy data from
+         *
+         * @return this builder
+         */
+        public Builder copyNonNullFields(Result result) {
+            if (result.id != null) {
+                Result.this.id = result.id;
+            }
+            if (result.data != null) {
+                Result.this.data = result.data;
+            }
+            if (result.duty != null) {
+                Result.this.duty = result.duty;
+            }
+            if (result.client != null) {
+                Result.this.client = result.client;
+            }
+            if (result.doctor != null) {
+                Result.this.doctor = result.doctor;
+            }
+
+            return this;
+        }
     }
 }

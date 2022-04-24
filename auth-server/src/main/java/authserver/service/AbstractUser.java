@@ -47,7 +47,7 @@ public abstract class AbstractUser implements UserDetails {
     private String password;
 
     @Column(name = "is_enabled")
-    private boolean isEnabled = true;
+    private Boolean isEnabled = true;
 
     /**
      * Constructs a new enabled AbstractUser.
@@ -56,14 +56,15 @@ public abstract class AbstractUser implements UserDetails {
     }
 
     /**
-     * Constructs a new enabled Employee with the specified login and password.
+     * Constructs a new AbstractUser copying data from the passed one.
      *
-     * @param login login to set
-     * @param password password to set
+     * @param other user to copy data from
      */
-    public AbstractUser(String login, String password) {
-        this.login = login;
-        this.password = password;
+    public AbstractUser(AbstractUser other) {
+        id = other.id;
+        login = other.login;
+        password = other.password;
+        isEnabled = other.isEnabled;
     }
 
     @Override
@@ -86,6 +87,16 @@ public abstract class AbstractUser implements UserDetails {
         return isEnabled;
     }
 
+    @Override
+    public boolean isEnabled() {
+        return isEnabled;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
     public Long getId() {
         return id;
     }
@@ -102,19 +113,11 @@ public abstract class AbstractUser implements UserDetails {
         this.login = login;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
     public void setPassword(String password) {
         this.password = password;
     }
 
-    public boolean isEnabled() {
-        return isEnabled;
-    }
-
-    public void setEnabled(boolean enabled) {
+    public void setEnabled(Boolean enabled) {
         isEnabled = enabled;
     }
 

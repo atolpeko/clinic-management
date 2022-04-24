@@ -1,0 +1,30 @@
+server:
+  port: 8888
+spring:
+  application:
+    name: CONFIG-SERVER
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/atolpeko/clinic-config
+          default-label: development
+          searchPaths: admin-server, auth-server, api-gateway, discovery-server,
+            client-service, clinic-service, employee-service,
+            registration-service, results-service
+  boot:
+    admin:
+      client:
+        url: http://localhost:9090/admin
+  security:
+    oauth2:
+      jwt-key: MjWP5L7CiDff90qA
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+        exclude: threaddump, heapdump
+  endpoint:
+    health:
+      show-details: always

@@ -66,7 +66,7 @@ public class FacilityControllerTest {
         newFacilityJson = "{\"name\": \"Facility1\"," +
                 "\"departments\" : [{ \"id\": 1 }]}";
 
-        updateFacilityJson = "{\"name\": \"Alex\"}";
+        updateFacilityJson = "{\"name\": \"Facility2\"}";
     }
 
     @Test

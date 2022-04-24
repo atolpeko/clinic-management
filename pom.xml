@@ -5,7 +5,7 @@
 
     <groupId>atolpeko</groupId>
     <artifactId>clinic-service-parent</artifactId>
-    <version>1.0</version>
+    <version>1.2</version>
     <packaging>pom</packaging>
 
     <parent>
@@ -22,6 +22,7 @@
         <module>api-gateway</module>
         <module>client-service</module>
         <module>clinic-service</module>
+        <module>employee-service</module>
         <module>registration-service</module>
         <module>results-service</module>
     </modules>

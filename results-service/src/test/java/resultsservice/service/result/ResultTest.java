@@ -19,9 +19,14 @@ package resultsservice.service.result;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import resultsservice.service.external.client.Client;
+import resultsservice.service.external.employee.Doctor;
+import resultsservice.service.external.registration.Duty;
 
 import javax.validation.Validation;
 import javax.validation.Validator;
+
+import java.math.BigDecimal;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -37,11 +42,15 @@ public class ResultTest {
 
     @Test
     public void shouldPassValidationWhenHasValidData() {
-        Result result = new Result();
-        result.setData("Data");
-        result.setDutyId(1L);
-        result.setClientId(1L);
-        result.setDoctorId(1L);
+        Client client = Client.builder().withId(1L).build();
+        Doctor doctor = Doctor.builder().withId(1L).build();
+        Duty duty = Duty.builder().withId(1L).build();
+        Result result = Result.builder()
+                .withData("Data")
+                .withClient(client)
+                .withDoctor(doctor)
+                .withDuty(duty)
+                .build();
 
         int errors = validator.validate(result).size();
         assertThat(errors, is(0));
@@ -50,9 +59,6 @@ public class ResultTest {
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
         Result result = new Result();
-        result.setDoctorId(-1L);
-        result.setDutyId(-1L);
-        result.setClientId(-1L);
 
         int errors = validator.validate(result).size();
         assertThat(errors, is(4));

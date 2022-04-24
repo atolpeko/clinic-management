@@ -81,7 +81,7 @@ public interface ClientService {
      * @throws ClientsModificationException either if a client has invalid data or already exists
      * @throws RemoteResourceException if there is any problem with the remote client repository
      */
-    Client register(Client client);
+    Client save(Client client);
 
     /**
      * Updates the client with the specified ID in the remote client repository.

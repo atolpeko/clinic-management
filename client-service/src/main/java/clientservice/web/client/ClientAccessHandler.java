@@ -16,16 +16,16 @@
 
 package clientservice.web.client;
 
-import clientservice.data.ClientRepository;
 import clientservice.service.Client;
-
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import clientservice.service.ClientService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -34,14 +34,11 @@ import java.util.function.Supplier;
  */
 @Component
 public class ClientAccessHandler {
-    private final ClientRepository repository;
-    private final CircuitBreaker circuitBreaker;
+    private final ClientService clientService;
 
     @Autowired
-    public ClientAccessHandler(ClientRepository repository,
-                               CircuitBreaker circuitBreaker) {
-        this.repository = repository;
-        this.circuitBreaker = circuitBreaker;
+    public ClientAccessHandler(ClientService clientService) {
+        this.clientService = clientService;
     }
 
     /**
@@ -57,20 +54,23 @@ public class ClientAccessHandler {
             return false;
         }
 
-        boolean isTopManager = auth.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("TOP_MANAGER"));
-        return isTopManager || isOwner(id, auth);
+        return isTopManager(auth) || isOwner(id, auth);
     }
 
-    private boolean isOwner(long ownerId, Authentication currAuth) {
-        Supplier<Optional<Client>> findById = () -> repository.findById(ownerId);
-        Optional<Client> client = circuitBreaker.decorateSupplier(findById).get();
+    private boolean isTopManager(Authentication authentication) {
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        return authorities.stream()
+                .anyMatch(auth -> auth.getAuthority().equals("TOP_MANAGER"));
+    }
+
+    private boolean isOwner(long ownerId, Authentication authentication) {
+        Optional<Client> client = clientService.findById(ownerId);
         if (client.isEmpty()) {
             return false;
         }
 
         String ownerEmail = client.get().getEmail();
-        return ownerEmail.equals(currAuth.getName());
+        return authentication.getName().equals(ownerEmail);
     }
 
     /**

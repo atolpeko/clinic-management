@@ -42,16 +42,16 @@ public class ActuatorTest {
     @Test
     @WithMockUser(authorities = "ADMIN")
     public void shouldAllowAccessToActuatorWhenUserIsAdmin() throws Exception {
-        getActuatorAndExpect(status().isOk());
+        accessActuatorAndExpect(status().isOk());
     }
 
     @Test
     @WithMockUser(authorities = "INTERNAL")
     public void shouldAllowAccessToActuatorWhenUserIsInternal() throws Exception {
-        getActuatorAndExpect(status().isOk());
+        accessActuatorAndExpect(status().isOk());
     }
 
-    private void getActuatorAndExpect(ResultMatcher status) throws Exception {
+    private void accessActuatorAndExpect(ResultMatcher status) throws Exception {
         mvc.perform(get("/actuator/"))
                 .andDo(print())
                 .andExpect(status);
@@ -60,12 +60,12 @@ public class ActuatorTest {
     @Test
     @WithMockUser(authorities = { "TOP_MANAGER", "TEAM_MANAGER", "DOCTOR", "USER" })
     public void shouldDenyAccessToActuatorWhenUserIsNotInternal() throws Exception {
-        getActuatorAndExpect(status().isForbidden());
+        accessActuatorAndExpect(status().isForbidden());
     }
 
     @Test
     @WithAnonymousUser
     public void shouldDenyAccessToActuatorWhenUserIsNotAuthenticated() throws Exception {
-        getActuatorAndExpect(status().isUnauthorized());
+        accessActuatorAndExpect(status().isUnauthorized());
     }
 }

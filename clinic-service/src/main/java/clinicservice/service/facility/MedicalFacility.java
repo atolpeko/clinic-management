@@ -56,6 +56,24 @@ public class MedicalFacility implements Serializable {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Set<Department> departments;
 
+    /**
+     * @return MedicalFacility builder
+     */
+    public static Builder builder() {
+        return new MedicalFacility().new Builder();
+    }
+
+    /**
+     * Returns a MedicalFacility builder with predefined fields copied from the specified facility.
+     *
+     * @param data facility to copy data from
+     *
+     * @return MedicalFacility builder
+     */
+    public static Builder builder(MedicalFacility data) {
+        return new MedicalFacility(data).new Builder();
+    }
+
     public MedicalFacility() {
         departments = new HashSet<>();
     }
@@ -70,18 +88,7 @@ public class MedicalFacility implements Serializable {
         name = other.name;
         departments = other.departments;
     }
-
-    /**
-     * Constructs a new MedicalFacility with the specified  name and departments.
-     *
-     * @param name name to set
-     * @param departments departments to set
-     */
-    public MedicalFacility(String name, Set<Department> departments) {
-        this.name = name;
-        this.departments = new HashSet<>(departments);
-    }
-
+    
     /**
      * Adds the specified department to the list of departments.
      * Synchronized for bidirectional association.
@@ -156,5 +163,54 @@ public class MedicalFacility implements Serializable {
                 ", name='" + name + '\'' +
                 ", departments=" + departments +
                 '}';
+    }
+
+    /**
+     * MedicalFacility object builder
+     */
+    public class Builder {
+
+        private Builder() {
+        }
+
+        public MedicalFacility build() {
+            return MedicalFacility.this;
+        }
+
+        public Builder withId(Long id) {
+            MedicalFacility.this.id = id;
+            return this;
+        }
+
+        public Builder withName(String name) {
+            MedicalFacility.this.name = name;
+            return this;
+        }
+
+        public Builder withDepartments(Set<Department> departments) {
+            MedicalFacility.this.departments = departments;
+            return this;
+        }
+
+        /**
+         * Copies not null fields from the specified facility.
+         *
+         * @param facility facility to copy data from
+         *
+         * @return this builder
+         */
+        public Builder copyNonNullFields(MedicalFacility facility) {
+            if (facility.id != null) {
+                MedicalFacility.this.id = facility.id;
+            }
+            if (facility.name != null) {
+                MedicalFacility.this.name = facility.name;
+            }
+            if (!facility.departments.isEmpty()) {
+                MedicalFacility.this.departments = new HashSet<>(facility.departments);
+            }
+
+            return this;
+        }
     }
 }

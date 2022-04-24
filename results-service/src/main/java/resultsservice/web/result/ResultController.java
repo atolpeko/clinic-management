@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -40,6 +41,7 @@ import resultsservice.service.result.ResultService;
 
 import javax.validation.Valid;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -75,22 +77,27 @@ public class ResultController {
     // Cannot use @PostFilter on CollectionModel :(
     private void filter(List<Result> results) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean isUser = authentication.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("USER"));
-        boolean isDoctor = authentication.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("DOCTOR"));
-
-        if (isUser) {
-            results.removeIf(registration -> {
-                String email = registration.getClient().getEmail();
-                return !authentication.getName().equals(email);
-            });
-        } else if (isDoctor) {
-            results.removeIf(registration -> {
-                String email = registration.getDoctor().getEmail();
-                return !authentication.getName().equals(email);
-            });
+        if (hasRole(authentication, "USER")) {
+            results.removeIf(result -> !clientIsOwner(authentication, result));
+        } else if (hasRole(authentication, "DOCTOR")) {
+            results.removeIf(result -> !doctorIsOwner(authentication, result));
         }
+    }
+
+    private boolean hasRole(Authentication authentication, String role) {
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        return authorities.stream()
+                .anyMatch(authority -> authority.getAuthority().equals(role));
+    }
+
+    private boolean clientIsOwner(Authentication authentication, Result result) {
+        String email = result.getClient().getEmail();
+        return authentication.getName().equals(email);
+    }
+
+    private boolean doctorIsOwner(Authentication authentication, Result result) {
+        String email = result.getDoctor().getEmail();
+        return authentication.getName().equals(email);
     }
 
     @GetMapping("/{id}")

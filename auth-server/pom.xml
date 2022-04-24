@@ -6,11 +6,11 @@
 	<parent>
 		<groupId>atolpeko</groupId>
 		<artifactId>clinic-service-parent</artifactId>
-		<version>1.0</version>
+		<version>1.2</version>
 	</parent>
 
 	<artifactId>auth-server</artifactId>
-	<version>1.0</version>
+	<version>1.2</version>
 
 	<name>auth-server</name>
 	<description>OAuth2 server</description>
@@ -93,6 +93,12 @@
 			<artifactId>mysql-connector-java</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+
+		<dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
 	</dependencies>
 
 	<build>

@@ -107,16 +107,8 @@ public class FacilityServiceImpl implements FacilityService {
     public MedicalFacility save(MedicalFacility facility) {
         try {
             validate(facility);
-            MedicalFacility facilityToSave = new MedicalFacility(facility);
-            facilityToSave.setId(null);
-
-            Supplier<MedicalFacility> save = () -> {
-                MedicalFacility saved = facilityRepository.save(facilityToSave);
-                facilityRepository.flush();
-                return saved;
-            };
-
-            MedicalFacility saved = circuitBreaker.decorateSupplier(save).get();
+            MedicalFacility facilityToSave = prepareSaveData(facility);
+            MedicalFacility saved = persistFacility(facilityToSave);
             logger.info("Medical facility " + saved.getName() + " saved. ID - " + saved.getId());
             return saved;
         } catch (IllegalModificationException e) {
@@ -141,7 +133,11 @@ public class FacilityServiceImpl implements FacilityService {
             throw new IllegalModificationException(msg);
         }
 
-        for (Department department : facility.getDepartments()) {
+        validateDepartments(facility.getDepartments());
+    }
+
+    private void validateDepartments(Set<Department> departments) {
+        for (Department department : departments) {
             if (!departmentExists(department.getId())) {
                 String msg = "No department with id: " + department.getId();
                 throw new IllegalModificationException(msg);
@@ -150,29 +146,42 @@ public class FacilityServiceImpl implements FacilityService {
     }
 
     private boolean departmentExists(long id) {
-        Supplier<Optional<Department>> findById = () -> departmentRepository.findById(id);
-        Optional<Department> department = circuitBreaker.decorateSupplier(findById).get();
-        return department.isPresent();
+        try {
+            Supplier<Optional<Department>> findById = () -> departmentRepository.findById(id);
+            Optional<Department> department = circuitBreaker.decorateSupplier(findById).get();
+            return department.isPresent();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return false;
+        }
+    }
+
+    private MedicalFacility prepareSaveData(MedicalFacility facility) {
+        MedicalFacility facilityToSave = new MedicalFacility(facility);
+        facilityToSave.setId(null);
+        return facilityToSave;
+    }
+
+    private MedicalFacility persistFacility(MedicalFacility facility) {
+        Supplier<MedicalFacility> save = () -> {
+            MedicalFacility saved = facilityRepository.save(facility);
+            facilityRepository.flush();
+            return saved;
+        };
+
+        return circuitBreaker.decorateSupplier(save).get();
     }
 
     @Override
     public MedicalFacility update(MedicalFacility facility) {
         try {
-            Supplier<Optional<MedicalFacility>> findById = () -> facilityRepository.findById(facility.getId());
-            String errorMsg = "No medical facility with id " + facility.getId();
-            MedicalFacility facilityToUpdate = circuitBreaker.decorateSupplier(findById)
-                    .get()
-                    .orElseThrow(() -> new IllegalModificationException(errorMsg));
-            prepareUpdateData(facilityToUpdate, facility);
+            long id = facility.getId();
+            MedicalFacility facilityToUpdate = findById(id)
+                    .orElseThrow(() -> new IllegalModificationException("No medical facility with id " + id));
+            facilityToUpdate = prepareUpdateData(facilityToUpdate, facility);
             validate(facilityToUpdate);
 
-            Supplier<MedicalFacility> update = () -> {
-                MedicalFacility updated = facilityRepository.save(facilityToUpdate);
-                facilityRepository.flush();
-                return updated;
-            };
-
-            MedicalFacility updated = circuitBreaker.decorateSupplier(update).get();
+            MedicalFacility updated = persistFacility(facilityToUpdate);
             logger.info("Medical facility " + updated.getId() + " updated");
             return updated;
         } catch (IllegalModificationException e) {
@@ -184,24 +193,16 @@ public class FacilityServiceImpl implements FacilityService {
         }
     }
 
-    private void prepareUpdateData(MedicalFacility facility, MedicalFacility updateData) {
-        if (updateData.getName() != null) {
-            facility.setName(updateData.getName());
-        }
-        if (!updateData.getDepartments().isEmpty()) {
-            facility.setDepartments(updateData.getDepartments());
-        }
+    private MedicalFacility prepareUpdateData(MedicalFacility savedFacility, MedicalFacility data) {
+        return MedicalFacility.builder(savedFacility)
+                .copyNonNullFields(data)
+                .build();
     }
 
     @Override
     public void deleteAllByDepartmentId(long departmentId) {
         try {
-            Runnable delete = () -> {
-                facilityRepository.deleteAllByDepartmentId(departmentId);
-                facilityRepository.flush();
-            };
-
-            circuitBreaker.decorateRunnable(delete).run();
+            deleteAllFromDepartment(departmentId);
             logger.info("All medical facilities deleted from department " + departmentId);
         } catch (EmptyResultDataAccessException e) {
             throw new IllegalModificationException("No department with id " + departmentId, e);
@@ -210,15 +211,19 @@ public class FacilityServiceImpl implements FacilityService {
         }
     }
 
+    private void deleteAllFromDepartment(long departmentId) {
+        Runnable delete = () -> {
+            facilityRepository.deleteAllByDepartmentId(departmentId);
+            facilityRepository.flush();
+        };
+
+        circuitBreaker.decorateRunnable(delete).run();
+    }
+
     @Override
     public void deleteFromDepartmentById(long departmentId, long facilityId) {
         try {
-            Runnable delete = () -> {
-                facilityRepository.deleteFromDepartment(departmentId, facilityId);
-                facilityRepository.flush();
-            };
-
-            circuitBreaker.decorateRunnable(delete).run();
+            deleteFromDepartment(departmentId, facilityId);
             logger.info("Medical facility " + facilityId + " deleted from department " + departmentId);
         } catch (EmptyResultDataAccessException e) {
             String errorMsg = "No department with id " + departmentId +
@@ -229,15 +234,19 @@ public class FacilityServiceImpl implements FacilityService {
         }
     }
 
+    private void deleteFromDepartment(long departmentId, long facilityId) {
+        Runnable delete = () -> {
+            facilityRepository.deleteFromDepartment(departmentId, facilityId);
+            facilityRepository.flush();
+        };
+
+        circuitBreaker.decorateRunnable(delete).run();
+    }
+
     @Override
     public void deleteById(long id) {
         try {
-            Runnable delete = () -> {
-                facilityRepository.deleteById(id);
-                facilityRepository.flush();
-            };
-
-            circuitBreaker.decorateRunnable(delete).run();
+            deleteFacilityById(id);
             logger.info("Medical facility " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
             throw new IllegalModificationException("No facility with id " + id, e);
@@ -247,5 +256,14 @@ public class FacilityServiceImpl implements FacilityService {
         } catch (Exception e) {
             throw new RemoteResourceException("Facility database unavailable", e);
         }
+    }
+
+    private void deleteFacilityById(long id) {
+        Runnable delete = () -> {
+            facilityRepository.deleteById(id);
+            facilityRepository.flush();
+        };
+
+        circuitBreaker.decorateRunnable(delete).run();
     }
 }

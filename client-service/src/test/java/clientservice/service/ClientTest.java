@@ -37,13 +37,27 @@ public class ClientTest {
 
     @Test
     public void shouldPassValidationWhenHasValidData() {
-        Client client = new Client();
-        client.setEmail("alex@gmail.com");
-        client.setPassword("12345678");
-        client.setName("Alexander");
-        client.setSex(Client.Sex.MALE);
-        client.setPhoneNumber("+375-34-556-70-90");
-        client.setAddress(new Address("USA", "NY", "NYC", "23", 1));
+        Address address = Address.builder()
+                .withCountry("USA")
+                .withState("NY")
+                .withCity("NYC")
+                .withStreet("23")
+                .withHouseNumber(1)
+                .build();
+
+        PersonalData data = PersonalData.builder()
+                .withAddress(address)
+                .withName("Client")
+                .withSex(PersonalData.Sex.MALE)
+                .withPhoneNumber("+375334558876")
+                .build();
+
+        Client client = Client.builder()
+                .withPersonalData(data)
+                .withEmail("alex@gmail.com")
+                .withPassword("12345678")
+                .isEnabled(true)
+                .build();
 
         int errors = validator.validate(client).size();
         assertThat(errors, is(0));
@@ -51,13 +65,13 @@ public class ClientTest {
 
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
-        Address address = new Address();
-        address.setHouseNumber(-1);
-
-        Client client = new Client();
-        client.setEmail("not-a-email");
-        client.setPassword("12345");
-        client.setAddress(address);
+        Address address = Address.builder().withHouseNumber(-1).build();
+        PersonalData data = PersonalData.builder().withAddress(address).build();
+        Client client = Client.builder()
+                .withPersonalData(data)
+                .withEmail("not-a-email")
+                .withPassword("12345")
+                .build();
 
         int errors = validator.validate(client).size();
         assertThat(errors, is(10));

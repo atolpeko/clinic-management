@@ -14,12 +14,12 @@ spring:
       client: url=http://localhost:9090:admin
   security:
     oauth2:
-      jwt-key: MjWP5L7CiDff90qA
+      jwt-key: key
       client:
-        client-id: admin-server
-        client-secret: 15admin9_df55
-        authorization-grant-type: client_credentials
-        scope: read
+        client-id: client
+        client-secret: secret
+        authorization-grant-type: grant
+        scope: scope
         access-token-uri: http://localhost:9000/oauth/token
 management:
   endpoints:

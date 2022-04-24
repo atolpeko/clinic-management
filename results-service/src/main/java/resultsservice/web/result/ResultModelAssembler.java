@@ -38,15 +38,15 @@ public class ResultModelAssembler implements RepresentationModelAssembler<Result
     public EntityModel<Result> toModel(Result entity) {
         Link dutyLink = BasicLinkBuilder
                 .linkToCurrentMapping()
-                .slash("/services/" + entity.getDutyId())
+                .slash("/services/" + entity.getDuty().getId())
                 .withRel("service");
         Link doctorLink = BasicLinkBuilder
                 .linkToCurrentMapping()
-                .slash("/doctors/" + entity.getDoctorId())
+                .slash("/doctors/" + entity.getDoctor().getId())
                 .withRel("doctor");
         Link clientLink = BasicLinkBuilder
                 .linkToCurrentMapping()
-                .slash("/clients/" + entity.getClientId())
+                .slash("/clients/" + entity.getClient().getId())
                 .withRel("client");
 
         EntityModel<Result> entityModel = EntityModel.of(entity, dutyLink, doctorLink, clientLink);

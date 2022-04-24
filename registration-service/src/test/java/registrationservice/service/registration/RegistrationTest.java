@@ -21,9 +21,12 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import registrationservice.service.duty.Duty;
+import registrationservice.service.external.client.Client;
+import registrationservice.service.external.employee.Doctor;
 
 import javax.validation.Validation;
 import javax.validation.Validator;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -40,11 +43,16 @@ public class RegistrationTest {
 
     @Test
     public void shouldPassValidationWhenHasValidData() {
-        Registration registration = new Registration();
-        registration.setDate(LocalDateTime.now());
-        registration.setClientId(1L);
-        registration.setDoctorId(1L);
-        registration.setDuty(new Duty());
+        Duty duty = Duty.builder().withId(1L).build();
+        Client client = Client.builder().withId(1L).build();
+        Doctor doctor = Doctor.builder().withId(1L).build();
+
+        Registration registration =Registration.builder()
+                .withDuty(duty)
+                .withClient(client)
+                .withDoctor(doctor)
+                .withDate(LocalDateTime.now())
+                .build();
 
         int errors = validator.validate(registration).size();
         assertThat(errors, is(0));
@@ -53,8 +61,6 @@ public class RegistrationTest {
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
         Registration registration = new Registration();
-        registration.setDoctorId(-1L);
-        registration.setClientId(-1L);
 
         int errors = validator.validate(registration).size();
         assertThat(errors, is(3));

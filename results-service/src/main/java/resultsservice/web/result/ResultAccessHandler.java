@@ -59,29 +59,27 @@ public class ResultAccessHandler {
                 return false;
             }
 
-            Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-            boolean isUser = authorities.stream()
-                    .anyMatch(authority -> authority.getAuthority().equals("USER"));
-            boolean isDoctor = authorities.stream()
-                    .anyMatch(authority -> authority.getAuthority().equals("DOCTOR"));
-            boolean isTopManager = authorities.stream()
-                    .anyMatch(authority -> authority.getAuthority().equals("TOP_MANAGER"));
-
-            if (isUser) {
+            if (hasRole(authentication, "USER")) {
                 String email = result.getClient().getEmail();
-                return email.equals(authentication.getName());
+                return authentication.getName().equals(email);
             }
 
-            if (isDoctor) {
+            if (hasRole(authentication, "DOCTOR")) {
                 String email = result.getDoctor().getEmail();
-                return email.equals(authentication.getName());
+                return authentication.getName().equals(email);
             }
 
-            return isTopManager;
+            return hasRole(authentication, "TOP_MANAGER");
         } catch (Exception e) {
             logger.error(e.getMessage());
             return false;
         }
+    }
+
+    private boolean hasRole(Authentication authentication, String role) {
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        return authorities.stream()
+                .anyMatch(authority -> authority.getAuthority().equals(role));
     }
 
     /**

@@ -39,7 +39,12 @@ public class DutyTest {
 
     @Test
     public void shouldPassValidationWhenHasValidData() {
-        Duty duty = new Duty("Name", "Description", "Specialty", new BigDecimal(10));
+        Duty duty = Duty.builder()
+                .withName("Name")
+                .withDescription("Description")
+                .withNeededSpecialty("Specialty")
+                .withPrice(BigDecimal.TEN)
+                .build();
 
         int errors = validator.validate(duty).size();
         assertThat(errors, is(0));
@@ -47,8 +52,9 @@ public class DutyTest {
 
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
-        Duty duty = new Duty();
-        duty.setPrice(BigDecimal.valueOf(-1L));
+        Duty duty = Duty.builder()
+                .withPrice(BigDecimal.valueOf(-1))
+                .build();
 
         int errors = validator.validate(duty).size();
         assertThat(errors, is(4));

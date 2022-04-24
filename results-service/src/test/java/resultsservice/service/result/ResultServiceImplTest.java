@@ -29,8 +29,8 @@ import resultsservice.data.ResultsRepository;
 import resultsservice.service.exception.IllegalModificationException;
 import resultsservice.service.external.client.Client;
 import resultsservice.service.external.client.ClientServiceFeignClient;
-import resultsservice.service.external.clinic.ClinicServiceFeignClient;
-import resultsservice.service.external.clinic.Doctor;
+import resultsservice.service.external.employee.EmployeeServiceFeignClient;
+import resultsservice.service.external.employee.Doctor;
 import resultsservice.service.external.registration.Duty;
 import resultsservice.service.external.registration.RegistrationServiceFeignClient;
 
@@ -58,7 +58,7 @@ public class ResultServiceImplTest {
     private static Validator validator;
     private static CircuitBreaker circuitBreaker;
     private static ClientServiceFeignClient clientService;
-    private static ClinicServiceFeignClient clinicService;
+    private static EmployeeServiceFeignClient employeeService;
     private static RegistrationServiceFeignClient registrationService;
 
     private static Result result;
@@ -76,38 +76,53 @@ public class ResultServiceImplTest {
         when(circuitBreaker.decorateRunnable(any())).then(returnsFirstArg());
 
         clientService = mock(ClientServiceFeignClient.class);
-        when(clientService.findClientById(any(Long.class))).thenReturn(Optional.of(new Client()));
+        Client client = Client.builder().withId(1L).build();
+        when(clientService.findClientById(any(Long.class))).thenReturn((client));
 
-        clinicService = mock(ClinicServiceFeignClient.class);
-        when(clinicService.findDoctorById(any(Long.class))).thenReturn(Optional.of(new Doctor()));
+        employeeService = mock(EmployeeServiceFeignClient.class);
+        Doctor doctor = Doctor.builder().withId(1L).build();
+        when(employeeService.findDoctorById(any(Long.class))).thenReturn((doctor));
 
         registrationService = mock(RegistrationServiceFeignClient.class);
-        when(registrationService.findDutyById(any(Long.class))).thenReturn(Optional.of(new Duty()));
+        Duty duty = Duty.builder().withId(1L).build();
+        when(registrationService.findDutyById(any(Long.class))).thenReturn((duty));
     }
 
     @BeforeAll
     public static void createResult() {
-        result = new Result();
-        result.setId(1L);
-        result.setDutyId(1L);
-        result.setDoctorId(1L);
-        result.setClientId(1L);
+        Client client = Client.builder().withId(1L).build();
+        Doctor doctor = Doctor.builder().withId(1L).build();
+        Duty duty = Duty.builder().withId(1L).build();
+
+        result = Result.builder()
+                .withId(1L)
+                .withData("Data")
+                .withClient(client)
+                .withDoctor(doctor)
+                .withDuty(duty)
+                .build();
     }
 
     @BeforeAll
     public static void createUpdatedResult() {
-        updatedResult = new Result();
-        updatedResult.setId(1L);
-        updatedResult.setDutyId(2L);
-        updatedResult.setDoctorId(2L);
-        updatedResult.setClientId(2L);
+        Client client = Client.builder().withId(2L).build();
+        Doctor doctor = Doctor.builder().withId(2L).build();
+        Duty duty = Duty.builder().withId(2L).build();
+
+        updatedResult = Result.builder()
+                .withId(1L)
+                .withData("Data2")
+                .withClient(client)
+                .withDoctor(doctor)
+                .withDuty(duty)
+                .build();
     }
 
     @BeforeEach
     public void beforeEach() {
         Mockito.reset(resultsRepository, validator);
-        resultService = new ResultServiceImpl(resultsRepository, validator, circuitBreaker,
-                clientService, clinicService, registrationService);
+        resultService = new ResultServiceImpl(resultsRepository, clientService, employeeService,
+                registrationService, validator, circuitBreaker);
     }
 
     @Test

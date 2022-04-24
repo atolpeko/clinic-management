@@ -16,7 +16,6 @@
 
 package clinicservice.service.department;
 
-import clinicservice.service.Address;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -38,8 +37,17 @@ public class DepartmentTest {
 
     @Test
     public void shouldPassValidationWhenHasValidData() {
-        Department department = new Department();
-        department.setAddress(new Address("USA", "NY", "NYC", "23", 1));
+        Address address = Address.builder()
+                .withCountry("USA")
+                .withState("NY")
+                .withCity("NYC")
+                .withStreet("23")
+                .withHouseNumber(1)
+                .build();
+
+        Department department = Department.builder()
+                .withAdress(address)
+                .build();
 
         int errors = validator.validate(department).size();
         assertThat(errors, is(0));
@@ -47,11 +55,8 @@ public class DepartmentTest {
 
     @Test
     public void shouldNotPassValidationWhenHasInvalidData() {
-        Address address = new Address();
-        address.setHouseNumber(-1);
-
-        Department department = new Department();
-        department.setAddress(address);
+        Address address = Address.builder().withHouseNumber(-1).build();
+        Department department = Department.builder().withAdress(address).build();
 
         int errors = validator.validate(department).size();
         assertThat(errors, is(5));

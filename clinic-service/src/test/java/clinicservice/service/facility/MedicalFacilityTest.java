@@ -41,7 +41,10 @@ public class MedicalFacilityTest {
 
     @Test
     public void shouldPassValidationWhenHasValidData() {
-        MedicalFacility facility = new MedicalFacility("Facility", Set.of(new Department()));
+        MedicalFacility facility = MedicalFacility.builder()
+                .withName("Facility")
+                .withDepartments(Set.of(new Department()))
+                .build();
 
         int errors = validator.validate(facility).size();
         assertThat(errors, is(0));

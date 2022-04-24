@@ -20,4 +20,10 @@ spring:
       platform: h2
   security:
     oauth2:
-      jwt-key: MjWP5L7CiDff90qA
+      jwt-key: key
+      client:
+        client-id: client
+        client-secret: secret
+        authorization-grant-type: grant
+        scope: scope
+        access-token-uri: http://localhost:9000/oauth/token

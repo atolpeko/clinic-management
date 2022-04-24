@@ -16,10 +16,7 @@
 
 package clinicservice.web;
 
-import clinicservice.data.TopManagerRepository;
 import clinicservice.service.department.DepartmentService;
-import clinicservice.service.employee.doctor.DoctorService;
-import clinicservice.service.employee.manager.teammanager.TeamManagerService;
 import clinicservice.service.facility.FacilityService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,21 +31,12 @@ import java.util.Map;
 public class ActuatorInfoContributor implements InfoContributor {
     private final DepartmentService departmentService;
     private final FacilityService facilityService;
-    private final DoctorService doctorService;
-    private final TeamManagerService teamManagerService;
-    private final TopManagerRepository topManagerRepository;
 
     @Autowired
     public ActuatorInfoContributor(DepartmentService departmentService,
-                                   FacilityService facilityService,
-                                   DoctorService doctorService,
-                                   TeamManagerService teamManagerService,
-                                   TopManagerRepository topManagerRepository) {
+                                   FacilityService facilityService) {
         this.departmentService = departmentService;
         this.facilityService = facilityService;
-        this.doctorService = doctorService;
-        this.teamManagerService = teamManagerService;
-        this.topManagerRepository = topManagerRepository;
     }
 
     @Override
@@ -56,9 +44,6 @@ public class ActuatorInfoContributor implements InfoContributor {
         Map<String, Object> details = new HashMap<>();
         details.put("The number of departments: ", departmentService.count());
         details.put("The number of facilities: ", facilityService.count());
-        details.put("The number of doctors: ", doctorService.count());
-        details.put("The number of team managers: ", teamManagerService.count());
-        details.put("The number of top managers: ", topManagerRepository.count());
 
         builder.withDetails(details);
     }

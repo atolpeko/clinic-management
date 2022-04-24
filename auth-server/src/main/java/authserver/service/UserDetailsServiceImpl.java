@@ -58,24 +58,30 @@ public class UserDetailsServiceImpl implements UserDetailsService {
      *
      * @throws UsernameNotFoundException if the user could not be found
      * @throws IllegalStateException if the user database is not available
-     *
      */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         try {
-            Supplier<Optional<BasicUser>> findUser = () -> userRepository.findByLogin(username);
-            Supplier<Optional<Employee>> findEmployee = () -> employeeRepository.findByLogin(username);
-
-            Optional<BasicUser> user = circuitBreaker.decorateSupplier(findUser).get();
+            Optional<BasicUser> user = findUser(username);
             if (user.isPresent()) {
                 return user.get();
             } else {
-                return circuitBreaker.decorateSupplier(findEmployee).get().orElseThrow();
+                return findEmployee(username).get();
             }
         } catch (NoSuchElementException e) {
             throw new UsernameNotFoundException("User not found: " + username, e);
         } catch (Exception e) {
             throw new IllegalStateException("User database unavailable", e);
         }
+    }
+
+    private Optional<BasicUser> findUser(String login) {
+        Supplier<Optional<BasicUser>> findUser = () -> userRepository.findByLogin(login);
+        return circuitBreaker.decorateSupplier(findUser).get();
+    }
+
+    private Optional<Employee> findEmployee(String login) {
+        Supplier<Optional<Employee>> findEmployee = () -> employeeRepository.findByLogin(login);
+        return circuitBreaker.decorateSupplier(findEmployee).get();
     }
 }

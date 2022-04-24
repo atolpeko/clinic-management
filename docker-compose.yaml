@@ -26,7 +26,7 @@ services:
       - db-volume:/var/lib/mysql
 
   config-server:
-    image: atolpeko/config-server:1.0
+    image: atolpeko/config-server:1.2
     container_name: config-server
     restart: on-failure
     mem_limit: 1024M
@@ -38,7 +38,7 @@ services:
       - "SPRING_PROFILES_ACTIVE=docker"    
 
   discovery-server:
-    image: atolpeko/discovery-server:1.0
+    image: atolpeko/discovery-server:1.2
     container_name: discovery-server
     restart: on-failure
     mem_limit: 1024M
@@ -52,7 +52,7 @@ services:
       - "SPRING_PROFILES_ACTIVE=docker"     
 
   auth-server:
-    image: atolpeko/auth-server:1.0
+    image: atolpeko/auth-server:1.2
     container_name: auth-server
     restart: on-failure
     mem_limit: 1024M
@@ -67,7 +67,7 @@ services:
       - "SPRING_PROFILES_ACTIVE=docker"        
 
   api-gateway:
-    image: atolpeko/api-gateway:1.0
+    image: atolpeko/api-gateway:1.2
     container_name: api-gateway
     restart: on-failure
     mem_limit: 1024M
@@ -82,7 +82,7 @@ services:
       - "SPRING_PROFILES_ACTIVE=docker"     
 
   client-service:
-    image: atolpeko/client-service:1.0
+    image: atolpeko/client-service:1.2
     restart: on-failure
     mem_limit: 1024M
     networks: 
@@ -97,7 +97,7 @@ services:
       - "SPRING_PROFILES_ACTIVE=docker"       
 
   clinic-service:
-    image: atolpeko/clinic-service:1.0
+    image: atolpeko/clinic-service:1.2
     restart: on-failure
     mem_limit: 1024M
     networks: 
@@ -111,8 +111,23 @@ services:
     environment:
       - "SPRING_PROFILES_ACTIVE=docker"       
 
+  employee-service:
+    image: atolpeko/employee-service:1.2
+    restart: on-failure
+    mem_limit: 1024M
+    networks: 
+      - cloud-network
+    ports:
+      - 5960-5970:5960    
+    depends_on:
+      - config-server
+      - discovery-server  
+      - mysql  
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"           
+
   registration-service:
-    image: atolpeko/registration-service:1.0
+    image: atolpeko/registration-service:1.2
     restart: on-failure
     mem_limit: 1024M
     networks: 
@@ -127,7 +142,7 @@ services:
       - "SPRING_PROFILES_ACTIVE=docker"       
 
   results-service:
-    image: atolpeko/results-service:1.0
+    image: atolpeko/results-service:1.2
     restart: on-failure
     mem_limit: 1024M
     networks: 
@@ -142,7 +157,7 @@ services:
       - "SPRING_PROFILES_ACTIVE=docker"    
 
   admin-server:
-    image: atolpeko/admin-server:1.0
+    image: atolpeko/admin-server:1.2
     container_name: admin-server
     restart: on-failure
     mem_limit: 1024M
