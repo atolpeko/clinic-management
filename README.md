@@ -4,7 +4,7 @@
 
 The Clinic Management Service allows you to manage departments, medical facilities, employees, clients and services; make registrations and store test results.
 
-**Technology stack:** Java SE, Spring Core, Spring Boot, Spring MVC, Spring Data, Spring Security, Spring Cloud, Apache Tomcat, Jackson, Maven, JUnit, Mockito, MySQL, Hibernate, Docker.
+**Technology stack:** Java SE, Spring Core, Spring Boot, Spring MVC, Spring Data, Spring Security, Spring Cloud, Apache Tomcat, Jackson, Maven, JUnit, Mockito, MySQL, H2, Hibernate, Docker.
 
 ## Run locally
 
