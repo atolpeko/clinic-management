@@ -5,7 +5,7 @@
 
     <groupId>atolpeko</groupId>
     <artifactId>clinic-service-parent</artifactId>
-    <version>1.0</version>
+    <version>1.2</version>
     <packaging>pom</packaging>
 
     <parent>
