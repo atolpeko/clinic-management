@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package registrationservice;
+package registrationservice.config;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 
@@ -35,7 +35,6 @@ import registrationservice.service.registration.RegistrationService;
 import registrationservice.service.registration.RegistrationServiceImpl;
 
 import javax.validation.Validator;
-import java.util.Optional;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -58,37 +57,57 @@ public class IntegrationTestConfig {
     @Bean
     @Primary
     public RegistrationService registrationService() {
-        return new RegistrationServiceImpl(registrationRepository, validator, circuitBreaker,
-                employeeServiceFeignClient(), clientServiceFeignClient());
+        return new RegistrationServiceImpl(registrationRepository, employeeServiceFeignClient(),
+                clientServiceFeignClient(), validator, circuitBreaker);
     }
 
     @Bean
     @Primary
     public DutyService dutyService() {
-        return new DutyServiceImpl(dutyRepository, registrationRepository, validator,
-                employeeServiceFeignClient(), circuitBreaker);
+        return new DutyServiceImpl(dutyRepository, registrationRepository,
+                employeeServiceFeignClient(), validator, circuitBreaker);
     }
 
     @Bean
     public ClientServiceFeignClient clientServiceFeignClient() {
-        Client firstClient = new Client(1L, "emma@gmail.com", "Emma");
-        Client secondClient = new Client(2L, "jain@gmail.com", "Jain");
+        Client firstClient = Client.builder()
+                .withId(1L)
+                .withEmail("emma@gmail.com")
+                .withName("Emma")
+                .build();
+
+        Client secondClient = Client.builder()
+                .withId(2L)
+                .withEmail("jain@gmail.com")
+                .withName("Jain")
+                .build();
 
         ClientServiceFeignClient feignClient = mock(ClientServiceFeignClient.class);
-        when(feignClient.findClientById(1L)).thenReturn(Optional.of(firstClient));
-        when(feignClient.findClientById(2L)).thenReturn(Optional.of(secondClient));
+        when(feignClient.findClientById(1L)).thenReturn(firstClient);
+        when(feignClient.findClientById(2L)).thenReturn(secondClient);
 
         return feignClient;
     }
 
     @Bean
     public EmployeeServiceFeignClient employeeServiceFeignClient() {
-        Doctor firstDoctor = new Doctor(1L, "mark@gmail.com", "Mark", "Surgery");
-        Doctor secondDoctor = new Doctor(2L, "robert@gmail.com", "Robert", "Surgery");
+        Doctor firstDoctor = Doctor.builder()
+                .withId(1L)
+                .withEmail("mark@gmail.com")
+                .withName("Mark")
+                .withSpecialty("Surgery")
+                .build();
+
+        Doctor secondDoctor = Doctor.builder()
+                .withId(2L)
+                .withEmail("robert@gmail.com")
+                .withName("Robert")
+                .withSpecialty("Surgery")
+                .build();
 
         EmployeeServiceFeignClient feignClient = mock(EmployeeServiceFeignClient.class);
-        when(feignClient.findDoctorById(1L)).thenReturn(Optional.of(firstDoctor));
-        when(feignClient.findDoctorById(2L)).thenReturn(Optional.of(secondDoctor));
+        when(feignClient.findDoctorById(1L)).thenReturn(firstDoctor);
+        when(feignClient.findDoctorById(2L)).thenReturn(secondDoctor);
 
         return feignClient;
     }

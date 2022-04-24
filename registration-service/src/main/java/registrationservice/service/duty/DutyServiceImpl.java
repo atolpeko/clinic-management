@@ -54,20 +54,20 @@ public class DutyServiceImpl implements DutyService {
 
     private final DutyRepository dutyRepository;
     private final RegistrationRepository registrationRepository;
+    private final EmployeeServiceFeignClient employeeService;
     private final Validator validator;
-    private final EmployeeServiceFeignClient feignClient;
     private final CircuitBreaker circuitBreaker;
 
     @Autowired
     public DutyServiceImpl(DutyRepository dutyRepository,
                            RegistrationRepository registrationRepository,
+                           EmployeeServiceFeignClient employeeService,
                            Validator validator,
-                           EmployeeServiceFeignClient clinicService,
                            CircuitBreaker circuitBreaker) {
         this.dutyRepository = dutyRepository;
         this.registrationRepository = registrationRepository;
+        this.employeeService = employeeService;
         this.validator = validator;
-        this.feignClient = clinicService;
         this.circuitBreaker = circuitBreaker;
     }
 
@@ -88,7 +88,7 @@ public class DutyServiceImpl implements DutyService {
     private void loadDoctors(Duty duty) {
         try {
             Supplier<CollectionModel<EntityModel<Doctor>>> find = () ->
-                    feignClient.findAllDoctorsBySpecialty(duty.getNeededSpecialty());
+                    employeeService.findAllDoctorsBySpecialty(duty.getNeededSpecialty());
             Collection<Doctor> doctors = circuitBreaker.decorateSupplier(find)
                     .get()
                     .getContent()
@@ -143,16 +143,8 @@ public class DutyServiceImpl implements DutyService {
     public Duty save(Duty duty) {
         try {
             validate(duty);
-            Duty dutyToSave = new Duty(duty);
-            dutyToSave.setId(null);
-
-            Supplier<Duty> save = () -> {
-                Duty saved = dutyRepository.save(dutyToSave);
-                dutyRepository.flush();
-                return saved;
-            };
-
-            Duty saved = circuitBreaker.decorateSupplier(save).get();
+            Duty dutyToSave = prepareSaveData(duty);
+            Duty saved = persistDuty(dutyToSave);
             loadDoctors(saved);
             logger.info("Duty " + saved.getName() + " saved. ID - " + saved.getId());
             return saved;
@@ -177,23 +169,33 @@ public class DutyServiceImpl implements DutyService {
         }
     }
 
+    private Duty prepareSaveData(Duty duty) {
+        Duty dutyToSave = new Duty(duty);
+        dutyToSave.setId(null);
+
+        return dutyToSave;
+    }
+
+    private Duty persistDuty(Duty duty) {
+        Supplier<Duty> save = () -> {
+            Duty saved = dutyRepository.save(duty);
+            dutyRepository.flush();
+            return saved;
+        };
+
+        return circuitBreaker.decorateSupplier(save).get();
+    }
+
     @Override
     public Duty update(Duty duty) {
         try {
-            Supplier<Optional<Duty>> findById = () -> dutyRepository.findById(duty.getId());
-            Duty dutyToUpdate = circuitBreaker.decorateSupplier(findById)
-                    .get()
-                    .orElseThrow(() -> new IllegalModificationException("No duty with id " + duty.getId()));
-            prepareUpdateData(dutyToUpdate, duty);
+            long id = duty.getId();
+            Duty dutyToUpdate = findById(id)
+                    .orElseThrow(() -> new IllegalModificationException("No duty with id " + id));
+            dutyToUpdate = prepareUpdateData(dutyToUpdate, duty);
             validate(dutyToUpdate);
 
-            Supplier<Duty> update = () -> {
-                Duty updated = dutyRepository.save(dutyToUpdate);
-                dutyRepository.flush();
-                return updated;
-            };
-
-            Duty updated = circuitBreaker.decorateSupplier(update).get();
+            Duty updated = persistDuty(dutyToUpdate);
             loadDoctors(updated);
             logger.info("Duty " + updated.getId() + " updated");
             return updated;
@@ -204,44 +206,47 @@ public class DutyServiceImpl implements DutyService {
         }
     }
 
-    private void prepareUpdateData(Duty duty, Duty updateData) {
-        if (updateData.getName() != null) {
-            duty.setName(updateData.getName());
-        }
-        if (updateData.getDescription() != null) {
-            duty.setDescription(updateData.getDescription());
-        }
-        if (updateData.getPrice() != null) {
-            duty.setPrice(updateData.getPrice());
-        }
-        if (updateData.getNeededSpecialty() != null) {
-            duty.setNeededSpecialty(updateData.getNeededSpecialty());
-        }
+    private Duty prepareUpdateData(Duty savedDuty, Duty data) {
+        return Duty.builder(savedDuty)
+                .copyNonNullFields(data)
+                .build();
     }
 
     @Override
     public void deleteById(long id) {
         try {
-            Supplier<List<Registration>> findAllByDuty = () -> registrationRepository.findAllByDutyId(id);
-            List<Registration> registrations = circuitBreaker.decorateSupplier(findAllByDuty).get();
-            registrations.forEach(registration -> registration.setDuty(null));
-
-            Runnable updateRegistrations = () -> {
-                registrationRepository.saveAll(registrations);
-                registrationRepository.flush();
-            };
-            Runnable deleteDuty = () -> {
-                dutyRepository.deleteById(id);
-                dutyRepository.flush();
-            };
-
-            circuitBreaker.decorateRunnable(updateRegistrations).run();
-            circuitBreaker.decorateRunnable(deleteDuty).run();
+            deleteDutyFromRegistrations(id);
+            deleteDuty(id);
             logger.info("Duty " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
             throw new IllegalModificationException("No duty with id " + id, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Duty database unavailable", e);
         }
+    }
+
+    private void deleteDutyFromRegistrations(long dutyId) {
+        Supplier<List<Registration>> findAllByDuty = () -> registrationRepository.findAllByDutyId(dutyId);
+        List<Registration> registrations = circuitBreaker.decorateSupplier(findAllByDuty).get();
+        registrations.forEach(registration -> registration.setDuty(null));
+        persistRegistrations(registrations);
+    }
+
+    private void persistRegistrations(List<Registration> registrations) {
+        Runnable save = () -> {
+            registrationRepository.saveAll(registrations);
+            registrationRepository.flush();
+        };
+
+        circuitBreaker.decorateRunnable(save).run();
+    }
+
+    private void deleteDuty(long id) {
+        Runnable deleteDuty = () -> {
+            dutyRepository.deleteById(id);
+            dutyRepository.flush();
+        };
+
+        circuitBreaker.decorateRunnable(deleteDuty).run();
     }
 }

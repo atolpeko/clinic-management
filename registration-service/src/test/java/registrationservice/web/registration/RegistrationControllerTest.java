@@ -31,7 +31,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import org.springframework.test.web.servlet.ResultMatcher;
 
-import registrationservice.IntegrationTestConfig;
+import registrationservice.config.IntegrationTestConfig;
 import registrationservice.service.registration.Registration;
 import registrationservice.service.registration.RegistrationService;
 
@@ -67,8 +67,8 @@ public class RegistrationControllerTest {
     public static void createRegistrationJson() {
         newRegistrationJson = "{\"date\": \"2022-03-08T00:00:00\"," +
                 "\"duty\": { \"id\": 1  }," +
-                "\"clientId\": 1," +
-                "\"doctorId\": 1}";
+                "\"doctor\": { \"id\": 1  }," +
+                "\"client\": { \"id\": 1  }}";
     }
 
     @Test

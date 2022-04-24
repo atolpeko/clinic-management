@@ -40,11 +40,11 @@ public class RegistrationModelAssembler
     public EntityModel<Registration> toModel(Registration entity) {
         Link doctorLink = BasicLinkBuilder
                 .linkToCurrentMapping()
-                .slash("/doctors/" + entity.getDoctorId())
+                .slash("/doctors/" + entity.getDoctor().getId())
                 .withRel("doctor");
         Link clientLink = BasicLinkBuilder
                 .linkToCurrentMapping()
-                .slash("/clients/" + entity.getClientId())
+                .slash("/clients/" + entity.getClient().getId())
                 .withRel("client");
 
         EntityModel<Registration> entityModel = EntityModel.of(entity, doctorLink, clientLink);

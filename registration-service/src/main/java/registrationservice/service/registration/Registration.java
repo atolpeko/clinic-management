@@ -23,15 +23,14 @@ import registrationservice.service.external.client.Client;
 import registrationservice.service.external.employee.Doctor;
 
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -56,24 +55,23 @@ public class Registration implements Serializable {
     @NotNull(message = "Registration date is mandatory")
     private LocalDateTime date;
 
-    @Column(nullable = false)
-    @NotNull(message = "Client ID is mandatory")
-    @Positive(message = "Client ID must be positive")
-    private Long clientId;
-
-    @Column(nullable = false)
-    @NotNull(message = "Doctor ID is mandatory")
-    @Positive(message = "Doctor ID must be positive")
-    private Long doctorId;
-
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
-    @Transient
+    @Embedded
+    @NotNull(message = "Doctor is mandatory")
     private Doctor doctor;
 
-    @Transient
+    @Embedded
+    @NotNull(message = "Client is mandatory")
     private Client client;
+
+    /**
+     * @return Registration builder
+     */
+    public static Builder builder() {
+        return new Registration().new Builder();
+    }
 
     /**
      * Constructs a new active Registration.
@@ -91,29 +89,9 @@ public class Registration implements Serializable {
         id = other.id;
         duty = other.duty;
         date = LocalDateTime.from(other.date);
-        doctorId = other.doctorId;
-        clientId = other.clientId;
         isActive = other.isActive;
         doctor = (other.doctor == null) ? null : new Doctor(other.doctor);
         client = (other.client == null) ? null :new Client(other.client);
-    }
-
-    /**
-     * Construct a new Registration with the specified duty, date, client, doctor and status.
-     *
-     * @param duty duty to set
-     * @param date date to set
-     * @param client client to set
-     * @param doctor doctor to set
-     * @param isActive registration status to set
-     */
-    public Registration(Duty duty, Doctor doctor, LocalDateTime date,
-                        Client client, Boolean isActive) {
-        this.duty = duty;
-        this.date = date;
-        this.doctor = doctor;
-        this.client = client;
-        this.isActive = isActive;
     }
 
     public Long getId() {
@@ -138,22 +116,6 @@ public class Registration implements Serializable {
 
     public void setDate(LocalDateTime date) {
         this.date = date;
-    }
-
-    public Long getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(Long clientId) {
-        this.clientId = clientId;
-    }
-
-    public Long getDoctorId() {
-        return doctorId;
-    }
-
-    public void setDoctorId(Long doctorId) {
-        this.doctorId = doctorId;
     }
 
     public Doctor getDoctor() {
@@ -193,15 +155,13 @@ public class Registration implements Serializable {
         return Objects.equals(isActive, that.isActive)
                 && Objects.equals(duty, that.duty)
                 && Objects.equals(date, that.date)
-                && Objects.equals(clientId, that.clientId)
-                && Objects.equals(doctorId, that.doctorId)
                 && Objects.equals(doctor, that.doctor)
                 && Objects.equals(client, that.client);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(duty, date, clientId, doctorId, isActive, doctor, client);
+        return Objects.hash(duty, date, isActive, doctor, client);
     }
 
     @Override
@@ -210,11 +170,52 @@ public class Registration implements Serializable {
                 "id=" + id +
                 ", duty=" + duty +
                 ", date=" + date +
-                ", clientId=" + clientId +
-                ", doctorId=" + doctorId +
                 ", isActive=" + isActive +
                 ", doctor=" + doctor +
                 ", client=" + client +
                 '}';
+    }
+
+    /**
+     * Registration object builder.
+     */
+    public class Builder {
+
+        private Builder() {
+        }
+
+        public Registration build() {
+            return Registration.this;
+        }
+
+        public Builder withId(Long id) {
+            Registration.this.id = id;
+            return this;
+        }
+
+        public Builder withDuty(Duty duty) {
+            Registration.this.duty = duty;
+            return this;
+        }
+
+        public Builder withDoctor(Doctor doctor) {
+            Registration.this.doctor = doctor;
+            return this;
+        }
+
+        public Builder withClient(Client client) {
+            Registration.this.client = client;
+            return this;
+        }
+
+        public Builder withDate(LocalDateTime date) {
+            Registration.this.date = date;
+            return this;
+        }
+
+        public Builder isActive(boolean isActive) {
+            Registration.this.isActive = isActive;
+            return this;
+        }
     }
 }

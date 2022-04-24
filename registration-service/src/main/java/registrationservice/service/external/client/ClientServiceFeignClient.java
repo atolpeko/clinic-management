@@ -25,8 +25,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import registrationservice.config.OauthFeignConfiguration;
 
-import java.util.Optional;
-
 /**
  * Provides access to client microservice.
  */
@@ -38,12 +36,12 @@ public interface ClientServiceFeignClient {
      *
      * @param id ID of the client to get
      *
-     * @return client with the specified ID or Optional#empty() if none found
+     * @return client with the specified ID
      *
      * @throws FeignClientException if there is any problem with feign client
      */
     @RequestMapping(method = RequestMethod.GET,
             value = "/clients/{id}",
             consumes = "application/json")
-    Optional<Client> findClientById(@PathVariable Long id);
+    Client findClientById(@PathVariable Long id);
 }

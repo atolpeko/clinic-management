@@ -66,6 +66,24 @@ public class Duty implements Serializable {
     @Transient
     private Collection<Doctor> doctors;
 
+    /**
+     * @return Duty builder
+     */
+    public static Builder builder() {
+        return new Duty().new Builder();
+    }
+
+    /**
+     * Returns a Duty builder with predefined fields copied from the specified duty.
+     *
+     * @param data duty to copy data from
+     *
+     * @return Duty builder
+     */
+    public static Builder builder(Duty data) {
+        return new Duty(data).new Builder();
+    }
+
     public Duty() {
         doctors = new ArrayList<>();
     }
@@ -82,21 +100,6 @@ public class Duty implements Serializable {
         neededSpecialty = other.neededSpecialty;
         price = other.price;
         doctors = new ArrayList<>(other.doctors);
-    }
-
-    /**
-     * Construct a new Duty with the specified name, description, specialty and price.
-     *
-     * @param name name to set
-     * @param description description to set
-     * @param needsSpecialty specialty to set
-     * @param price price to set
-     */
-    public Duty(String name, String description, String needsSpecialty, BigDecimal price) {
-        this.name = name;
-        this.description = description;
-        this.neededSpecialty = needsSpecialty;
-        this.price = price;
     }
 
     public Long getId() {
@@ -176,9 +179,82 @@ public class Duty implements Serializable {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
-                ", needsSpecialty='" + neededSpecialty + '\'' +
+                ", neededSpecialty='" + neededSpecialty + '\'' +
                 ", price=" + price +
-                ", doctorIds=" + doctors +
+                ", doctors=" + doctors +
                 '}';
+    }
+
+    /**
+     * Duty object builder.
+     */
+    public class Builder {
+
+        private Builder() {
+        }
+
+        public Duty build() {
+            return Duty.this;
+        }
+
+        public Builder withId(Long id) {
+            Duty.this.id = id;
+            return this;
+        }
+
+        public Builder withName(String name) {
+            Duty.this.name = name;
+            return this;
+        }
+
+        public Builder withDescription(String description) {
+            Duty.this.description = description;
+            return this;
+        }
+
+        public Builder withNeededSpecialty(String specialty) {
+            Duty.this.neededSpecialty = specialty;
+            return this;
+        }
+
+        public Builder withPrice(BigDecimal price) {
+            Duty.this.price = price;
+            return this;
+        }
+
+        public Builder withDoctors(Collection<Doctor> doctors) {
+            Duty.this.doctors = doctors;
+            return this;
+        }
+
+        /**
+         * Copies not null fields from the specified duty.
+         *
+         * @param duty duty to copy data from
+         *
+         * @return this builder
+         */
+        public Builder copyNonNullFields(Duty duty) {
+            if (duty.id != null) {
+                Duty.this.id = duty.id;
+            }
+            if (duty.name != null) {
+                Duty.this.name = duty.name;
+            }
+            if (duty.description != null) {
+                Duty.this.description = duty.description;
+            }
+            if (duty.neededSpecialty != null) {
+                Duty.this.neededSpecialty = duty.neededSpecialty;
+            }
+            if (duty.price != null) {
+                Duty.this.price = duty.price;
+            }
+            if (!duty.doctors.isEmpty()) {
+                Duty.this.doctors = new ArrayList<>(duty.doctors);
+            }
+            
+            return this;
+        }
     }
 }

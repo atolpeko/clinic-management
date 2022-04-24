@@ -16,6 +16,7 @@
 
 package registrationservice.service.registration;
 
+import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 
 import org.apache.logging.log4j.LogManager;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import registrationservice.data.RegistrationRepository;
+import registrationservice.service.duty.Duty;
 import registrationservice.service.exception.IllegalModificationException;
 import registrationservice.service.exception.RemoteResourceException;
 import registrationservice.service.external.client.Client;
@@ -39,7 +41,6 @@ import javax.validation.Validator;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -58,15 +59,15 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     @Autowired
     public RegistrationServiceImpl(RegistrationRepository repository,
-                                   Validator validator,
-                                   CircuitBreaker circuitBreaker,
                                    EmployeeServiceFeignClient employeeService,
-                                   ClientServiceFeignClient clientService) {
+                                   ClientServiceFeignClient clientService,
+                                   Validator validator,
+                                   CircuitBreaker circuitBreaker) {
         this.repository = repository;
-        this.validator = validator;
-        this.circuitBreaker = circuitBreaker;
         this.employeeService = employeeService;
         this.clientService = clientService;
+        this.validator = validator;
+        this.circuitBreaker = circuitBreaker;
     }
 
     @Override
@@ -82,34 +83,36 @@ public class RegistrationServiceImpl implements RegistrationService {
     }
 
     private void loadContent(Registration registration) {
-        registration.setDoctor(loadDoctor(registration.getDoctorId()));
-        registration.setClient(loadClient(registration.getClientId()));
+        registration.setDoctor(loadDoctor(registration.getDoctor().getId()));
+        registration.setClient(loadClient(registration.getClient().getId()));
     }
 
     private Doctor loadDoctor(long doctorId) {
         try {
-            Supplier<Optional<Doctor>> findDoctor = () -> employeeService.findDoctorById(doctorId);
-            return circuitBreaker.decorateSupplier(findDoctor).get().orElseThrow();
-        } catch (NoSuchElementException e) {
-            logger.error("Doctor not found: " + doctorId);
-            return null;
-        } catch (Exception e) {
-            String errorMsg = "Employee microservice unavailable: " + e.getMessage();
-            logger.error(errorMsg);
+            Supplier<Doctor> findDoctor = () -> employeeService.findDoctorById(doctorId);
+            return circuitBreaker.decorateSupplier(findDoctor).get();
+        } catch (FeignException e) {
+            if (e.status() == 404) {
+                logger.error("Doctor not found: " + doctorId);
+            } else {
+                logger.error("Employee microservice unavailable: " + e.getMessage());
+            }
+
             return null;
         }
     }
 
     private Client loadClient(long clientId) {
         try {
-            Supplier<Optional<Client>> findClient = () -> clientService.findClientById(clientId);
-            return circuitBreaker.decorateSupplier(findClient).get().orElseThrow();
-        } catch (NoSuchElementException e) {
-            logger.error("Client not found: " + clientId);
-            return null;
-        } catch (Exception e) {
-            String errorMsg = "Client microservice unavailable: " + e.getMessage();
-            logger.error(errorMsg);
+            Supplier<Client> findClient = () -> clientService.findClientById(clientId);
+            return circuitBreaker.decorateSupplier(findClient).get();
+        } catch (FeignException e) {
+            if (e.status() == 404) {
+                logger.error("Client not found: " + clientId);
+            } else {
+                logger.error("Client microservice unavailable: " + e.getMessage());
+            }
+
             return null;
         }
     }
@@ -164,16 +167,8 @@ public class RegistrationServiceImpl implements RegistrationService {
     public Registration save(Registration registration) {
         try {
             validate(registration);
-            Registration registrationToSave = new Registration(registration);
-            registrationToSave.setId(null);
-
-            Supplier<Registration> save = () -> {
-                Registration saved = repository.save(registrationToSave);
-                repository.flush();
-                return saved;
-            };
-
-            Registration saved = circuitBreaker.decorateSupplier(save).get();
+            Registration registrationToSave = prepareSaveData(registration);
+            Registration saved = persistRegistration(registrationToSave);
             loadContent(saved);
             logger.info("Registration " + saved.getDate() + " saved. ID - " + saved.getId());
             return saved;
@@ -185,6 +180,13 @@ public class RegistrationServiceImpl implements RegistrationService {
     }
 
     private void validate(Registration registration) {
+        validateRegistration(registration);
+        validateDuty(registration.getDuty());
+        validateDoctor(registration.getDoctor());
+        validateClient(registration.getClient());
+    }
+
+    private void validateRegistration(Registration registration) {
         Set<ConstraintViolation<Registration>> violations = validator.validate(registration);
         if (!violations.isEmpty()) {
             StringBuilder builder = new StringBuilder();
@@ -196,31 +198,75 @@ public class RegistrationServiceImpl implements RegistrationService {
             String msg = builder.toString().toLowerCase(Locale.ROOT);
             throw new IllegalModificationException(msg);
         }
+    }
 
-        if (registration.getDuty() == null) {
-            throw new IllegalModificationException("Duty is mandatory");
-        }
-        if (registration.getDuty().getId() == null) {
+    private void validateDuty(Duty duty) {
+        if (duty.getId() == null) {
             throw new IllegalModificationException("Duty ID is mandatory");
         }
+    }
+
+    private void validateDoctor(Doctor doctor) {
+        try {
+            if (doctor.getId() == null) {
+                throw new IllegalModificationException("Doctor ID is mandatory");
+            }
+
+            Supplier<Doctor> findById = () -> employeeService.findDoctorById(doctor.getId());
+            circuitBreaker.decorateSupplier(findById).get();
+        } catch (FeignException e) {
+            if (e.status() == 404) {
+                throw new IllegalModificationException("No doctor with id " + doctor.getId());
+            } else {
+                logger.error(e.getMessage());
+                throw new RemoteResourceException("Employee service unavailable", e);
+            }
+        }
+    }
+
+    private void validateClient(Client client) {
+        try {
+            if (client.getId() == null) {
+                throw new IllegalModificationException("Client ID is mandatory");
+            }
+
+            Supplier<Client> findById = () -> clientService.findClientById(client.getId());
+            circuitBreaker.decorateSupplier(findById).get();
+        } catch (FeignException e) {
+            if (e.status() == 404) {
+                throw new IllegalModificationException("No client with id " + client.getId());
+            } else {
+                logger.error(e.getMessage());
+                throw new RemoteResourceException("Client service unavailable", e);
+            }
+        }
+    }
+
+    private Registration prepareSaveData(Registration registration) {
+        Registration registrationToSave = new Registration(registration);
+        registrationToSave.setId(null);
+
+        return registrationToSave;
+    }
+
+    private Registration persistRegistration(Registration registration) {
+        Supplier<Registration> save = () -> {
+            Registration saved = repository.save(registration);
+            repository.flush();
+            return saved;
+        };
+
+        return circuitBreaker.decorateSupplier(save).get();
     }
 
     @Override
     public Registration setActive(long id, boolean isActive) {
         try {
-            Supplier<Optional<Registration>> findById = () -> repository.findById(id);
-            Registration registrationToUpdate = circuitBreaker.decorateSupplier(findById)
-                    .get()
+            Registration registrationToUpdate = findById(id)
                     .orElseThrow(() -> new IllegalModificationException("No registration with id " + id));
             registrationToUpdate.setActive(isActive);
 
-            Supplier<Registration> update = () -> {
-                Registration updated = repository.save(registrationToUpdate);
-                repository.flush();
-                return updated;
-            };
-
-            Registration updated = circuitBreaker.decorateSupplier(update).get();
+            Registration updated = persistRegistration(registrationToUpdate);
             loadContent(updated);
             logger.info("Registration status " + id + " changed");
             return updated;
@@ -232,17 +278,21 @@ public class RegistrationServiceImpl implements RegistrationService {
     @Override
     public void deleteById(long id) {
         try {
-            Runnable delete = () -> {
-                repository.deleteById(id);
-                repository.flush();
-            };
-
-            circuitBreaker.decorateRunnable(delete).run();
+            deleteRegistration(id);
             logger.info("Registration " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
             throw new IllegalModificationException("No registration with id " + id, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Registration database unavailable", e);
         }
+    }
+
+    private void deleteRegistration(long id) {
+        Runnable delete = () -> {
+            repository.deleteById(id);
+            repository.flush();
+        };
+
+        circuitBreaker.decorateRunnable(delete).run();
     }
 }

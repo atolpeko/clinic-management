@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package registrationservice;
+package registrationservice.config;
 
 import registrationservice.config.ResourceServerConfiguration;
 

@@ -54,7 +54,7 @@ public class DutyServiceImplTest {
     private static DutyRepository dutyRepository;
     private static RegistrationRepository registrationRepository;
     private static Validator validator;
-    private static EmployeeServiceFeignClient feignClient;
+    private static EmployeeServiceFeignClient employeeService;
     private static CircuitBreaker circuitBreaker;
 
     private static Duty duty;
@@ -67,7 +67,7 @@ public class DutyServiceImplTest {
         dutyRepository = mock(DutyRepository.class);
         registrationRepository = mock(RegistrationRepository.class);
         validator = mock(Validator.class);
-        feignClient = mock(EmployeeServiceFeignClient.class);
+        employeeService = mock(EmployeeServiceFeignClient.class);
 
         circuitBreaker = mock(CircuitBreaker.class);
         when(circuitBreaker.decorateSupplier(any())).then(returnsFirstArg());
@@ -76,29 +76,31 @@ public class DutyServiceImplTest {
 
     @BeforeAll
     public static void createDuty() {
-        duty = new Duty();
-        duty.setId(1L);
-        duty.setName("Name1");
-        duty.setDescription("Description1");
-        duty.setNeededSpecialty("Specialty1");
-        duty.setPrice(new BigDecimal(10));
+        duty = Duty.builder()
+                .withId(1L)
+                .withName("Name1")
+                .withDescription("Description1")
+                .withNeededSpecialty("Specialty1")
+                .withPrice(BigDecimal.TEN)
+                .build();
     }
 
     @BeforeAll
     public static void createUpdatedDuty() {
-        updatedDuty = new Duty();
-        updatedDuty.setId(1L);
-        updatedDuty.setName("Name2");
-        updatedDuty.setDescription("Description2");
-        updatedDuty.setNeededSpecialty("Specialty2");
-        updatedDuty.setPrice(new BigDecimal(20));
+        updatedDuty = Duty.builder()
+                .withId(1L)
+                .withName("Name2")
+                .withDescription("Description2")
+                .withNeededSpecialty("Specialty2")
+                .withPrice(BigDecimal.ONE)
+                .build();
     }
 
     @BeforeEach
     public void beforeEach() {
         Mockito.reset(dutyRepository, validator);
         dutyService = new DutyServiceImpl(dutyRepository, registrationRepository,
-                validator, feignClient, circuitBreaker);
+                employeeService, validator, circuitBreaker);
     }
 
     @Test
