@@ -16,6 +16,8 @@
 
 package resultsservice.service.result;
 
+import feign.FeignException;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 
 import org.apache.logging.log4j.LogManager;
@@ -41,7 +43,6 @@ import javax.validation.Validator;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -61,17 +62,17 @@ public class ResultServiceImpl implements ResultService {
 
     @Autowired
     public ResultServiceImpl(ResultsRepository repository,
-                             Validator validator,
-                             CircuitBreaker circuitBreaker,
                              ClientServiceFeignClient clientService,
                              EmployeeServiceFeignClient employeeService,
-                             RegistrationServiceFeignClient registrationService) {
+                             RegistrationServiceFeignClient registrationService,
+                             Validator validator,
+                             CircuitBreaker circuitBreaker) {
         this.repository = repository;
-        this.validator = validator;
-        this.circuitBreaker = circuitBreaker;
         this.clientService = clientService;
         this.employeeService = employeeService;
         this.registrationService = registrationService;
+        this.validator = validator;
+        this.circuitBreaker = circuitBreaker;
     }
 
     @Override
@@ -87,49 +88,52 @@ public class ResultServiceImpl implements ResultService {
     }
 
     private void loadContent(Result result) {
-        result.setDuty(loadDuty(result.getDutyId()));
-        result.setDoctor(loadDoctor(result.getDoctorId()));
-        result.setClient(loadClient(result.getClientId()));
+        result.setDuty(loadDuty(result.getDuty().getId()));
+        result.setDoctor(loadDoctor(result.getDoctor().getId()));
+        result.setClient(loadClient(result.getClient().getId()));
     }
 
     private Duty loadDuty(long dutyId) {
         try {
-            Supplier<Optional<Duty>> findDuty = () -> registrationService.findDutyById(dutyId);
-            return circuitBreaker.decorateSupplier(findDuty).get().orElseThrow();
-        } catch (NoSuchElementException e) {
-            logger.error("Duty not found: " + dutyId);
-            return null;
-        } catch (Exception e) {
-            String errorMsg = "Registration microservice unavailable: " + e.getMessage();
-            logger.error(errorMsg);
+            Supplier<Duty> findDuty = () -> registrationService.findDutyById(dutyId);
+            return circuitBreaker.decorateSupplier(findDuty).get();
+        } catch (FeignException e) {
+            if (e.status() == 404) {
+                logger.error("Duty not found: " + dutyId);
+            } else {
+                logger.error("Registration microservice unavailable: " + e.getMessage());
+            }
+
             return null;
         }
     }
     
     private Doctor loadDoctor(long doctorId) {
         try {
-            Supplier<Optional<Doctor>> findDoctor = () -> employeeService.findDoctorById(doctorId);
-            return circuitBreaker.decorateSupplier(findDoctor).get().orElseThrow();
-        } catch (NoSuchElementException e) {
-            logger.error("Doctor not found: " + doctorId);
-            return null;
-        } catch (Exception e) {
-            String errorMsg = "Employee microservice unavailable: " + e.getMessage();
-            logger.error(errorMsg);
+            Supplier<Doctor> findDoctor = () -> employeeService.findDoctorById(doctorId);
+            return circuitBreaker.decorateSupplier(findDoctor).get();
+        } catch (FeignException e) {
+            if (e.status() == 404) {
+                logger.error("Doctor not found: " + doctorId);
+            } else {
+                logger.error("Employee microservice unavailable: " + e.getMessage());
+            }
+
             return null;
         }
     }
 
     private Client loadClient(long clientId) {
         try {
-            Supplier<Optional<Client>> findClient = () -> clientService.findClientById(clientId);
-            return circuitBreaker.decorateSupplier(findClient).get().orElseThrow();
-        } catch (NoSuchElementException e) {
-            logger.error("Client not found: " + clientId);
-            return null;
-        } catch (Exception e) {
-            String errorMsg = "Client microservice unavailable: " + e.getMessage();
-            logger.error(errorMsg);
+            Supplier<Client> findClient = () -> clientService.findClientById(clientId);
+            return circuitBreaker.decorateSupplier(findClient).get();
+        } catch (FeignException e) {
+            if (e.status() == 404) {
+                logger.error("Client not found: " + clientId);
+            } else {
+                logger.error("Client microservice unavailable: " + e.getMessage());
+            }
+
             return null;
         }
     }
@@ -161,7 +165,7 @@ public class ResultServiceImpl implements ResultService {
     @Override
     public long count() {
         try {
-            Supplier<Long> count = repository::count;;
+            Supplier<Long> count = repository::count;
             return circuitBreaker.decorateSupplier(count).get();
         } catch (Exception e) {
             throw new RemoteResourceException("Result database unavailable", e);
@@ -172,16 +176,9 @@ public class ResultServiceImpl implements ResultService {
     public Result save(Result result) {
         try {
             validate(result);
-            Result resultToSave = new Result(result);
-            resultToSave.setId(null);
+            Result resultToSave = prepareSaveData(result);
 
-            Supplier<Result> save = () -> {
-                Result saved = repository.save(resultToSave);
-                repository.flush();
-                return saved;
-            };
-
-            Result saved = circuitBreaker.decorateSupplier(save).get();
+            Result saved = persistResult(resultToSave);
             loadContent(saved);
             logger.info("Result saved. ID - " + saved.getId());
             return saved;
@@ -193,6 +190,13 @@ public class ResultServiceImpl implements ResultService {
     }
 
     private void validate(Result result) {
+        validateResult(result);
+        validateDuty(result.getDuty());
+        validateDoctor(result.getDoctor());
+        validateClient(result.getClient());
+    }
+
+    private void validateResult(Result result) {
         Set<ConstraintViolation<Result>> violations = validator.validate(result);
         if (!violations.isEmpty()) {
             StringBuilder builder = new StringBuilder();
@@ -206,23 +210,87 @@ public class ResultServiceImpl implements ResultService {
         }
     }
 
+    private void validateDuty(Duty duty) {
+        try {
+            if (duty.getId() == null) {
+                throw new IllegalModificationException("Duty ID is mandatory");
+            }
+
+            Supplier<Duty> findById = () -> registrationService.findDutyById(duty.getId());
+            circuitBreaker.decorateSupplier(findById).get();
+        } catch (FeignException e) {
+            if (e.status() == 404) {
+                throw new IllegalModificationException("No duty with id " + duty.getId());
+            } else {
+                logger.error(e.getMessage());
+                throw new RemoteResourceException("Registration service unavailable", e);
+            }
+        }
+    }
+
+    private void validateDoctor(Doctor doctor) {
+        try {
+            if (doctor.getId() == null) {
+                throw new IllegalModificationException("Doctor ID is mandatory");
+            }
+
+            Supplier<Doctor> findById = () -> employeeService.findDoctorById(doctor.getId());
+            circuitBreaker.decorateSupplier(findById).get();
+        } catch (FeignException e) {
+            if (e.status() == 404) {
+                throw new IllegalModificationException("No doctor with id " + doctor.getId());
+            } else {
+                logger.error(e.getMessage());
+                throw new RemoteResourceException("Employee service unavailable", e);
+            }
+        }
+    }
+
+    private void validateClient(Client client) {
+        try {
+            if (client.getId() == null) {
+                throw new IllegalModificationException("Client ID is mandatory");
+            }
+
+            Supplier<Client> findById = () -> clientService.findClientById(client.getId());
+            circuitBreaker.decorateSupplier(findById).get();
+        } catch (FeignException e) {
+            if (e.status() == 404) {
+                throw new IllegalModificationException("No client with id " + client.getId());
+            } else {
+                logger.error(e.getMessage());
+                throw new RemoteResourceException("Client service unavailable", e);
+            }
+        }
+    }
+
+    private Result prepareSaveData(Result result) {
+        Result resultToSave = new Result(result);
+        resultToSave.setId(null);
+
+        return resultToSave;
+    }
+
+    private Result persistResult(Result result) {
+        Supplier<Result> save = () -> {
+            Result saved = repository.save(result);
+            repository.flush();
+            return saved;
+        };
+
+        return circuitBreaker.decorateSupplier(save).get();
+    }
+
     @Override
     public Result update(Result result) {
         try {
-            Supplier<Optional<Result>> findById = () -> repository.findById(result.getId());
-            Result resultToUpdate = circuitBreaker.decorateSupplier(findById)
-                    .get()
-                    .orElseThrow(() -> new IllegalModificationException("No result with id " + result.getId()));
-            prepareUpdateData(resultToUpdate, result);
+            long id = result.getId();
+            Result resultToUpdate = findById(id)
+                    .orElseThrow(() -> new IllegalModificationException("No result with id " + id));
+            resultToUpdate = prepareUpdateData(resultToUpdate, result);
             validate(resultToUpdate);
 
-            Supplier<Result> update = () -> {
-                Result updated = repository.save(resultToUpdate);
-                repository.flush();
-                return updated;
-            };
-
-            Result updated = circuitBreaker.decorateSupplier(update).get();
+            Result updated = persistResult(resultToUpdate);
             loadContent(updated);
             logger.info("Result " + updated.getId() + " updated");
             return updated;
@@ -233,35 +301,30 @@ public class ResultServiceImpl implements ResultService {
         }
     }
 
-    private void prepareUpdateData(Result result, Result updateData) {
-        if (updateData.getData() != null) {
-            result.setData(updateData.getData());
-        }
-        if (updateData.getDutyId() != null) {
-            result.setDutyId(updateData.getDutyId());
-        }
-        if (updateData.getDoctorId() != null) {
-            result.setDoctorId(updateData.getDoctorId());
-        }
-        if (updateData.getClientId() != null) {
-            result.setClientId(updateData.getClientId());
-        }
+    private Result prepareUpdateData(Result savedResult, Result data) {
+        return Result.builder(savedResult)
+                .copyNonNullFields(data)
+                .build();
     }
 
     @Override
     public void deleteById(long id) {
         try {
-            Runnable delete = () -> {
-                repository.deleteById(id);
-                repository.flush();
-            };
-
-            circuitBreaker.decorateRunnable(delete).run();
+            deleteResult(id);
             logger.info("Duty " + id + " deleted");
         } catch (EmptyResultDataAccessException e) {
             throw new IllegalModificationException("No result with id " + id, e);
         } catch (Exception e) {
             throw new RemoteResourceException("Result database unavailable", e);
         }
+    }
+
+    private void deleteResult(long id) {
+        Runnable delete = () -> {
+            repository.deleteById(id);
+            repository.flush();
+        };
+
+        circuitBreaker.decorateRunnable(delete).run();
     }
 }

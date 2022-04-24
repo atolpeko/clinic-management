@@ -16,6 +16,8 @@
 
 package resultsservice.service.external.registration;
 
+import javax.persistence.Column;
+import javax.persistence.Transient;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -24,9 +26,22 @@ import java.util.Objects;
  * Duty domain class.
  */
 public class Duty implements Serializable {
+
+    @Column(name = "duty_id", nullable = false)
     private Long id;
+
+    @Transient
     private String name;
+
+    @Transient
     private BigDecimal price;
+
+    /**
+     * @return Duty builder
+     */
+    public static Builder builder() {
+        return new Duty().new Builder();
+    }
 
     public Duty() {
     }
@@ -40,18 +55,6 @@ public class Duty implements Serializable {
         id = other.id;
         name = other.name;
         price = other.price;
-    }
-
-    /**
-     * Construct a new Duty with the specified id, name and price.
-     *
-     * @param id id to set
-     * @param name name to set
-     * @param price price to set
-     */
-    public Duty(Long id, String name, BigDecimal price) {
-        this.name = name;
-        this.price = price;
     }
 
     public Long getId() {
@@ -106,5 +109,33 @@ public class Duty implements Serializable {
                 ", name='" + name + '\'' +
                 ", price=" + price +
                 '}';
+    }
+
+    /**
+     * Duty object builder.
+     */
+    public class Builder {
+
+        private Builder() {
+        }
+
+        public Duty build() {
+            return Duty.this;
+        }
+
+        public Builder withId(Long id) {
+            Duty.this.id = id;
+            return this;
+        }
+
+        public Builder withName(String name) {
+            Duty.this.name = name;
+            return this;
+        }
+
+        public Builder withPrice(BigDecimal price) {
+            Duty.this.price = price;
+            return this;
+        }
     }
 }

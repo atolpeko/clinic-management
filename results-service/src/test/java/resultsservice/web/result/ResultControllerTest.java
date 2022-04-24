@@ -30,7 +30,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 
-import resultsservice.IntegrationTestConfig;
+import resultsservice.config.IntegrationTestConfig;
 import resultsservice.service.result.Result;
 import resultsservice.service.result.ResultService;
 
@@ -68,27 +68,20 @@ public class ResultControllerTest {
     @BeforeAll
     public static void createNewResultJsons() {
         newResult1Json = "{\"data\":\"New Data 1\"," +
-                "\"dutyId\":1," +
-                "\"clientId\":2," +
-                "\"doctorId\":1}";
+                "\"duty\" : {\"id\":1}," +
+                "\"client\" : {\"id\":2}," +
+                "\"doctor\" : {\"id\":1}}";
 
         newResult2Json = "{\"data\":\"New Data 2\"," +
-                "\"dutyId\":2," +
-                "\"clientId\":1," +
-                "\"doctorId\":2}";
+                "\"duty\" : {\"id\":2}," +
+                "\"client\" : {\"id\":1}," +
+                "\"doctor\" : {\"id\":2}}";
     }
 
     @BeforeAll
     public static void createUpdateResultJsons() {
-        update1Json = "{\"data\":\"Update 1\"," +
-                "\"dutyId\":2," +
-                "\"clientId\":1," +
-                "\"doctorId\":2}";
-
-        update2Json = "{\"data\":\"Update 2\"," +
-                "\"dutyId\":1," +
-                "\"clientId\":2," +
-                "\"doctorId\":3}";
+        update1Json = "{\"data\":\"Update Data 1\"}";
+        update2Json = "{\"data\":\"Update Data 2\"}";
     }
 
     @Test

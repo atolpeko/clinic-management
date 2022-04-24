@@ -16,16 +16,33 @@
 
 package resultsservice.service.external.client;
 
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * Client domain class.
  */
+@Embeddable
 public class Client implements Serializable {
+
+    @Column(name = "client_id", nullable = false)
     private Long id;
+
+    @Transient
     private String email;
+
+    @Transient
     private String name;
+
+    /**
+     * @return Client builder
+     */
+    public static Builder builder() {
+        return new Client().new Builder();
+    }
 
     public Client() {
     }
@@ -39,19 +56,6 @@ public class Client implements Serializable {
         id = other.id;
         email = other.email;
         name = other.name;
-    }
-
-    /**
-     * Constructs a new Client with the specified id, email and name.
-     *
-     * @param id id to set
-     * @param email email to set
-     * @param name name to set
-     */
-    public Client(Long id, String email, String name) {
-        this.id = id;
-        this.email = email;
-        this.name = name;
     }
 
     public Long getId() {
@@ -106,5 +110,33 @@ public class Client implements Serializable {
                 ", email='" + email + '\'' +
                 ", name='" + name + '\'' +
                 '}';
+    }
+
+    /**
+     * Client object builder.
+     */
+    public class Builder {
+
+        private Builder() {
+        }
+
+        public Client build() {
+            return Client.this;
+        }
+
+        public Builder withId(Long id) {
+            Client.this.id = id;
+            return this;
+        }
+
+        public Builder withEmail(String email) {
+            Client.this.email = email;
+            return this;
+        }
+
+        public Builder withName(String name) {
+            Client.this.name = name;
+            return this;
+        }
     }
 }

@@ -25,8 +25,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import resultsservice.config.OauthFeignConfiguration;
 
-import java.util.Optional;
-
 /**
  * Provides access to employee microservice.
  */
@@ -38,12 +36,12 @@ public interface EmployeeServiceFeignClient {
      *
      * @param id ID of the doctor to get
      *
-     * @return doctor with the specified ID or Optional#empty() if none found
+     * @return doctor with the specified ID 
      *
      * @throws FeignClientException if there is any problem with feign client
      */
     @RequestMapping(method = RequestMethod.GET,
             value = "/doctors/{id}",
             consumes = "application/json")
-    Optional<Doctor> findDoctorById(@PathVariable Long id);
+    Doctor findDoctorById(@PathVariable Long id);
 }

@@ -16,17 +16,36 @@
 
 package resultsservice.service.external.employee;
 
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * Doctor domain class.
  */
+@Embeddable
 public class Doctor implements Serializable {
+
+    @Column(name = "doctor_id", nullable = false)
     private Long id;
+
+    @Transient
     private String email;
+
+    @Transient
     private String name;
+
+    @Transient
     private String specialty;
+
+    /**
+     * @return Doctor builder
+     */
+    public static Builder builder() {
+        return new Doctor().new Builder();
+    }
 
     public Doctor() {
     }
@@ -41,21 +60,6 @@ public class Doctor implements Serializable {
         email = other.email;
         name = other.name;
         specialty = other.specialty;
-    }
-
-    /**
-     * Constructs a new Doctor with the specified id, email, name and specialty.
-     *
-     * @param id id to set
-     * @param email email to set
-     * @param name name to set
-     * @param specialty specialty to set
-     */
-    public Doctor(Long id, String email, String name, String specialty) {
-        this.id = id;
-        this.email = email;
-        this.name = name;
-        this.specialty = specialty;
     }
 
     public Long getId() {
@@ -120,5 +124,38 @@ public class Doctor implements Serializable {
                 ", name='" + name + '\'' +
                 ", specialty='" + specialty + '\'' +
                 '}';
+    }
+
+    /**
+     * Doctor object builder.
+     */
+    public class Builder {
+
+        private Builder() {
+        }
+
+        public Doctor build() {
+            return Doctor.this;
+        }
+
+        public Builder withId(Long id) {
+            Doctor.this.id = id;
+            return this;
+        }
+
+        public Builder withEmail(String email) {
+            Doctor.this.email = email;
+            return this;
+        }
+
+        public Builder withName(String name) {
+            Doctor.this.name = name;
+            return this;
+        }
+
+        public Builder withSpecialty(String specialty) {
+            Doctor.this.specialty = specialty;
+            return this;
+        }
     }
 }

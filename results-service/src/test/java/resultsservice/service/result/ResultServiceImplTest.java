@@ -76,38 +76,53 @@ public class ResultServiceImplTest {
         when(circuitBreaker.decorateRunnable(any())).then(returnsFirstArg());
 
         clientService = mock(ClientServiceFeignClient.class);
-        when(clientService.findClientById(any(Long.class))).thenReturn(Optional.of(new Client()));
+        Client client = Client.builder().withId(1L).build();
+        when(clientService.findClientById(any(Long.class))).thenReturn((client));
 
         employeeService = mock(EmployeeServiceFeignClient.class);
-        when(employeeService.findDoctorById(any(Long.class))).thenReturn(Optional.of(new Doctor()));
+        Doctor doctor = Doctor.builder().withId(1L).build();
+        when(employeeService.findDoctorById(any(Long.class))).thenReturn((doctor));
 
         registrationService = mock(RegistrationServiceFeignClient.class);
-        when(registrationService.findDutyById(any(Long.class))).thenReturn(Optional.of(new Duty()));
+        Duty duty = Duty.builder().withId(1L).build();
+        when(registrationService.findDutyById(any(Long.class))).thenReturn((duty));
     }
 
     @BeforeAll
     public static void createResult() {
-        result = new Result();
-        result.setId(1L);
-        result.setDutyId(1L);
-        result.setDoctorId(1L);
-        result.setClientId(1L);
+        Client client = Client.builder().withId(1L).build();
+        Doctor doctor = Doctor.builder().withId(1L).build();
+        Duty duty = Duty.builder().withId(1L).build();
+
+        result = Result.builder()
+                .withId(1L)
+                .withData("Data")
+                .withClient(client)
+                .withDoctor(doctor)
+                .withDuty(duty)
+                .build();
     }
 
     @BeforeAll
     public static void createUpdatedResult() {
-        updatedResult = new Result();
-        updatedResult.setId(1L);
-        updatedResult.setDutyId(2L);
-        updatedResult.setDoctorId(2L);
-        updatedResult.setClientId(2L);
+        Client client = Client.builder().withId(2L).build();
+        Doctor doctor = Doctor.builder().withId(2L).build();
+        Duty duty = Duty.builder().withId(2L).build();
+
+        updatedResult = Result.builder()
+                .withId(1L)
+                .withData("Data2")
+                .withClient(client)
+                .withDoctor(doctor)
+                .withDuty(duty)
+                .build();
     }
 
     @BeforeEach
     public void beforeEach() {
         Mockito.reset(resultsRepository, validator);
-        resultService = new ResultServiceImpl(resultsRepository, validator, circuitBreaker,
-                clientService, employeeService, registrationService);
+        resultService = new ResultServiceImpl(resultsRepository, clientService, employeeService,
+                registrationService, validator, circuitBreaker);
     }
 
     @Test

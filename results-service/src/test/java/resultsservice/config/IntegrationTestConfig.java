@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package resultsservice;
+package resultsservice.config;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 
@@ -36,7 +36,6 @@ import resultsservice.service.result.ResultServiceImpl;
 import javax.validation.Validator;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -56,43 +55,72 @@ public class IntegrationTestConfig {
     @Bean
     @Primary
     public ResultService resultService() {
-        return new ResultServiceImpl(resultsRepository, validator, circuitBreaker,
+        return new ResultServiceImpl(resultsRepository,
                 clientServiceFeignClient(), employeeServiceFeignClient(),
-                registrationServiceFeignClient());
+                registrationServiceFeignClient(), validator, circuitBreaker);
     }
 
     @Bean
     public ClientServiceFeignClient clientServiceFeignClient() {
-        Client firstClient = new Client(1L, "emma@gmail.com", "Emma");
-        Client secondClient = new Client(2L, "jain@gmail.com", "Jain");
+        Client firstClient = Client.builder()
+                .withId(1L)
+                .withEmail("emma@gmail.com")
+                .withName("Emma")
+                .build();
+
+        Client secondClient = Client.builder()
+                .withId(2L)
+                .withEmail("jain@gmail.com")
+                .withName("Jain")
+                .build();
 
         ClientServiceFeignClient feignClient = mock(ClientServiceFeignClient.class);
-        when(feignClient.findClientById(1L)).thenReturn(Optional.of(firstClient));
-        when(feignClient.findClientById(2L)).thenReturn(Optional.of(secondClient));
+        when(feignClient.findClientById(1L)).thenReturn((firstClient));
+        when(feignClient.findClientById(2L)).thenReturn((secondClient));
 
         return feignClient;
     }
 
     @Bean
     public EmployeeServiceFeignClient employeeServiceFeignClient() {
-        Doctor firstDoctor = new Doctor(1L, "mark@gmail.com", "Mark", "Surgery");
-        Doctor secondDoctor = new Doctor(2L, "robert@gmail.com", "Robert", "Surgery");
+        Doctor firstDoctor = Doctor.builder()
+                .withId(1L)
+                .withEmail("mark@gmail.com")
+                .withName("Mark")
+                .withSpecialty("Surgery")
+                .build();
+
+        Doctor secondDoctor = Doctor.builder()
+                .withId(2L)
+                .withEmail("robert@gmail.com")
+                .withName("Robert")
+                .withSpecialty("Surgery")
+                .build();
 
         EmployeeServiceFeignClient feignClient = mock(EmployeeServiceFeignClient.class);
-        when(feignClient.findDoctorById(1L)).thenReturn(Optional.of(firstDoctor));
-        when(feignClient.findDoctorById(2L)).thenReturn(Optional.of(secondDoctor));
+        when(feignClient.findDoctorById(1L)).thenReturn((firstDoctor));
+        when(feignClient.findDoctorById(2L)).thenReturn((secondDoctor));
 
         return feignClient;
     }
 
     @Bean
     public RegistrationServiceFeignClient registrationServiceFeignClient() {
-        Duty firstDuty = new Duty(1L, "Duty1", BigDecimal.TEN);
-        Duty secondDuty = new Duty(2L, "Duty2", BigDecimal.TEN);
+        Duty firstDuty = Duty.builder()
+                .withId(1L)
+                .withName("Duty1")
+                .withPrice(BigDecimal.TEN)
+                .build();
+
+        Duty secondDuty = Duty.builder()
+                .withId(2L)
+                .withName("Duty2")
+                .withPrice(BigDecimal.TEN)
+                .build();
 
         RegistrationServiceFeignClient feignClient = mock(RegistrationServiceFeignClient.class);
-        when(feignClient.findDutyById(1L)).thenReturn(Optional.of(firstDuty));
-        when(feignClient.findDutyById(2L)).thenReturn(Optional.of(secondDuty));
+        when(feignClient.findDutyById(1L)).thenReturn((firstDuty));
+        when(feignClient.findDutyById(2L)).thenReturn((secondDuty));
 
         return feignClient;
     }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package resultsservice;
+package resultsservice.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
