@@ -23,20 +23,23 @@ chmod +x run_all.sh
 
 > Note: in order to run services locally without Docker, you must have a MySQL database running at port 3306.
 
-## Run locally with Docker
+## Run locally with Docker Compose
 
 The first step is to build the project with Maven. Maven will build a Docker image for each microservice and push it to your local Docker repository.
 
 ```
-mvn clean install 
+mvn clean install -Dimage_prefix=...
 ```
 
 Next, run images with Docker compose. It will mount the `db-volume` volume to hold all the data.
 
 ```
+export image_prefix=...
 docker compose config
 docker compose up  
 ```
+
+> Note: `...` is used as a Docker image prefix. Put you Docker Hub login instead of this placeholder.
 
 ## Using Clinic Management Service
 
