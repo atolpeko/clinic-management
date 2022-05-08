@@ -11,6 +11,7 @@
 
     <artifactId>results-service</artifactId>
     <version>1.2</version>
+    <packaging>jar</packaging>
 
     <name>results-service</name>
     <description>Microservice providing endpoints for managing medical test results</description>

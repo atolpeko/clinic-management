@@ -11,6 +11,7 @@
 
 	<artifactId>auth-server</artifactId>
 	<version>1.2</version>
+	<packaging>jar</packaging>
 
 	<name>auth-server</name>
 	<description>OAuth2 server</description>
