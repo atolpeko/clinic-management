@@ -156,14 +156,13 @@ public abstract class AbstractEmployee implements Serializable {
         return Objects.equals(email, that.email)
                 && Objects.equals(password, that.password)
                 && Objects.equals(personalData, that.personalData)
+                && Objects.equals(department, that.department)
                 && Objects.equals(isEnabled, that.isEnabled);
-        // Not using department field to avoid infinite recursion
     }
 
     @Override
     public int hashCode() {
-        // Not using department field to avoid infinite recursion
-        return Objects.hash(email, password, personalData, isEnabled);
+        return Objects.hash(email, password, personalData, department, isEnabled);
     }
 
     @Override

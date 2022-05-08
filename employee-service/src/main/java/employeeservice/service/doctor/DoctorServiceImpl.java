@@ -148,6 +148,11 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     private void validate(Doctor doctor) {
+        validateDoctor(doctor);
+        validateDepartment(doctor.getDepartment());
+    }
+
+    private void validateDoctor(Doctor doctor) {
         Set<ConstraintViolation<Doctor>> violations = validator.validate(doctor);
         if (!violations.isEmpty()) {
             StringBuilder builder = new StringBuilder();
@@ -163,8 +168,6 @@ public class DoctorServiceImpl implements DoctorService {
         if (doctor.getDepartment() == null) {
             throw new IllegalModificationException("Department is mandatory");
         }
-
-        validateDepartment(doctor.getDepartment());
     }
 
     private void validateDepartment(Department department) {

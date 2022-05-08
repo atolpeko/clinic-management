@@ -143,6 +143,12 @@ public class TeamManagerServiceImpl implements TeamManagerService {
     }
 
     private void validate(TeamManager manager) {
+        validateManager(manager);
+        validateDepartment(manager.getDepartment());
+        validateTeam(manager.getTeam());
+    }
+
+    private void validateManager(TeamManager manager) {
         Set<ConstraintViolation<TeamManager>> violations = validator.validate(manager);
         if (!violations.isEmpty()) {
             StringBuilder builder = new StringBuilder();
@@ -158,9 +164,6 @@ public class TeamManagerServiceImpl implements TeamManagerService {
         if (manager.getDepartment() == null) {
             throw new IllegalModificationException("Department is mandatory");
         }
-
-        validateDepartment(manager.getDepartment());
-        validateTeam(manager.getTeam());
     }
 
     private void validateDepartment(Department department) {
